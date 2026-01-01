@@ -635,24 +635,26 @@ function backToMenu() {
     showPage('menuPage');
 }
 
-// ADIM 1: Grup/Bireysel Seçimi
+// ADIM 1: Grup/Sipariş Seçimi
 function goToGroupMode() {
     app.currentMode = 'group';
-    document.getElementById('infoTitle').innerText = 'Grup Bilgileri';
+    document.getElementById('infoTitle').innerText = 'Grup / Sipariş Bilgileri';
     document.getElementById('groupIdGroup').style.display = 'block';
-    document.getElementById('firstName').value = '';
-    document.getElementById('lastName').value = '';
+    document.getElementById('infoFirstName').value = '';
+    document.getElementById('infoLastName').value = '';
     document.getElementById('groupId').value = '';
     showPage('infoPage');
 }
 
+// Rezervasyon / Kupon Sayfası
+function goToReservationMode() {
+    alert('Rezervasyon ve Kupon özellikleri yakında gelecek!');
+    // Şimdilik placeholder - ileride implement edilecek
+}
+
+// ESKI: Bireysel Sipariş (artık kullanılmıyor - goToGroupMode ile birleştirildi)
 function goToIndividualMode() {
-    app.currentMode = 'individual';
-    document.getElementById('infoTitle').innerText = 'Bilgilerinizi Girin';
-    document.getElementById('groupIdGroup').style.display = 'none';
-    document.getElementById('firstName').value = '';
-    document.getElementById('lastName').value = '';
-    showPage('infoPage');
+    goToGroupMode();
 }
 
 // ADIM 2: Bilgi Girişi
