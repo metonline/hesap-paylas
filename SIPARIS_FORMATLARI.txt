@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""Sipariş Gösterim Formatları Karşılaştırması"""
+
+print("="*80)
+print("🍽️  SİPARİŞ GÖSTERIM FORMATLARI")
+print("="*80)
+
+print("\n" + "="*80)
+print("1️⃣  GRUP ARASINDA GÖRÜNTÜLENECEK FORMAT (Uygulama İçi)")
+print("="*80)
+
+group_display = """
+👤 Ahmet Yilmaz:
+   1. 🔸 🌶️ Adana Kebap (2 adet) = 90.00 ₺
+   2. 🔹 🥛 Ayran (1 adet) - Ahmet Yilmaz ekledi
+   ──────────────────────────────────────────────────
+   Toplam:      98.00 ₺
+
+👤 Fatma Demir:
+   1. 🔸 🥗 Çoban Salatası (1 adet) = 20.00 ₺
+   2. 🔹 🥛 Ayran (1 adet) - Fatma Demir ekledi
+   ──────────────────────────────────────────────────
+   Toplam:      28.00 ₺
+
+📊 ORTAK ÜRÜNLER:
+🔹 🥛 Ayran (3 adet) - Ahmet Yilmaz, Fatma Demir, Mehmet Şahin ekledi
+"""
+
+print(group_display)
+
+print("="*80)
+print("2️⃣  RESTAURANT'A GÖNDERİLECEK FORMAT (SMS/WhatsApp/Email)")
+print("="*80)
+
+restaurant_display = """
+GRUP SİPARİŞ - #GRP-ABC123
+════════════════════════════════════════
+
+👤 Ahmet Yilmaz:
+  🔸 🌶️ Adana Kebap (2 adet) = 90.00₺
+  🔹 🥛 Ayran (1 adet) = 8.00₺
+
+👤 Fatma Demir:
+  🔸 🥗 Çoban Salatası (1 adet) = 20.00₺
+  🔹 🥛 Ayran (1 adet) = 8.00₺
+
+👤 Mehmet Şahin:
+  🔸 🔥 Urfa Kebap (1 adet) = 50.00₺
+  🔹 🥛 Ayran (1 adet) = 8.00₺
+
+════════════════════════════════════════
+📊 ÖZET:
+  Hesap Toplam: 184.00₺
+  Bahşiş: 18.40₺
+  Vergi: 9.20₺
+  ────────────────
+  GENEL TOPLAM: 211.60₺
+
+📍 Grup Üye Sayısı: 3
+⏰ Tarih: 22.12.2025 15:30
+════════════════════════════════════════
+"""
+
+print(restaurant_display)
+
+print("\n" + "="*80)
+print("✨ FORMAT ÖZELLIKELERI")
+print("="*80)
+
+features = """
+📋 GRUP İÇİ FORMAT (show_orders_and_split):
+   ✓ Ürün emoji göstergesi (🌶️ 🥛 vb.)
+   ✓ Ürün adı açık
+   ✓ Miktar parantez içinde (3 adet)
+   ✓ Ortak ürünlerde kim ekledi gösterilir
+   ✓ Fiyatlar gösterilir (kimin ne kadar ödeyeceği)
+   ✓ Kişi başı toplam gösterilir
+   
+   Kullanım: Grup üyeleri kendi ödemelerine karar vermek için
+   
+────────────────────────────────────────────────────────────
+   
+📮 RESTAURANT FORMAT (format_order_for_restaurant):
+   ✓ Ürün emoji göstergesi (🌶️ 🥛 vb.)
+   ✓ Ürün adı açık
+   ✓ Miktar parantez içinde (3 adet)
+   ✓ Fiyat toplam (ne kadar ödeyecek)
+   ✓ Kişi başına düzenlenmiş
+   ✓ Özet ve genel toplam
+   
+   Kullanım: Restaurant sipariş hazırlamak ve para almak için
+   NOT: Kim ekledi yazılmıyor (Restaurant için gereksiz)
+"""
+
+print(features)
+
+print("\n" + "="*80)
+print("🎯 ÖZETLEMESİ")
+print("="*80)
+
+summary = """
+✅ Grup Üyeleri Arasında (CLI Uygulama):
+   - Ürün başında emoji (🌶️)
+   - Açık ürün adı
+   - Miktar: (2 adet)
+   - Ortak ürünlerde: kim ekledi gösterilir
+   - Fiyatlar görülebilir
+   
+✅ Restaurant'a (SMS/WhatsApp/Email):
+   - Ürün başında emoji (🌶️)
+   - Açık ürün adı  
+   - Miktar: (2 adet)
+   - Kim ekledi yazılmıyor
+   - Kişiye göre organize
+   - Özet ve toplam
+"""
+
+print(summary)

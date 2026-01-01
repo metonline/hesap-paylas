@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#FF6B6B">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Hesap Paylaş">
+    <meta name="description" content="Hızlı ve adil hesap bölüştürme uygulaması">
+    <meta name="keywords" content="hesap, bölüşme, restoran, seyahat, paylaşma">
+    
+    <title>Hesap Paylaş</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23FF6B6B' width='192' height='192'/><text x='96' y='110' font-size='80' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>HP</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23FF6B6B' width='180' height='180' rx='40'/><text x='90' y='105' font-size='70' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>HP</text></svg>">
+    
+    <link rel="stylesheet" href="styles.css?v=30">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    <style>
+        * {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        input, textarea, select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Onboarding/Kayıt Sayfası -->
+        <div id="onboardingPage" class="page active">
+            <div class="onboarding-content">
+                <div class="onboarding-header">
+                    <h1 style="font-size: 2.5em; margin-bottom: 10px;">🍽️ Hesap / Paylaş</h1>
+                    <p style="font-size: 1.2em; color: #666;">Adil Çözüm</p>
+                </div>
+                
+                <div class="benefits-section">
+                    <h2>Üyelik Avantajları</h2>
+                    <div class="benefits-grid">
+                        <div class="benefit-card">
+                            <div class="benefit-icon">🎟️</div>
+                            <p>Kuponlar &<br>Promosyonlar</p>
+                        </div>
+                        <div class="benefit-card">
+                            <div class="benefit-icon">⚖️</div>
+                            <p>Kolay ve Adil<br>Bölüşme</p>
+                        </div>
+                        <div class="benefit-card">
+                            <div class="benefit-icon">⚡</div>
+                            <p>Hızlı Rezervasyon<br>& Sipariş</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="signup-section">
+                    <h3>Hemen Başla</h3>
+                    
+                    <div class="social-signin">
+                        <button class="social-btn google-btn" onclick="signInWithGoogle()">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right: 10px;">
+                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M8 12 H16 M12 8 V 16" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                            Google ile Giriş
+                        </button>
+                        <button class="social-btn facebook-btn" onclick="signInWithFacebook()">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right: 10px;">
+                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                                <path d="M10 9 H12 V20 M8 12 H16" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                            Facebook ile Giriş
+                        </button>
+                        <button class="social-btn apple-btn" onclick="signInWithApple()">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right: 10px;">
+                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
+                            </svg>
+                            Apple ile Giriş
+                        </button>
+                    </div>
+
+                    <div class="divider">
+                        <span>veya</span>
+                    </div>
+
+                    <form id="manualSignupForm" onsubmit="handleManualSignup(event)">
+                        <div class="form-group">
+                            <input type="text" id="firstName" placeholder="Ad" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="lastName" placeholder="Soyad" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="tel" id="phone" placeholder="Telefon (0541 234 5678)" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="email" id="email" placeholder="E-posta" required>
+                        </div>
+                        <button type="submit" class="btn-primary" style="width: 100%;">Üye Ol</button>
+                    </form>
+
+                    <p class="terms-text">Kaydolarak <a href="#">Şartları</a> kabul etmiş olursunuz</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ana Sayfa -->
+        <div id="homePage" class="page">
+            <div class="header">
+                <h1>
+                    <span class="hesap">Hesap</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 120" width="20" height="60" style="display: inline-block; vertical-align: middle; margin: 0 8px;">
+                        <!-- Üst nokta (beyaz/açık) -->
+                        <circle cx="12" cy="35" r="4" fill="#D0D0D0"/>
+                        <!-- Çapraz çizgi (\ gibi beyaz/açık) -->
+                        <line x1="30" y1="40" x2="10" y2="80" stroke="#D0D0D0" stroke-width="5" stroke-linecap="round"/>
+                        <!-- Alt nokta (beyaz/açık) -->
+                        <circle cx="28" cy="75" r="4" fill="#D0D0D0"/>
+                    </svg>
+                    <span class="paylas">Paylaş</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 100" width="60" height="50" style="display: inline-block; vertical-align: middle; margin-left: 20px;">
+                        <!-- Terazinin kaidesi -->
+                        <polygon points="60,95 45,85 75,85" fill="#7B2CBF" stroke="#7B2CBF" stroke-width="2"/>
+                        <line x1="60" y1="85" x2="60" y2="45" stroke="#7B2CBF" stroke-width="4"/>
+                        
+                        <!-- Terazinin kolu -->
+                        <line x1="15" y1="45" x2="105" y2="45" stroke="#7B2CBF" stroke-width="5" stroke-linecap="round"/>
+                        <circle cx="60" cy="45" r="5" fill="#7B2CBF"/>
+                        
+                        <!-- Sol taraf: Bir büyük küre -->
+                        <circle cx="25" cy="25" r="18" fill="none" stroke="#FF6B6B" stroke-width="3"/>
+                        <circle cx="25" cy="25" r="15" fill="#FF6B6B" opacity="0.3"/>
+                        
+                        <!-- Sağ taraf: İki küçük küre -->
+                        <circle cx="95" cy="15" r="13" fill="none" stroke="#4ECDC4" stroke-width="3"/>
+                        <circle cx="95" cy="15" r="10" fill="#4ECDC4" opacity="0.3"/>
+                        
+                        <circle cx="95" cy="50" r="13" fill="none" stroke="#F7DC6F" stroke-width="3"/>
+                        <circle cx="95" cy="50" r="10" fill="#F7DC6F" opacity="0.3"/>
+                    </svg>
+                </h1>
+                <p class="tagline">Adil Çözüm!</p>
+                
+                <!-- Profil İkonu -->
+                <button class="profile-btn" onclick="goToProfile()" title="Profil">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+            </div>
+            
+            <div class="options-grid">
+                <div class="option-card" onclick="goToGroupMode()">
+                    <div class="option-icon">👥</div>
+                    <h2>Grup Oluştur</h2>
+                    <p>QR kod ile arkadaşlarınızı davet edin</p>
+                </div>
+                
+                <div class="option-card" onclick="goToIndividualMode()">
+                    <div class="option-icon">👤</div>
+                    <h2>Bireysel Sipariş</h2>
+                    <p>Tek başınıza sipariş verin</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bilgi Girişi Sayfası -->
+        <div id="infoPage" class="page">
+            <div class="back-button" onclick="backToHome()">← Geri</div>
+            
+            <div class="form-container">
+                <h2 id="infoTitle">Bilgilerinizi Girin</h2>
+                
+                <div class="form-group">
+                    <label for="firstName">Adı:</label>
+                    <input type="text" id="firstName" placeholder="Örn: Ahmet" autocomplete="off">
+                </div>
+                
+                <div class="form-group">
+                    <label for="lastName">Soyadı:</label>
+                    <input type="text" id="lastName" placeholder="Örn: Yılmaz" autocomplete="off">
+                </div>
+                
+                <div class="form-group" id="groupIdGroup" style="display: none;">
+                    <label for="groupId">Grup ID (İsteğe bağlı):</label>
+                    <input type="text" id="groupId" placeholder="QR koddan group ID" autocomplete="off">
+                </div>
+                
+                <button class="btn btn-primary" onclick="submitInfo()">Devam Et</button>
+            </div>
+        </div>
+
+        <!-- Restaurant Seçimi -->
+        <div id="restaurantPage" class="page">
+            <div class="back-button" onclick="backToInfo()">← Geri</div>
+            
+            <div class="section">
+                <h2>🍽️ Restaurant Seç</h2>
+                <div id="restaurantList" class="restaurant-grid"></div>
+            </div>
+        </div>
+
+        <!-- Profil Sayfası -->
+        <div id="profilePage" class="page">
+            <div class="back-button" onclick="backToHome()">← Geri</div>
+            
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="profile-avatar">👤</div>
+                    <h1 id="profileName"></h1>
+                    <p id="profileEmail"></p>
+                </div>
+
+                <div class="profile-content">
+                    <!-- Üyelik Bilgileri -->
+                    <div class="profile-section">
+                        <h2>📋 Üyelik Bilgileri</h2>
+                        <div class="info-box">
+                            <p><strong>Telefon:</strong> <span id="profilePhone"></span></p>
+                            <p><strong>E-posta:</strong> <span id="profileEmailInfo"></span></p>
+                            <p><strong>Üyelik Tarihi:</strong> <span id="profileDate"></span></p>
+                        </div>
+                        <button class="btn-secondary" onclick="editProfile()">Düzenle</button>
+                    </div>
+
+                    <!-- Siparişler ve Harcamalar -->
+                    <div class="profile-section">
+                        <h2>🛒 Sipariş Geçmişi</h2>
+                        <div class="orders-list">
+                            <div class="order-item">
+                                <div class="order-header">
+                                    <div>
+                                        <h4>Tarihi Kebapçı</h4>
+                                        <p class="order-date">20 Aralık 2025, 19:30</p>
+                                    </div>
+                                    <div class="order-amount">₺ 285.50</div>
+                                </div>
+
+                                <!-- Ana Sipariş -->
+                                <div class="order-section">
+                                    <h5>🍽️ Ana Sipariş</h5>
+                                    <div class="order-details">
+                                        <p>• Adana Kebap (2 adet) - ₺240</p>
+                                        <p>• Ayran (2 adet) - ₺24</p>
+                                        <p>• Patlıcan Salatası (1) - ₺25</p>
+                                        <p class="subtotal">Alt Total: ₺289</p>
+                                    </div>
+                                </div>
+
+                                <!-- Üye Siparişi -->
+                                <div class="order-section">
+                                    <h5>💳 Üye Siparişi</h5>
+                                    <div class="member-bill">
+                                        <div class="member-item">
+                                            <p class="member-name">👤 Siz</p>
+                                            <p class="member-amount">₺95.17</p>
+                                        </div>
+                                        <div class="member-item">
+                                            <p class="member-name">👤 Ahmet</p>
+                                            <p class="member-amount">₺95.17</p>
+                                        </div>
+                                        <div class="member-item">
+                                            <p class="member-name">👤 Merve</p>
+                                            <p class="member-amount">₺95.16</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="btn-small" onclick="viewOrderDetails(1)">Detaylı Görüntüle</button>
+                            </div>
+
+                            <div class="order-item">
+                                <div class="order-header">
+                                    <div>
+                                        <h4>Modern Pizza House</h4>
+                                        <p class="order-date">18 Aralık 2025, 18:45</p>
+                                    </div>
+                                    <div class="order-amount">₺ 156.00</div>
+                                </div>
+
+                                <!-- Ana Sipariş -->
+                                <div class="order-section">
+                                    <h5>🍽️ Ana Sipariş</h5>
+                                    <div class="order-details">
+                                        <p>• Margarita Pizza (1 adet) - ₺80</p>
+                                        <p>• Sodaları (2 adet) - ₺18</p>
+                                        <p class="subtotal">Alt Total: ₺98</p>
+                                    </div>
+                                </div>
+
+                                <!-- Üye Siparişi -->
+                                <div class="order-section">
+                                    <h5>💳 Üye Siparişi</h5>
+                                    <div class="member-bill">
+                                        <div class="member-item">
+                                            <p class="member-name">👤 Siz</p>
+                                            <p class="member-amount">₺78.00</p>
+                                        </div>
+                                        <div class="member-item">
+                                            <p class="member-name">👤 Ali</p>
+                                            <p class="member-amount">₺78.00</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="btn-small" onclick="viewOrderDetails(2)">Detaylı Görüntüle</button>
+                            </div>
+
+                            <div class="order-item">
+                                <div class="order-header">
+                                    <div>
+                                        <h4>Restoran Eryaman</h4>
+                                        <p class="order-date">15 Aralık 2025, 20:15</p>
+                                    </div>
+                                    <div class="order-amount">₺ 420.75</div>
+                                </div>
+
+                                <!-- Ana Sipariş -->
+                                <div class="order-section">
+                                    <h5>🍽️ Ana Sipariş</h5>
+                                    <div class="order-details">
+                                        <p>• Steak (2 adet) - ₺320</p>
+                                        <p>• Salata Tabağı (2 adet) - ₺50</p>
+                                        <p>• Şarap - ₺80</p>
+                                        <p class="subtotal">Alt Total: ₺450</p>
+                                    </div>
+                                </div>
+
+                                <!-- Üye Siparişi -->
+                                <div class="order-section">
+                                    <h5>💳 Üye Siparişi</h5>
+                                    <div class="member-bill">
+                                        <div class="member-item">
+                                            <p class="member-name">👤 Siz</p>
+                                            <p class="member-amount">₺140.25</p>
+                                        </div>
+                                        <div class="member-item">
+                                            <p class="member-name">👤 Ahmet</p>
+                                            <p class="member-amount">₺140.25</p>
+                                        </div>
+                                        <div class="member-item">
+                                            <p class="member-name">👤 Merve</p>
+                                            <p class="member-amount">₺140.25</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="btn-small" onclick="viewOrderDetails(3)">Detaylı Görüntüle</button>
+                            </div>
+
+                            <div class="order-item">
+                                <div class="order-header">
+                                    <div>
+                                        <h4>Kahveci Ali Bey</h4>
+                                        <p class="order-date">12 Aralık 2025, 15:20</p>
+                                    </div>
+                                    <div class="order-amount">₺ 85.00</div>
+                                </div>
+
+                                <!-- Ana Sipariş -->
+                                <div class="order-section">
+                                    <h5>🍽️ Ana Sipariş</h5>
+                                    <div class="order-details">
+                                        <p>• Türk Kahvesi (3 adet) - ₺45</p>
+                                        <p>• Baklava Tabağı - ₺40</p>
+                                        <p class="subtotal">Alt Total: ₺85</p>
+                                    </div>
+                                </div>
+
+                                <!-- Üye Siparişi -->
+                                <div class="order-section">
+                                    <h5>💳 Üye Siparişi</h5>
+                                    <div class="member-bill">
+                                        <div class="member-item">
+                                            <p class="member-name">👤 Siz</p>
+                                            <p class="member-amount">₺42.50</p>
+                                        </div>
+                                        <div class="member-item">
+                                            <p class="member-name">👤 Cansu</p>
+                                            <p class="member-amount">₺42.50</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="btn-small" onclick="viewOrderDetails(4)">Detaylı Görüntüle</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rezervasyonlar -->
+                    <div class="profile-section">
+                        <h2>🗓️ Rezervasyonlar</h2>
+                        <div class="info-box">
+                            <p><strong>Aktif Rezervasyon:</strong> <span id="activeReservations">0</span></p>
+                            <p><strong>Geçmiş Rezervasyon:</strong> <span>8 rezervasyon</span></p>
+                        </div>
+                        <button class="btn-secondary" onclick="viewReservations()">Rezervasyonları Yönet</button>
+                    </div>
+
+                    <!-- Kuponlar -->
+                    <div class="profile-section">
+                        <h2>🎟️ Kuponlar & Bonus Puanları</h2>
+                        
+                        <!-- Bonus Puanları -->
+                        <div class="bonus-section">
+                            <div class="bonus-header">
+                                <div>
+                                    <h3>Bonus Puanlarınız</h3>
+                                    <p id="bonusPoints" class="bonus-amount">2,450 Puan</p>
+                                </div>
+                                <div class="status-badge" id="statusBadge">Gold Üye</div>
+                            </div>
+                            
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="progressFill" style="width: 75%;"></div>
+                                </div>
+                                <p class="progress-text">2,450 / 5,000 puanına kadar Silver'dan Gold'a çık</p>
+                            </div>
+                            
+                            <div class="status-levels">
+                                <div class="level">
+                                    <span class="level-icon">🥉</span>
+                                    <span>Bronze</span>
+                                    <span class="level-range">(0-1000)</span>
+                                </div>
+                                <div class="level">
+                                    <span class="level-icon">🥈</span>
+                                    <span>Silver</span>
+                                    <span class="level-range">(1001-5000)</span>
+                                </div>
+                                <div class="level active">
+                                    <span class="level-icon">🥇</span>
+                                    <span>Gold</span>
+                                    <span class="level-range">(5001+)</span>
+                                </div>
+                            </div>
+                            
+                            <div class="level-benefits">
+                                <h4>Gold Üye Avantajları</h4>
+                                <ul>
+                                    <li>✅ Her siparişte %10 bonus puan</li>
+                                    <li>✅ Özel indirim kuponları</li>
+                                    <li>✅ Doğum günü hediyesi</li>
+                                    <li>✅ VIP müşteri desteği</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="coupon-tabs">
+                            <button class="tab-btn active" onclick="switchCouponTab('active')">Kullanılmamış</button>
+                            <button class="tab-btn" onclick="switchCouponTab('used')">Kullanılan</button>
+                        </div>
+                        <div id="activeCoupons" class="coupon-list">
+                            <div class="coupon-card">
+                                <div class="coupon-header">50₺ İndirim</div>
+                                <p>100₺ üzeri alışverişlerde geçerli</p>
+                                <p class="coupon-code">Kod: HAPPY50</p>
+                            </div>
+                            <div class="coupon-card">
+                                <div class="coupon-header">%10 İndirim</div>
+                                <p>Tüm pizzalarda geçerli</p>
+                                <p class="coupon-code">Kod: PIZZA10</p>
+                            </div>
+                        </div>
+                        <div id="usedCoupons" class="coupon-list" style="display: none;">
+                            <div class="coupon-card used">
+                                <div class="coupon-header">25₺ İndirim</div>
+                                <p>Kullanım tarihi: 15 Aralık 2025</p>
+                                <p class="coupon-code">Kod: WELCOME25</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ödeme Araçları -->
+                    <div class="profile-section">
+                        <h2>💳 Ödeme Araçları</h2>
+                        <div class="card-list">
+                            <div class="card-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="20" fill="#FF6B6B">
+                                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                                    <line x1="2" y1="11" x2="22" y2="11"/>
+                                </svg>
+                                <div>
+                                    <p><strong>Visa Card</strong></p>
+                                    <p class="card-number">•••• •••• •••• 4242</p>
+                                </div>
+                                <button class="btn-small">Sil</button>
+                            </div>
+                            <div class="card-item">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="20" fill="#4ECDC4">
+                                    <rect x="2" y="5" width="20" height="14" rx="2"/>
+                                    <line x1="2" y1="11" x2="22" y2="11"/>
+                                </svg>
+                                <div>
+                                    <p><strong>Mastercard</strong></p>
+                                    <p class="card-number">•••• •••• •••• 5555</p>
+                                </div>
+                                <button class="btn-small">Sil</button>
+                            </div>
+                        </div>
+                        <button class="btn-secondary" onclick="addPaymentMethod()">Yeni Kart Ekle</button>
+                    </div>
+
+                    <!-- Şifre Değiştirme -->
+                    <div class="profile-section">
+                        <h2>🔐 Güvenlik</h2>
+                        <button class="btn-secondary" onclick="changePassword()">Şifre Değiştir</button>
+                    </div>
+
+                    <!-- Çıkış -->
+                    <div class="profile-section">
+                        <button class="btn-danger" onclick="logout()">Çıkış Yap</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menü Sayfası -->
+        <div id="menuPage" class="page">
+            <div class="back-button" onclick="backToRestaurant()">← Geri</div>
+            
+            <div class="menu-header">
+                <h2 id="restaurantName">Restaurant Adı</h2>
+                <p id="restaurantInfo">Telefon: <span id="restaurantPhone"></span></p>
+            </div>
+            
+            <div class="tabs">
+                <div id="categoryTabs" class="category-tabs"></div>
+            </div>
+            
+            <div id="menuItems" class="menu-items"></div>
+            
+            <div class="menu-footer">
+                <button class="btn btn-secondary" onclick="goToCart()">🛒 Sipariş Listesine Git (Adet: <span id="cartCount">0</span>)</button>
+            </div>
+        </div>
+
+        <!-- Sipariş Listesi ve Hesap Bölme -->
+        <div id="cartPage" class="page">
+            <div class="back-button" onclick="backToMenu()">← Geri</div>
+            
+            <h2>🛒 Siparişler ve Hesap Bölme</h2>
+            
+            <div id="ordersSection" class="orders-section">
+                <div id="ordersList"></div>
+            </div>
+            
+            <div class="summary-section">
+                <div class="summary-card">
+                    <h3>💰 Toplam Tutarlar</h3>
+                    <div id="summaryItems"></div>
+                    <hr>
+                    <div class="total-row">
+                        <strong>Genel Toplam:</strong>
+                        <strong id="grandTotal">0.00 ₺</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="resetAll()">Yeni Hesaplama</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ürün Detay Modal -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeItemModal()">&times;</span>
+            
+            <div id="itemModalBody">
+                <!-- Dinamik içerik -->
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js?v=20"></script>
+</body>
+</html>

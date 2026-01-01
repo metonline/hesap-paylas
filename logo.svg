@@ -1,0 +1,55 @@
+<!-- Logo SVG -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Arka plan dairesi -->
+  <circle cx="100" cy="100" r="95" fill="#fff" stroke="#FF6B6B" stroke-width="3"/>
+  
+  <!-- Restaurant (Çatal Kaşık) -->
+  <g transform="translate(40, 60)">
+    <!-- Çatal -->
+    <line x1="5" y1="0" x2="5" y2="30" stroke="#FF6B6B" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="0" y1="5" x2="10" y2="5" stroke="#FF6B6B" stroke-width="2.5" stroke-linecap="round"/>
+    <line x1="0" y1="12" x2="10" y2="12" stroke="#FF6B6B" stroke-width="2.5" stroke-linecap="round"/>
+    
+    <!-- Kaşık -->
+    <line x1="20" y1="0" x2="20" y2="20" stroke="#4ECDC4" stroke-width="2.5" stroke-linecap="round"/>
+    <ellipse cx="20" cy="28" rx="5" ry="6" fill="#4ECDC4"/>
+  </g>
+  
+  <!-- Seyahat (Uçak) -->
+  <g transform="translate(120, 50)">
+    <!-- Uçak gövdesi -->
+    <ellipse cx="0" cy="0" rx="3" ry="10" fill="#45B7D1"/>
+    <!-- Kanat -->
+    <rect x="-12" y="-2" width="24" height="4" fill="#45B7D1"/>
+    <!-- Burun -->
+    <circle cx="0" cy="-12" r="3" fill="#45B7D1"/>
+  </g>
+  
+  <!-- Ev (Kat) -->
+  <g transform="translate(60, 130)">
+    <!-- Çatı -->
+    <polygon points="0,-15 15,0 -15,0" fill="#F7DC6F"/>
+    <!-- Duvar -->
+    <rect x="-12" y="0" width="24" height="15" fill="#F7DC6F" stroke="#E67E22" stroke-width="1.5"/>
+    <!-- Pencere 1 -->
+    <rect x="-8" y="3" width="5" height="5" fill="#E67E22"/>
+    <!-- Pencere 2 -->
+    <rect x="3" y="3" width="5" height="5" fill="#E67E22"/>
+    <!-- Kapı -->
+    <rect x="-3" y="10" width="6" height="8" fill="#E67E22"/>
+    <circle cx="2" cy="14" r="0.8" fill="#F7DC6F"/>
+  </g>
+  
+  <!-- Orta: Para Sembolü (Hesap Paylaşımı) -->
+  <g transform="translate(100, 100)">
+    <circle cx="0" cy="0" r="20" fill="none" stroke="#95E1D3" stroke-width="2"/>
+    <line x1="0" y1="-12" x2="0" y2="12" stroke="#95E1D3" stroke-width="2.5" stroke-linecap="round"/>
+    <path d="M -8 -6 Q 0 -10 8 -6" fill="none" stroke="#95E1D3" stroke-width="2" stroke-linecap="round"/>
+    <path d="M -8 6 Q 0 10 8 6" fill="none" stroke="#95E1D3" stroke-width="2" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Renkli noktalar (çeşitlilik göstergesi) -->
+  <circle cx="25" cy="30" r="3" fill="#FF6B6B" opacity="0.6"/>
+  <circle cx="175" cy="40" r="3" fill="#45B7D1" opacity="0.6"/>
+  <circle cx="30" cy="170" r="3" fill="#F7DC6F" opacity="0.6"/>
+</svg>
