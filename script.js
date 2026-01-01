@@ -579,8 +579,8 @@ function goToIndividualMode() {
 
 // ADIM 2: Bilgi Girişi
 function submitInfo() {
-    const firstName = document.getElementById('firstName').value.trim();
-    const lastName = document.getElementById('lastName').value.trim();
+    const firstName = document.getElementById('infoFirstName').value.trim();
+    const lastName = document.getElementById('infoLastName').value.trim();
     
     if (!firstName) {
         alert('Lütfen adınızı girin!');
