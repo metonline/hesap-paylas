@@ -46,8 +46,10 @@ self.addEventListener('fetch', event => {
         }
         
         return fetch(event.request).then(response => {
-          // Başarılı response'u cache'le
-          if (!response || response.status !== 200 || response.type === 'error') {
+          // Başarılı response'u cache'le (chrome-extension ve data: URL'leri exclude et)
+          if (!response || response.status !== 200 || response.type === 'error' || 
+              event.request.url.startsWith('chrome-extension://') || 
+              event.request.url.startsWith('data:')) {
             return response;
           }
           

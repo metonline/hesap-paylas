@@ -220,9 +220,13 @@ function handleManualSignup(event) {
     }
     
     // API'ye kaydol
-    const submitBtn = document.querySelector('.signup-form button');
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Kaydediliyor...';
+    const form = document.querySelector('.signup-form');
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Kaydediliyor...';
+    }
     
     api.signup(firstName, lastName, email, password, phone)
         .then(response => {
@@ -242,8 +246,10 @@ function handleManualSignup(event) {
         })
         .catch(error => {
             alert('Kayıt başarısız oldu: ' + error.message);
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Kaydol';
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Kaydol';
+            }
         });
 }
 
