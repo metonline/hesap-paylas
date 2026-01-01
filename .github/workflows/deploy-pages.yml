@@ -1,0 +1,32 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Copy static files to gh-pages
+        run: |
+          mkdir -p gh-pages
+          cp index.html gh-pages/
+          cp styles.css gh-pages/
+          cp script.js gh-pages/
+          cp manifest.json gh-pages/
+          cp service-worker.js gh-pages/
+          cp -r logo.svg gh-pages/ 2>/dev/null || true
+      
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages
+          cname: hesappaylas.com
+          force_orphan: true
