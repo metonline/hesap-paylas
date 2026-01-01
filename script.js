@@ -17,6 +17,94 @@ window.addEventListener('beforeinstallprompt', (e) => {
     // Install button gösterilebilir
 });
 
+// ===== API CONFIGURATION =====
+
+const API_BASE_URL = 'http://localhost:5000/api';
+
+// API Helper Functions
+const api = {
+    async request(method, endpoint, data = null) {
+        const options = {
+            method,
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        };
+
+        const token = localStorage.getItem('hesapPaylas_token');
+        if (token) {
+            options.headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        if (data) {
+            options.body = JSON.stringify(data);
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+            const result = await response.json();
+            
+            if (!response.ok) {
+                console.error('API Error:', result);
+                throw new Error(result.error || 'API request failed');
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('API Request Error:', error);
+            throw error;
+        }
+    },
+
+    signup(firstName, lastName, email, password, phone) {
+        return this.request('POST', '/auth/signup', {
+            firstName,
+            lastName,
+            email,
+            password,
+            phone
+        });
+    },
+
+    login(email, password) {
+        return this.request('POST', '/auth/login', {
+            email,
+            password
+        });
+    },
+
+    getProfile() {
+        return this.request('GET', '/user/profile');
+    },
+
+    updateProfile(data) {
+        return this.request('PUT', '/user/profile', data);
+    },
+
+    createGroup(name, description) {
+        return this.request('POST', '/groups', {
+            name,
+            description
+        });
+    },
+
+    getGroup(groupId) {
+        return this.request('GET', `/groups/${groupId}`);
+    },
+
+    createOrder(groupId, restaurant, items) {
+        return this.request('POST', '/orders', {
+            groupId,
+            restaurant,
+            items
+        });
+    },
+
+    getOrder(orderId) {
+        return this.request('GET', `/orders/${orderId}`);
+    }
+};
+
 // Veri Yönetimi
 const app = {
     currentMode: null, // 'group' veya 'individual'
@@ -32,80 +120,78 @@ const app = {
 // Google Sign-In
 function signInWithGoogle() {
     console.log("Google ile giriş yapılıyor...");
-    // Gerçek uygulamada Google OAuth SDK entegrasyonu olur
-    // Şimdilik demo veri
-    const demoUser = {
-        firstName: "Ahmet",
-        lastName: "Yılmaz",
-        email: "ahmet@gmail.com",
-        phone: "+905412345678",
-        source: "google"
-    };
-    completeSignup(demoUser);
+    alert('Google OAuth entegrasyonu henüz uygulanmadı. Lütfen manuel kaydolunuz.');
 }
 
 // Facebook Sign-In
 function signInWithFacebook() {
     console.log("Facebook ile giriş yapılıyor...");
-    // Gerçek uygulamada Facebook SDK entegrasyonu olur
-    const demoUser = {
-        firstName: "Ayşe",
-        lastName: "Demir",
-        email: "ayse@facebook.com",
-        phone: "+905554443322",
-        source: "facebook"
-    };
-    completeSignup(demoUser);
+    alert('Facebook OAuth entegrasyonu henüz uygulanmadı. Lütfen manuel kaydolunuz.');
 }
 
 // Apple Sign-In
 function signInWithApple() {
     console.log("Apple ile giriş yapılıyor...");
-    // Gerçek uygulamada Apple SDK entegrasyonu olur
-    const demoUser = {
-        firstName: "Mehmet",
-        lastName: "Kaya",
-        email: "mehmet@icloud.com",
-        phone: "+905559998877",
-        source: "apple"
-    };
-    completeSignup(demoUser);
+    alert('Apple OAuth entegrasyonu henüz uygulanmadı. Lütfen manuel kaydolunuz.');
 }
 
 // Manuel Kaydolma
 function handleManualSignup(event) {
     event.preventDefault();
     
-    const user = {
-        firstName: document.getElementById('firstName').value.trim(),
-        lastName: document.getElementById('lastName').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        source: "manual"
-    };
+    const firstName = document.getElementById('firstName').value.trim();
+    const lastName = document.getElementById('lastName').value.trim();
+    const phone = document.getElementById('phone').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
     
     // Validasyon
-    if (!user.firstName || !user.lastName || !user.phone || !user.email) {
+    if (!firstName || !lastName || !phone || !email || !password) {
         alert('Lütfen tüm alanları doldurunuz!');
         return;
     }
     
     // Email validasyonu
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(user.email)) {
+    if (!emailRegex.test(email)) {
         alert('Geçerli bir e-posta adresi giriniz!');
         return;
     }
     
     // Telefon validasyonu
     const phoneRegex = /^(\+90|0)?\d{10}$/;
-    const cleanPhone = user.phone.replace(/\s/g, '');
+    const cleanPhone = phone.replace(/\s/g, '');
     if (!phoneRegex.test(cleanPhone)) {
         alert('Geçerli bir telefon numarası giriniz!');
         return;
     }
     
-    completeSignup(user);
+    // API'ye kaydol
+    const submitBtn = document.querySelector('.signup-form button');
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Kaydediliyor...';
+    
+    api.signup(firstName, lastName, email, password, phone)
+        .then(response => {
+            const user = response.user;
+            const token = response.token;
+            
+            // Token ve user'ı localStorage'a kaydet
+            localStorage.setItem('hesapPaylas_token', token);
+            localStorage.setItem('hesapPaylas_user', JSON.stringify(user));
+            
+            app.currentUser = user;
+            
+            showPage('homePage');
+            setTimeout(() => {
+                alert(`Hoş geldiniz ${user.first_name}! 🎉\n\nŞimdi hesap bölüşümünü başlatabilirsiniz.`);
+            }, 300);
+        })
+        .catch(error => {
+            alert('Kayıt başarısız oldu: ' + error.message);
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Kaydol';
+        });
 }
 
 // Kayıt Tamamlama
@@ -124,10 +210,27 @@ function completeSignup(userData) {
 
 // Kaydolmış Kullanıcı Kontrolü
 function checkExistingUser() {
+    const token = localStorage.getItem('hesapPaylas_token');
     const storedUser = localStorage.getItem('hesapPaylas_user');
-    if (storedUser) {
-        app.currentUser = JSON.parse(storedUser);
-        showPage('homePage');
+    
+    if (token && storedUser) {
+        try {
+            app.currentUser = JSON.parse(storedUser);
+            // Token varsa API'ye authenticate et
+            api.getProfile()
+                .then(profile => {
+                    app.currentUser = profile;
+                    localStorage.setItem('hesapPaylas_user', JSON.stringify(profile));
+                    showPage('homePage');
+                })
+                .catch(error => {
+                    // Token geçersiz, logout yap
+                    console.log('Token invalid:', error);
+                    logout();
+                });
+        } catch (e) {
+            logout();
+        }
     } else {
         showPage('onboardingPage');
     }
@@ -345,6 +448,7 @@ function logout() {
     if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
         app.currentUser = null;
         localStorage.removeItem('hesapPaylas_user');
+        localStorage.removeItem('hesapPaylas_token');
         showPage('onboardingPage');
         alert('Başarıyla çıkış yaptınız. Hoşça kalın! 👋');
     }
