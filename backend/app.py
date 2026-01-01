@@ -52,7 +52,6 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
-    groups = db.relationship('Group', secondary='group_members', backref='users')
     orders = db.relationship('Order', backref='creator', lazy=True)
     
     def set_password(self, password):
