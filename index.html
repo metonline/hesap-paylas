@@ -59,52 +59,62 @@
                 </div>
 
                 <div class="signup-section">
-                    <h3>Hemen Başla</h3>
-                    
-                    <div class="social-signin" id="googleSignInContainer">
-                        <!-- Google Sign-In button rendered here (production only) -->
+                    <!-- Tab butonları -->
+                    <div class="auth-tabs">
+                        <button class="tab-btn active" id="signupTabBtn" onclick="showAuthForm('signup')">Üye Ol</button>
+                        <button class="tab-btn" id="loginTabBtn" onclick="showAuthForm('login')">Giriş Yap</button>
                     </div>
                     
-                    <div class="social-signin" style="display: none;">
-                        <button class="social-btn facebook-btn" onclick="signInWithFacebook()">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right: 10px;">
-                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                                <path d="M10 9 H12 V20 M8 12 H16" stroke="currentColor" stroke-width="1.5"/>
-                            </svg>
-                            Facebook ile Giriş
-                        </button>
-                        <button class="social-btn apple-btn" onclick="signInWithApple()">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right: 10px;">
-                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                            </svg>
-                            Apple ile Giriş
-                        </button>
+                    <!-- Signup Form -->
+                    <div id="signupForm" class="auth-form">
+                        <h3>Hemen Başla</h3>
+                        
+                        <div class="social-signin" id="googleSignInContainer">
+                            <!-- Google Sign-In button rendered here (production only) -->
+                        </div>
+                        
+                        <div class="divider">
+                            <span>veya</span>
+                        </div>
+
+                        <form id="manualSignupForm" class="signup-form" onsubmit="handleManualSignup(event)">
+                            <div class="form-group">
+                                <input type="text" id="signupFirstName" placeholder="Ad" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="text" id="signupLastName" placeholder="Soyad" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="tel" id="phone" placeholder="Telefon (0541 234 5678)" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="email" id="email" placeholder="E-posta" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="password" id="password" placeholder="Şifre" required>
+                            </div>
+                            <button type="submit" class="btn-primary" style="width: 100%;">Üye Ol</button>
+                        </form>
+
+                        <p class="terms-text">Kaydolarak <a href="#">Şartları</a> kabul etmiş olursunuz</p>
                     </div>
+                    
+                    <!-- Login Form -->
+                    <div id="loginForm" class="auth-form" style="display: none;">
+                        <h3>Hesabına Giriş Yap</h3>
+                        
+                        <form id="manualLoginForm" class="login-form" onsubmit="handleManualLogin(event)">
+                            <div class="form-group">
+                                <input type="email" id="loginEmail" placeholder="E-posta" required>
+                            </div>
+                            <div class="form-group">
+                                <input type="password" id="loginPassword" placeholder="Şifre" required>
+                            </div>
+                            <button type="submit" class="btn-primary" style="width: 100%;">Giriş Yap</button>
+                        </form>
 
-                    <div class="divider">
-                        <span>veya</span>
+                        <p class="terms-text" style="margin-top: 15px;"><a href="#" onclick="showAuthForm('signup'); return false;">Hesabın yok mu? Üye ol</a></p>
                     </div>
-
-                    <form id="manualSignupForm" class="signup-form" onsubmit="handleManualSignup(event)">
-                        <div class="form-group">
-                            <input type="text" id="signupFirstName" placeholder="Ad" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="text" id="signupLastName" placeholder="Soyad" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="tel" id="phone" placeholder="Telefon (0541 234 5678)" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="email" id="email" placeholder="E-posta" required>
-                        </div>
-                        <div class="form-group">
-                            <input type="password" id="password" placeholder="Şifre" required>
-                        </div>
-                        <button type="submit" class="btn-primary" style="width: 100%;">Üye Ol</button>
-                    </form>
-
-                    <p class="terms-text">Kaydolarak <a href="#">Şartları</a> kabul etmiş olursunuz</p>
                 </div>
             </div>
         </div>

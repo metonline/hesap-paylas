@@ -297,6 +297,78 @@ function checkExistingUser() {
 
 // ===== SAYFA YÖNETİMİ =====
 
+// ===== AUTHENTICATION FORM SWITCHING =====
+
+function showAuthForm(formType) {
+    const signupForm = document.getElementById('signupForm');
+    const loginForm = document.getElementById('loginForm');
+    const signupTabBtn = document.getElementById('signupTabBtn');
+    const loginTabBtn = document.getElementById('loginTabBtn');
+    
+    if (formType === 'signup') {
+        signupForm.style.display = 'block';
+        loginForm.style.display = 'none';
+        signupTabBtn.classList.add('active');
+        loginTabBtn.classList.remove('active');
+    } else {
+        signupForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        signupTabBtn.classList.remove('active');
+        loginTabBtn.classList.add('active');
+    }
+}
+
+// Manuel Giriş
+function handleManualLogin(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    
+    if (!email || !password) {
+        alert('E-posta ve şifre alanlarını dolduru…!');
+        return;
+    }
+    
+    const form = document.querySelector('.login-form');
+    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    
+    if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Giriş yapılıyor...';
+    }
+    
+    api.login(email, password)
+        .then(response => {
+            const user = response.user;
+            const token = response.token;
+            
+            // Token ve user'ı localStorage'a kaydet
+            localStorage.setItem('hesapPaylas_token', token);
+            localStorage.setItem('hesapPaylas_user', JSON.stringify(user));
+            
+            app.currentUser = user;
+            
+            // Form alanlarını temizle
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            
+            // Ana sayfaya yönlendir
+            showPage('homePage');
+            alert(`Hoş geldin ${user.firstName}!`);
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+            const errorMsg = error.message || 'Giriş başarısız oldu';
+            alert(errorMsg);
+            
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Giriş Yap';
+            }
+        });
+}
+
 // Profil Sayfasına Git
 function goToProfile() {
     if (!app.currentUser) {
