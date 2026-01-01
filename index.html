@@ -61,14 +61,11 @@
                 <div class="signup-section">
                     <h3>Hemen Başla</h3>
                     
-                    <div class="social-signin">
-                        <button class="social-btn google-btn" onclick="signInWithGoogle()">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right: 10px;">
-                                <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>
-                                <path d="M8 12 H16 M12 8 V 16" stroke="currentColor" stroke-width="1.5"/>
-                            </svg>
-                            Google ile Giriş
-                        </button>
+                    <div class="social-signin" id="googleSignInContainer">
+                        <!-- Google Sign-In button rendered here -->
+                    </div>
+                    
+                    <div class="social-signin" style="display: none;">
                         <button class="social-btn facebook-btn" onclick="signInWithFacebook()">
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" style="margin-right: 10px;">
                                 <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="1.5"/>

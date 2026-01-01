@@ -29,6 +29,17 @@ window.addEventListener('load', () => {
             client_id: GOOGLE_CLIENT_ID,
             callback: handleGoogleResponse
         });
+        
+        // Render Google Sign-In button
+        const container = document.getElementById('googleSignInContainer');
+        if (container) {
+            google.accounts.id.renderButton(container, {
+                type: 'standard',
+                size: 'large',
+                text: 'signin_with',
+                locale: 'tr'
+            });
+        }
     }
 });
 
@@ -160,18 +171,7 @@ const app = {
 // Google Sign-In
 function signInWithGoogle() {
     console.log("Google ile giriş yapılıyor...");
-    // Google Sign-In button'ı trigger et
-    if (window.google && window.google.accounts) {
-        google.accounts.id.renderButton(
-            document.createElement('div'),
-            {
-                type: 'standard',
-                size: 'large',
-                text: 'signin_with',
-                locale: 'tr'
-            }
-        );
-    }
+    // SDK otomatik button render etmeli
 }
 
 // Facebook Sign-In
