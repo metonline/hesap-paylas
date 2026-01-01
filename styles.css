@@ -814,16 +814,15 @@ body {
 }
 
 .hesap {
-    color: #FF6B6B;
+    color: #4A90E2;
     font-weight: 900;
 }
 
 .slash {
-    color: #D0D0D0;
-    font-weight: 900;
-    font-size: 1.5em;
-    margin: 0 15px;
-    text-shadow: 0 3px 8px rgba(0, 0, 0, 0.3);
+    color: #999;
+    font-weight: 400;
+    font-size: 1.2em;
+    margin: 0 8px;
 }
 
 .paylas {
