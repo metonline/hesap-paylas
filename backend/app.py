@@ -12,6 +12,8 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
+from google.auth.transport import requests as google_requests
+from google.oauth2 import id_token
 
 # Load env
 load_dotenv()
@@ -165,6 +167,55 @@ def login():
         'user': user.to_dict(),
         'token': token
     }), 200
+
+@app.route('/api/auth/google', methods=['POST'])
+def google_signup():
+    """Google OAuth signup/login"""
+    data = request.get_json()
+    
+    if not data or 'token' not in data:
+        return jsonify({'error': 'Missing token'}), 400
+    
+    try:
+        # Verify Google token
+        idinfo = id_token.verify_oauth2_token(
+            data['token'],
+            google_requests.Request(),
+            '625132087724-43j0qmqgh8kds471d73oposqthr8tt1h.apps.googleusercontent.com'
+        )
+        
+        # Extract user info from Google token
+        google_id = idinfo['sub']
+        email = idinfo['email']
+        first_name = idinfo.get('given_name', 'User')
+        last_name = idinfo.get('family_name', '')
+        
+        # Check if user exists
+        user = User.query.filter_by(email=email).first()
+        
+        if not user:
+            # Create new user
+            user = User(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=None
+            )
+            # Random password (user won't need it with Google auth)
+            user.set_password(f"google_{google_id}")
+            db.session.add(user)
+            db.session.commit()
+        
+        # Generate token
+        token = generate_token(user.id)
+        return jsonify({
+            'message': 'Login successful',
+            'user': user.to_dict(),
+            'token': token
+        }), 200
+    
+    except Exception as e:
+        return jsonify({'error': f'Invalid token: {str(e)}'}), 401
 
 # ==================== Helper Functions ====================
 

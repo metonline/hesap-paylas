@@ -20,6 +20,40 @@ window.addEventListener('beforeinstallprompt', (e) => {
 // ===== API CONFIGURATION =====
 
 const API_BASE_URL = 'http://localhost:5000/api';
+const GOOGLE_CLIENT_ID = '625132087724-43j0qmqgh8kds471d73oposqthr8tt1h.apps.googleusercontent.com';
+
+// Initialize Google Sign-In
+window.addEventListener('load', () => {
+    if (window.google && window.google.accounts) {
+        google.accounts.id.initialize({
+            client_id: GOOGLE_CLIENT_ID,
+            callback: handleGoogleResponse
+        });
+    }
+});
+
+// Handle Google Sign-In Response
+function handleGoogleResponse(response) {
+    const token = response.credential;
+    console.log('Google token received:', token.substring(0, 20) + '...');
+    
+    // Backend'e token gönder
+    api.googleSignup(token)
+        .then(response => {
+            // Save token and user
+            localStorage.setItem('hesapPaylas_token', response.token);
+            localStorage.setItem('hesapPaylas_user', JSON.stringify(response.user));
+            app.currentUser = response.user;
+            
+            showPage('homePage');
+            setTimeout(() => {
+                alert(`Hoş geldiniz ${response.user.first_name}! 🎉`);
+            }, 300);
+        })
+        .catch(error => {
+            alert('Google ile giriş başarısız: ' + error.message);
+        });
+}
 
 // API Helper Functions
 const api = {
@@ -73,6 +107,12 @@ const api = {
         });
     },
 
+    googleSignup(token) {
+        return this.request('POST', '/auth/google', {
+            token
+        });
+    },
+
     getProfile() {
         return this.request('GET', '/user/profile');
     },
@@ -120,7 +160,18 @@ const app = {
 // Google Sign-In
 function signInWithGoogle() {
     console.log("Google ile giriş yapılıyor...");
-    alert('Google OAuth entegrasyonu henüz uygulanmadı. Lütfen manuel kaydolunuz.');
+    // Google Sign-In button'ı trigger et
+    if (window.google && window.google.accounts) {
+        google.accounts.id.renderButton(
+            document.createElement('div'),
+            {
+                type: 'standard',
+                size: 'large',
+                text: 'signin_with',
+                locale: 'tr'
+            }
+        );
+    }
 }
 
 // Facebook Sign-In
