@@ -7,7 +7,7 @@ SQLAlchemy==2.0.19
 Flask-SQLAlchemy==3.0.5
 Flask-CORS==4.0.0
 Flask-JWT-Extended==4.4.4
-PyJWT==2.8.1
+PyJWT==2.10.1
 requests==2.31.0
 stripe==5.4.0
 gunicorn==21.2.0

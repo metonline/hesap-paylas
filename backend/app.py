@@ -21,10 +21,11 @@ app = Flask(__name__)
 CORS(app)
 
 # Config
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL',
-    'postgresql://localhost/hesap_paylas'
-)
+database_url = os.getenv('DATABASE_URL', 'sqlite:///hesap_paylas.db')
+# Heroku PostgreSQL fix for SQLAlchemy 2.0
+if database_url.startswith('postgres://'):
+    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret')
 app.config['JWT_SECRET'] = os.getenv('JWT_SECRET', 'jwt-secret')
