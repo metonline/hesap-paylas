@@ -24,7 +24,9 @@ const GOOGLE_CLIENT_ID = '625132087724-43j0qmqgh8kds471d73oposqthr8tt1h.apps.goo
 
 // Initialize Google Sign-In
 window.addEventListener('load', () => {
-    if (window.google && window.google.accounts) {
+    // Google Sign-In'i production'da enable et
+    // Localhost'ta disabled (localhost OAuth yapılandırması yok)
+    if (window.google && window.google.accounts && window.location.hostname !== 'localhost') {
         google.accounts.id.initialize({
             client_id: GOOGLE_CLIENT_ID,
             callback: handleGoogleResponse
