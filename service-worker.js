@@ -1,5 +1,5 @@
 // Service Worker - PWA desteği
-const CACHE_NAME = 'hesap-paylas-v1';
+const CACHE_NAME = 'hesap-paylas-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
