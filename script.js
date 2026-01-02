@@ -723,7 +723,7 @@ const colorNames = [
 
 function showGroupCodePage(groupData) {
     console.log('showGroupCodePage çağrıldı, groupData:', groupData);
-    // Başlık güncelle - sadece çiçek adı göster
+    // Başlık güncelle - sadece renk adı göster
     document.getElementById('groupWelcomeTitle').textContent = groupData.name;
     document.getElementById('groupCodeDisplay').textContent = groupData.code;
     console.log('Kod yazıldı:', groupData.code);
@@ -733,25 +733,39 @@ function showGroupCodePage(groupData) {
     app.currentGroupName = groupData.name;
     app.currentGroupFullCode = groupData.fullCode;
     
-    // QR kodu temizle
-    const qrContainer = document.getElementById('qrCodeContainer');
-    qrContainer.innerHTML = '';
-    
-    // QR kod oluştur
-    try {
-        new QRCode(qrContainer, {
-            text: groupData.fullCode,
-            width: 200,
-            height: 200,
-            colorDark: '#11a853',
-            colorLight: '#ffffff'
-        });
-    } catch (e) {
-        console.log('QR kod oluşturulamadı:', e);
-    }
-    
     // Grup kodu sayfasını göster
     showPage('groupCodePage');
+    
+    // QR kod oluşturma işlemini biraz sonra yap (sayfaydın render olduktan sonra)
+    setTimeout(() => {
+        const qrContainer = document.getElementById('qrCodeContainer');
+        console.log('QR Container:', qrContainer);
+        console.log('QR Text:', groupData.fullCode);
+        
+        if (qrContainer) {
+            qrContainer.innerHTML = '';
+            
+            try {
+                if (typeof QRCode !== 'undefined') {
+                    new QRCode(qrContainer, {
+                        text: groupData.fullCode,
+                        width: 200,
+                        height: 200,
+                        colorDark: '#11a853',
+                        colorLight: '#ffffff'
+                    });
+                    console.log('QR kod başarıyla oluşturuldu');
+                } else {
+                    console.log('QRCode kütüphanesi yüklenmedi!');
+                }
+            } catch (e) {
+                console.log('QR kod oluşturulamadı - Hata:', e.message);
+                console.log('Hata detayları:', e);
+            }
+        } else {
+            console.log('qrCodeContainer bulunamadı!');
+        }
+    }, 100);
 }
 
 // Grup kodu sayfasından devam et
