@@ -722,8 +722,13 @@ const flowerNames = [
 
 function showGroupCodePage(groupData) {
     // Grup adını ve kodunu göster
-    document.getElementById('groupNameDisplay').textContent = groupData.name;
+    document.getElementById('groupWelcomeTitle').textContent = `${groupData.name} İsimli Grupa Hoşgeldiniz!`;
     document.getElementById('groupCodeDisplay').textContent = groupData.code;
+    
+    // Paylaşma için global değişkene kaydet
+    app.currentGroupCode = groupData.code;
+    app.currentGroupName = groupData.name;
+    app.currentGroupFullCode = groupData.fullCode;
     
     // QR kodu temizle
     const qrContainer = document.getElementById('qrCodeContainer');
@@ -776,6 +781,44 @@ function generateGroupId() {
         code: numericCode,
         fullCode: `${randomFlower}-${numericCode}`
     };
+}
+
+// PAYLAŞMA SEÇENEKLERİ
+function showShareOptions() {
+    document.getElementById('shareModal').style.display = 'flex';
+}
+
+function closeShareModal() {
+    document.getElementById('shareModal').style.display = 'none';
+}
+
+function shareViaWhatsApp() {
+    const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl: ${app.currentGroupCode}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+    closeShareModal();
+}
+
+function shareViaTelegram() {
+    const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl: ${app.currentGroupCode}`;
+    window.open(`https://t.me/share/url?url=&text=${encodeURIComponent(message)}`, '_blank');
+    closeShareModal();
+}
+
+function shareViaEmail() {
+    const subject = `${app.currentGroupName} Grubuna Davet`;
+    const body = `Merhaba!\n\n${app.currentGroupName} isimli gruba katılmaya davet ediyorum.\n\nGrup Kodu: ${app.currentGroupCode}`;
+    window.location.href = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    closeShareModal();
+}
+
+function copyGroupCode() {
+    const text = `${app.currentGroupName}: ${app.currentGroupCode}`;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Grup kodu kopyalandı!');
+        closeShareModal();
+    }).catch(() => {
+        alert('Kopyalama başarısız oldu');
+    });
 }
 
 // ADIM 3: Restaurant Seçimi
