@@ -722,7 +722,7 @@ const flowerNames = [
 
 function showGroupCodePage(groupData) {
     // Grup adını ve kodunu göster
-    document.getElementById('groupWelcomeTitle').textContent = `${groupData.name} İsimli Grupa Hoşgeldiniz!`;
+    document.getElementById('groupWelcomeTitle').textContent = `Hoşgeldiniz! Grup Adınız : ${groupData.name}`;
     document.getElementById('groupCodeDisplay').textContent = groupData.code;
     
     // Paylaşma için global değişkene kaydet
