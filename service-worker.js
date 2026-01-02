@@ -1,18 +1,28 @@
 // Service Worker - PWA desteği
 const CACHE_NAME = 'hesap-paylas-v2';
+
+// GitHub Pages pathed deployment'ı handle et
+const isGitHubPages = self.location.hostname === 'metonline.github.io';
+const basePath = isGitHubPages ? '/hesap-paylas' : '';
+
 const ASSETS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/styles.css',
-  '/script.js',
-  '/manifest.json'
+  basePath + '/',
+  basePath + '/index.html',
+  basePath + '/styles.css',
+  basePath + '/script.js',
+  basePath + '/manifest.json'
 ];
 
 // Service Worker kurulum
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(ASSETS_TO_CACHE);
+      // Hataları yakala, fallback kullan
+      return cache.addAll(ASSETS_TO_CACHE).catch(error => {
+        console.warn('Cache addAll hatası (beklenen):', error);
+        // Hata oluşsa bile devam et
+        return Promise.resolve();
+      });
     })
   );
   self.skipWaiting();
