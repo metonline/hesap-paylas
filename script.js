@@ -1080,9 +1080,6 @@ function resetAll() {
 }
 
 // Yardımcı Fonksiyonlar
-function generateGroupId() {
-    return Math.random().toString(36).substr(2, 9).toUpperCase();
-}
 // Sayfa Yüklendiğinde
 document.addEventListener('DOMContentLoaded', function() {
     loadFromLocalStorage();
