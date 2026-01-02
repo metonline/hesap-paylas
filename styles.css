@@ -895,11 +895,29 @@ body {
 }
 
 /* Seçenekler Grid */
+.logo-card {
+    background: linear-gradient(135deg, #e8f0ff 0%, #f5e8ff 100%);
+    padding: 12px 20px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    height: fit-content;
+}
+
+.logo-card h1 {
+    margin-bottom: 2px;
+}
+
+.logo-card p {
+    margin-top: 2px;
+    margin-bottom: 0;
+}
+
 .options-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    margin-top: 30px;
+    margin-top: 20px;
 }
 
 .option-card {
