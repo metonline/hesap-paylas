@@ -251,6 +251,8 @@ body {
     transition: border-color 0.3s ease;
     height: auto;
     line-height: 1.2;
+    pointer-events: auto;
+    cursor: text;
 }
 
 .form-group input:focus {
