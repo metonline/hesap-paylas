@@ -723,8 +723,8 @@ const flowerNames = [
 
 function showGroupCodePage(groupData) {
     console.log('showGroupCodePage çağrıldı, groupData:', groupData);
-    // Başlık güncelle
-    document.getElementById('groupWelcomeTitle').textContent = `Grubunuzun Adı: ${groupData.name}`;
+    // Başlık güncelle - sadece çiçek adı göster
+    document.getElementById('groupWelcomeTitle').textContent = groupData.name;
     document.getElementById('groupCodeDisplay').textContent = groupData.code;
     console.log('Kod yazıldı:', groupData.code);
     
