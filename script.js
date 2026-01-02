@@ -6,6 +6,9 @@ if ('serviceWorker' in navigator) {
         }).catch(error => {
             console.log('Service Worker registration failed:', error);
         });
+        
+        // Deep link'i handle et
+        handleDeepLink();
     });
 }
 
@@ -16,6 +19,35 @@ window.addEventListener('beforeinstallprompt', (e) => {
     deferredPrompt = e;
     // Install button gösterilebilir
 });
+
+// Deep Link Handler - URL parametrelerini kontrol et
+function handleDeepLink() {
+    const params = new URLSearchParams(window.location.search);
+    const groupCode = params.get('code');
+    
+    if (groupCode && /^\d{3}-\d{3}-\d{3}$/.test(groupCode)) {
+        console.log('Deep link detected with code:', groupCode);
+        
+        // Eğer user login'se direkt gruba katıl
+        const user = localStorage.getItem('hesapPaylas_user');
+        if (user) {
+            // User varsa, gruba katılma akışını başlat
+            app.currentMode = 'join_group';
+            app.groupCode = groupCode;
+            
+            setTimeout(() => {
+                document.getElementById('infoTitle').innerText = 'Bilgilerinizi Girin';
+                document.getElementById('groupIdGroup').style.display = 'none';
+                document.getElementById('infoFirstName').value = '';
+                document.getElementById('infoLastName').value = '';
+                showPage('infoPage');
+            }, 500);
+        } else {
+            // Login değilse, group code'u sessionStorage'e kaydet ve login sayfasına yönlendir
+            sessionStorage.setItem('pendingGroupCode', groupCode);
+        }
+    }
+}
 
 // ===== API CONFIGURATION =====
 
@@ -701,18 +733,32 @@ function scanQRCode(video, canvas, resultDiv) {
             // Kamerayı kapat
             stopQRScanner();
             
-            // QR kodundan bilgi çıkar (format: "groupname-xxx-xxx-xxx")
-            const parts = code.data.split('-');
-            if (parts.length === 4) {
-                const groupCode = `${parts[1]}-${parts[2]}-${parts[3]}`;
-                resultDiv.innerHTML = `<p style="color: green; font-weight: bold;">✓ Kod okundu: ${groupCode}</p>`;
+            // Deep link formatını kontrol et: hesappaylas://join?code=xxx-xxx-xxx&name=groupname
+            if (code.data.startsWith('hesappaylas://')) {
+                // Deep link formatı
+                const urlParams = new URLSearchParams(code.data.replace('hesappaylas://join?', ''));
+                const groupCode = urlParams.get('code');
                 
-                // Sadece kodu al, bilgi sayfasında girişi yapacak
-                proceedToJoinGroup(groupCode);
+                if (groupCode && /^\d{3}-\d{3}-\d{3}$/.test(groupCode)) {
+                    resultDiv.innerHTML = `<p style="color: green; font-weight: bold;">✓ Kod okundu: ${groupCode}</p>`;
+                    proceedToJoinGroup(groupCode);
+                } else {
+                    resultDiv.innerHTML = '<p style="color: red;">Geçersiz QR kod</p>';
+                    qrScannerActive = true;
+                    setTimeout(() => scanQRCode(video, canvas, resultDiv), 500);
+                }
             } else {
-                resultDiv.innerHTML = '<p style="color: orange;">Geçersiz QR kod formatı</p>';
-                qrScannerActive = true;
-                setTimeout(() => scanQRCode(video, canvas, resultDiv), 500);
+                // Eski format uyumluluğu: "groupname-xxx-xxx-xxx"
+                const parts = code.data.split('-');
+                if (parts.length === 4) {
+                    const groupCode = `${parts[1]}-${parts[2]}-${parts[3]}`;
+                    resultDiv.innerHTML = `<p style="color: green; font-weight: bold;">✓ Kod okundu: ${groupCode}</p>`;
+                    proceedToJoinGroup(groupCode);
+                } else {
+                    resultDiv.innerHTML = '<p style="color: orange;">Geçersiz QR kod formatı</p>';
+                    qrScannerActive = true;
+                    setTimeout(() => scanQRCode(video, canvas, resultDiv), 500);
+                }
             }
         } else {
             requestAnimationFrame(() => scanQRCode(video, canvas, resultDiv));
@@ -856,8 +902,10 @@ function showGroupCodePage(groupData) {
     setTimeout(() => {
         const qrContainer = document.getElementById('qrCodeContainer');
         console.log('QR Container:', qrContainer);
-        console.log('QR Text:', groupData.fullCode);
-        console.log('QRCode library yüklü mü?', typeof QRCode !== 'undefined');
+        
+        // QR kodunda deep link formatı kullan: hesappaylas://join?code=xxx-xxx-xxx&name=groupname
+        const deepLinkUrl = `hesappaylas://join?code=${groupData.code}&name=${encodeURIComponent(groupData.name)}`;
+        console.log('Deep Link URL:', deepLinkUrl);
         
         if (qrContainer) {
             // Var olan QR kodu temizle
@@ -867,7 +915,7 @@ function showGroupCodePage(groupData) {
                 if (typeof QRCode !== 'undefined') {
                     console.log('QR kod oluşturmaya başlanıyor...');
                     new QRCode(qrContainer, {
-                        text: groupData.fullCode,
+                        text: deepLinkUrl,
                         width: 200,
                         height: 200,
                         colorDark: '#11a853',
