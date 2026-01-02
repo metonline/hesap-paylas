@@ -635,15 +635,37 @@ function backToMenu() {
     showPage('menuPage');
 }
 
-// ADIM 1: Grup/Sipariş Seçimi
+// ADIM 1: Grup Kur / Katıl Seçimi
 function goToGroupMode() {
-    app.currentMode = 'group';
-    document.getElementById('infoTitle').innerText = 'Grup / Sipariş Bilgileri';
-    document.getElementById('groupIdGroup').style.display = 'block';
+    showPage('groupChoicePage');
+}
+
+// Grup Kurma
+function goToCreateGroup() {
+    app.currentMode = 'create_group';
+    document.getElementById('infoTitle').innerText = 'Grup Bilgileri';
+    document.getElementById('groupIdGroup').style.display = 'none';
     document.getElementById('infoFirstName').value = '';
     document.getElementById('infoLastName').value = '';
     document.getElementById('groupId').value = '';
     showPage('infoPage');
+}
+
+// Grup Katılma
+function goToJoinGroup() {
+    app.currentMode = 'join_group';
+    
+    // Kod girişi için modal göster
+    const groupCode = prompt('Lütfen grup kodunu giriniz:');
+    if (groupCode && groupCode.trim()) {
+        // Grup kodunu app'e kaydet ve bilgi sayfasına git
+        app.groupCode = groupCode.trim();
+        document.getElementById('infoTitle').innerText = 'Bilgilerinizi Girin';
+        document.getElementById('groupIdGroup').style.display = 'none';
+        document.getElementById('infoFirstName').value = '';
+        document.getElementById('infoLastName').value = '';
+        showPage('infoPage');
+    }
 }
 
 // Rezervasyon / Kupon Sayfası
@@ -666,17 +688,43 @@ function submitInfo() {
         alert('Lütfen adınızı girin!');
         return;
     }
-    
+
     app.currentUser = `${firstName} ${lastName}`;
     app.cart[app.currentUser] = [];
     
-    if (app.currentMode === 'group') {
-        app.groupId = document.getElementById('groupId').value.trim() || generateGroupId();
+    // Grup kuruyorsa, grup kodu oluştur
+    if (app.currentMode === 'create_group') {
+        app.groupId = generateGroupId();
+        
+        // Grup kodu göstereceği sayfaya yönlendir
+        showGroupCodePage(app.groupId);
+        return;
+    }
+    
+    // Gruba katılıyorsa, mevcut grup kodunu kullan
+    if (app.currentMode === 'join_group') {
+        app.groupId = app.groupCode;
     }
     
     saveToLocalStorage();
     loadRestaurants();
     showPage('restaurantPage');
+}
+
+// Grup Kodu Sayfası
+function showGroupCodePage(groupCode) {
+    const message = `Grup Kodunuz: ${groupCode}\n\nBu kodu arkadaşlarınıza vererek gruba davet edebilirsiniz.\n\nDevam etmek için butona tıklayın.`;
+    alert(message);
+    
+    // Devam et
+    saveToLocalStorage();
+    loadRestaurants();
+    showPage('restaurantPage');
+}
+
+// Grup Kodu Oluştur
+function generateGroupId() {
+    return 'GRP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 }
 
 // ADIM 3: Restaurant Seçimi
