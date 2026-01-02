@@ -52,38 +52,38 @@ body {
 .onboarding-content {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 12px;
     max-width: 500px;
     margin: 0 auto;
 }
 
 .onboarding-header {
     text-align: center;
-    padding: 20px 0;
+    padding: 8px 0;
 }
 
 .benefits-section {
     background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-    padding: 25px;
+    padding: 12px 15px;
     border-radius: var(--border-radius);
 }
 
 .benefits-section h2 {
     text-align: center;
     color: #333;
-    margin-bottom: 20px;
-    font-size: 1.3em;
+    margin-bottom: 8px;
+    font-size: 1em;
 }
 
 .benefits-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 15px;
+    gap: 8px;
 }
 
 .benefit-card {
     background: white;
-    padding: 15px;
+    padding: 10px 8px;
     border-radius: 10px;
     text-align: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -95,14 +95,15 @@ body {
 }
 
 .benefit-icon {
-    font-size: 2em;
-    margin-bottom: 8px;
+    font-size: 1.5em;
+    margin-bottom: 4px;
 }
 
 .benefit-card p {
-    font-size: 0.95em;
+    font-size: 0.75em;
     color: #333;
     font-weight: 500;
+    margin: 0;
 }
 
 .signup-section {
@@ -255,13 +256,14 @@ body {
 .btn-primary {
     background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
     color: white;
-    padding: 12px 20px;
+    padding: 9px 15px;
     border: none;
     border-radius: 8px;
-    font-size: 1em;
+    font-size: 0.9em;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
+    min-height: auto;
 }
 
 .btn-primary:hover {
