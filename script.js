@@ -809,9 +809,9 @@ function shareViaWhatsApp() {
     closeShareModal();
 }
 
-function shareViaTelegram() {
+function shareViaSMS() {
     const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl: ${app.currentGroupCode}`;
-    window.open(`https://t.me/share/url?url=&text=${encodeURIComponent(message)}`, '_blank');
+    window.location.href = `sms:?body=${encodeURIComponent(message)}`;
     closeShareModal();
 }
 
