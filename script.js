@@ -721,9 +721,8 @@ const flowerNames = [
 ];
 
 function showGroupCodePage(groupData) {
-    // Grup adını ve kodunu göster
-    document.getElementById('groupWelcomeTitle').textContent = `Hoşgeldiniz! Grup Adınız : ${groupData.name}`;
-    document.getElementById('groupNameDisplay').textContent = groupData.name;
+    // Başlık güncelle
+    document.getElementById('groupWelcomeTitle').textContent = `Grubunuzun Adı: ${groupData.name}`;
     document.getElementById('groupCodeDisplay').textContent = groupData.code;
     
     // Paylaşma için global değişkene kaydet
@@ -761,9 +760,9 @@ function continueFromGroupCode() {
         app.currentUserName = 'Kullanıcı';
     }
     app.cart[app.currentUserName] = [];
-    saveToLocalStorage();
-    loadRestaurants();
-    showPage('restaurantPage');
+    
+    // Gruba katılma/oluşturma işlemi tamamlandığında ana sayfaya dön
+    backToHome();
 }
 
 // Grup Kodu Oluştur (Çiçek Adı + Numara)

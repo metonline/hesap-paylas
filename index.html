@@ -174,31 +174,29 @@
             <div class="back-button" onclick="backToHome()">← Geri</div>
             
             <div class="form-container" style="text-align: center;">
-                <h2 id="groupWelcomeTitle" style="font-size: 1.4em; margin-bottom: 25px; font-weight: 600;"></h2>
+                <h2 style="font-size: 1.3em; margin-bottom: 8px; font-weight: 600; color: #333;">Gruba Hoşgeldiniz...</h2>
+                <h3 id="groupWelcomeTitle" style="font-size: 1.1em; margin-bottom: 30px; font-weight: 500; color: #666;"></h3>
                 
                 <!-- QR Kodu - Başlığın hemen altında -->
                 <div style="margin-bottom: 35px;">
-                    <p style="color: #999; font-size: 0.9em; margin-bottom: 12px; font-weight: 600;">QR Kodu Tarat:</p>
                     <div id="qrCodeContainer" style="display: inline-block; padding: 15px; background: white; border-radius: 10px; border: 2px solid #f0f0f0;"></div>
                 </div>
                 
-                <!-- 2 Sütunlu Grid: Kod ve Paylaş Butonu -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 35px;">
-                    <!-- Grup Kodu -->
-                    <div style="background: #f9f9f9; padding: 25px; border-radius: 10px; border: 2px solid #4A90E2;">
-                        <p style="color: #999; font-size: 0.85em; margin: 0 0 10px 0; font-weight: 600;">Grup Kodu</p>
-                        <p id="groupCodeDisplay" style="font-size: 1.8em; color: #333; font-weight: bold; letter-spacing: 3px; font-family: monospace; margin: 0;"></p>
+                <!-- 2 Sütunlu Grid: Kod Card ve Paylaş Butonu -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <!-- Kod Output Card -->
+                    <div style="background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%); padding: 30px; border-radius: 10px; border: 2px solid #4A90E2; box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1);">
+                        <p style="color: #999; font-size: 0.85em; margin: 0 0 15px 0; font-weight: 600; text-transform: uppercase;">Kod</p>
+                        <p id="groupCodeDisplay" style="font-size: 2em; color: #333; font-weight: bold; letter-spacing: 4px; font-family: monospace; margin: 0;"></p>
                     </div>
                     
                     <!-- Paylaş Butonu -->
                     <div style="display: flex; flex-direction: column; justify-content: center;">
-                        <button onclick="showShareOptions()" style="padding: 25px 20px; font-size: 1.2em; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 2px 8px rgba(17, 168, 83, 0.3); transition: transform 0.2s;">📤 Paylaş</button>
+                        <button onclick="showShareOptions()" style="padding: 30px 20px; font-size: 1.3em; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(17, 168, 83, 0.3); transition: all 0.3s; height: 100%;">📤 Paylaş</button>
                     </div>
                 </div>
                 
-                <p style="color: #666; margin-top: 20px; font-size: 0.95em; line-height: 1.6;">Grup kodunu arkadaşlarınıza vererek veya<br>QR kodu taratarak grupa katılmalarını sağlayabilirsiniz.</p>
-                
-                <button class="btn btn-primary" onclick="continueFromGroupCode()" style="margin-top: 35px;">Devam Et</button>
+                <p style="color: #666; margin-top: 30px; font-size: 0.95em; line-height: 1.6;">Kod veya QR koduyla arkadaşlarınızı<br>gruba davet edebilirsiniz.</p>
             </div>
         </div>
 
