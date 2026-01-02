@@ -645,6 +645,7 @@ function goToCreateGroup() {
     app.currentMode = 'create_group';
     // Grubu hemen oluştur - infoPage'i atla
     const groupData = generateGroupId();
+    console.log('Grup Oluşturuldu:', groupData);
     app.groupId = groupData.fullCode;
     app.groupName = groupData.name;
     showGroupCodePage(groupData);
@@ -721,9 +722,11 @@ const flowerNames = [
 ];
 
 function showGroupCodePage(groupData) {
+    console.log('showGroupCodePage çağrıldı, groupData:', groupData);
     // Başlık güncelle
     document.getElementById('groupWelcomeTitle').textContent = `Grubunuzun Adı: ${groupData.name}`;
     document.getElementById('groupCodeDisplay').textContent = groupData.code;
+    console.log('Kod yazıldı:', groupData.code);
     
     // Paylaşma için global değişkene kaydet
     app.currentGroupCode = groupData.code;
