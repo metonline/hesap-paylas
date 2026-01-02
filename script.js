@@ -644,13 +644,10 @@ function goToCreateGroup() {
 function goToJoinGroup() {
     app.currentMode = 'join_group';
     
-    // QR okuyucu sayfasını göster
-    showPage('qrScannerPage');
-    
-    // Kamerayı aç
-    setTimeout(() => {
-        startQRScanner();
-    }, 100);
+    // Manuel kod girişi seçeneği göster
+    showPage('joinCodePage');
+    document.getElementById('joinGroupCode').value = '';
+    document.getElementById('joinCodeResult').innerHTML = '';
 }
 
 // QR Kod Okuyucu Fonksiyonları
@@ -710,19 +707,8 @@ function scanQRCode(video, canvas, resultDiv) {
                 const groupCode = `${parts[1]}-${parts[2]}-${parts[3]}`;
                 resultDiv.innerHTML = `<p style="color: green; font-weight: bold;">✓ Kod okundu: ${groupCode}</p>`;
                 
-                // Gruba katılma işlemini başlat
-                app.currentMode = 'join_group';
-                app.groupCode = groupCode;
-                
-                document.getElementById('infoTitle').innerText = 'Bilgilerinizi Girin';
-                document.getElementById('groupIdGroup').style.display = 'none';
-                document.getElementById('infoFirstName').value = '';
-                document.getElementById('infoLastName').value = '';
-                
-                // 1 saniye sonra info sayfasına git
-                setTimeout(() => {
-                    showPage('infoPage');
-                }, 1000);
+                // Sadece kodu al, bilgi sayfasında girişi yapacak
+                proceedToJoinGroup(groupCode);
             } else {
                 resultDiv.innerHTML = '<p style="color: orange;">Geçersiz QR kod formatı</p>';
                 qrScannerActive = true;
@@ -736,7 +722,50 @@ function scanQRCode(video, canvas, resultDiv) {
     }
 }
 
-function stopQRScanner() {
+function backToJoinCodePage() {
+    showPage('joinCodePage');
+    document.getElementById('joinGroupCode').value = '';
+    document.getElementById('joinCodeResult').innerHTML = '';
+}
+
+function proceedToJoinGroup(groupCode) {
+    // Gruba katılma işlemini başlat
+    app.currentMode = 'join_group';
+    app.groupCode = groupCode.trim();
+    
+    document.getElementById('infoTitle').innerText = 'Bilgilerinizi Girin';
+    document.getElementById('groupIdGroup').style.display = 'none';
+    document.getElementById('infoFirstName').value = '';
+    document.getElementById('infoLastName').value = '';
+    
+    // 1 saniye sonra info sayfasına git
+    setTimeout(() => {
+        showPage('infoPage');
+    }, 1000);
+}
+
+function submitJoinCode() {
+    const groupCode = document.getElementById('joinGroupCode').value.trim();
+    const resultDiv = document.getElementById('joinCodeResult');
+    
+    if (!groupCode) {
+        resultDiv.innerHTML = '<p style="color: red;">Lütfen grup kodunu giriniz!</p>';
+        return;
+    }
+    
+    // Kod formatını doğrula (xxx-xxx-xxx)
+    if (!/^\d{3}-\d{3}-\d{3}$/.test(groupCode)) {
+        resultDiv.innerHTML = '<p style="color: red;">Geçersiz kod formatı! (xxx-xxx-xxx şeklinde olmalı)</p>';
+        return;
+    }
+    
+    resultDiv.innerHTML = '<p style="color: green; font-weight: bold;">✓ Kod doğrulandı!</p>';
+    
+    // Bilgi sayfasına git
+    setTimeout(() => {
+        proceedToJoinGroup(groupCode);
+    }, 500);
+}
     qrScannerActive = false;
     const video = document.getElementById('qrVideo');
     

@@ -188,9 +188,31 @@
             </div>
         </div>
 
+        <!-- Grup Kodu Giriş Sayfası -->
+        <div id="joinCodePage" class="page">
+            <div class="back-button" onclick="backToGroupChoice()">← Geri</div>
+            
+            <div class="form-container" style="text-align: center; padding: 15px;">
+                <h2 style="margin-bottom: 20px;">Grup Kodunu Gir</h2>
+                
+                <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                    <button onclick="showPage('qrScannerPage'); setTimeout(() => startQRScanner(), 100);" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95em;">📷 QR Okut</button>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; text-align: left; margin-bottom: 8px; font-weight: 600; color: #333;">Grup Kodu</label>
+                    <input type="text" id="joinGroupCode" placeholder="xxx-xxx-xxx" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; font-family: monospace; letter-spacing: 2px; box-sizing: border-box;">
+                </div>
+                
+                <button onclick="submitJoinCode()" style="width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-bottom: 15px;">Devam Et</button>
+                
+                <div id="joinCodeResult"></div>
+            </div>
+        </div>
+
         <!-- QR Kod Okuyucu Sayfası -->
         <div id="qrScannerPage" class="page">
-            <div class="back-button" onclick="backToGroupChoice()">← Geri</div>
+            <div class="back-button" onclick="backToJoinCodePage()">← Geri</div>
             
             <div class="form-container" style="text-align: center; padding: 15px;">
                 <h2 style="margin-bottom: 20px;">QR Kod Okut</h2>
