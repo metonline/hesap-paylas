@@ -714,11 +714,11 @@ function submitInfo() {
 }
 
 // Grup Kodu Sayfası
-// Çiçek İsimler
-const flowerNames = [
-    'Gül', 'Lale', 'Papatya', 'Yasemin', 'Orkide', 'Freesia', 'Karanfil',
-    'Krizantem', 'Cezayir', 'Lilac', 'Magolia', 'Azalea', 'Kameya', 'Fersem',
-    'Gerbera', 'Cala', 'Anthurium', 'Strelitzia', 'Aster', 'Hortensiya'
+// Renk İsimler
+const colorNames = [
+    'Kırmızı', 'Mavi', 'Yeşil', 'Sarı', 'Turuncu', 'Mor', 'Pembe',
+    'Siyah', 'Beyaz', 'Gri', 'Kahverengi', 'Turkuaz', 'İndigo', 'Lila',
+    'Kestane', 'Açık Mavi', 'Açık Yeşil', 'Açık Kırmızı', 'Koyu Mavi', 'Koyu Yeşil'
 ];
 
 function showGroupCodePage(groupData) {
@@ -770,8 +770,8 @@ function continueFromGroupCode() {
 
 // Grup Kodu Oluştur (Çiçek Adı + Numara)
 function generateGroupId() {
-    // Rastgele çiçek ismi seç
-    const randomFlower = flowerNames[Math.floor(Math.random() * flowerNames.length)];
+    // Rastgele renk ismi seç
+    const randomColor = colorNames[Math.floor(Math.random() * colorNames.length)];
     
     // 9 haneli numara üret (xxx-xxx-xxx formatında)
     const num1 = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
@@ -780,9 +780,9 @@ function generateGroupId() {
     const numericCode = `${num1}-${num2}-${num3}`;
     
     return {
-        name: randomFlower,
+        name: randomColor,
         code: numericCode,
-        fullCode: `${randomFlower}-${numericCode}`
+        fullCode: `${randomColor}-${numericCode}`
     };
 }
 
