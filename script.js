@@ -644,17 +644,115 @@ function goToCreateGroup() {
 function goToJoinGroup() {
     app.currentMode = 'join_group';
     
-    // Kod girişi için modal göster
-    const groupCode = prompt('Lütfen grup kodunu giriniz:');
-    if (groupCode && groupCode.trim()) {
-        // Grup kodunu app'e kaydet ve bilgi sayfasına git
-        app.groupCode = groupCode.trim();
-        document.getElementById('infoTitle').innerText = 'Bilgilerinizi Girin';
-        document.getElementById('groupIdGroup').style.display = 'none';
-        document.getElementById('infoFirstName').value = '';
-        document.getElementById('infoLastName').value = '';
-        showPage('infoPage');
+    // QR okuyucu sayfasını göster
+    showPage('qrScannerPage');
+    
+    // Kamerayı aç
+    setTimeout(() => {
+        startQRScanner();
+    }, 100);
+}
+
+// QR Kod Okuyucu Fonksiyonları
+let qrScannerActive = false;
+let qrScannerStream = null;
+
+function startQRScanner() {
+    const video = document.getElementById('qrVideo');
+    const canvas = document.getElementById('qrCanvas');
+    const resultDiv = document.getElementById('qrResult');
+    
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        resultDiv.innerHTML = '<p style="color: red;">Kamera erişimi desteklenmiyor!</p>';
+        return;
     }
+    
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => {
+            qrScannerStream = stream;
+            qrScannerActive = true;
+            video.srcObject = stream;
+            video.play();
+            
+            // QR okuma döngüsünü başlat
+            scanQRCode(video, canvas, resultDiv);
+        })
+        .catch(err => {
+            console.error('Kamera erişimi hatası:', err);
+            resultDiv.innerHTML = '<p style="color: red;">Kamera erişimi reddedildi!</p>';
+        });
+}
+
+function scanQRCode(video, canvas, resultDiv) {
+    if (!qrScannerActive) return;
+    
+    const context = canvas.getContext('2d');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+    
+    if (typeof jsQR !== 'undefined') {
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+        
+        if (code) {
+            console.log('QR Kod Okundu:', code.data);
+            qrScannerActive = false;
+            
+            // Kamerayı kapat
+            stopQRScanner();
+            
+            // QR kodundan bilgi çıkar (format: "groupname-xxx-xxx-xxx")
+            const parts = code.data.split('-');
+            if (parts.length === 4) {
+                const groupCode = `${parts[1]}-${parts[2]}-${parts[3]}`;
+                resultDiv.innerHTML = `<p style="color: green; font-weight: bold;">✓ Kod okundu: ${groupCode}</p>`;
+                
+                // Gruba katılma işlemini başlat
+                app.currentMode = 'join_group';
+                app.groupCode = groupCode;
+                
+                document.getElementById('infoTitle').innerText = 'Bilgilerinizi Girin';
+                document.getElementById('groupIdGroup').style.display = 'none';
+                document.getElementById('infoFirstName').value = '';
+                document.getElementById('infoLastName').value = '';
+                
+                // 1 saniye sonra info sayfasına git
+                setTimeout(() => {
+                    showPage('infoPage');
+                }, 1000);
+            } else {
+                resultDiv.innerHTML = '<p style="color: orange;">Geçersiz QR kod formatı</p>';
+                qrScannerActive = true;
+                setTimeout(() => scanQRCode(video, canvas, resultDiv), 500);
+            }
+        } else {
+            requestAnimationFrame(() => scanQRCode(video, canvas, resultDiv));
+        }
+    } else {
+        resultDiv.innerHTML = '<p style="color: red;">jsQR kütüphanesi yüklenmedi!</p>';
+    }
+}
+
+function stopQRScanner() {
+    qrScannerActive = false;
+    const video = document.getElementById('qrVideo');
+    
+    if (qrScannerStream) {
+        qrScannerStream.getTracks().forEach(track => track.stop());
+        qrScannerStream = null;
+    }
+    
+    if (video) {
+        video.srcObject = null;
+    }
+}
+
+function backToGroupChoice() {
+    stopQRScanner();
+    showPage('groupChoicePage');
 }
 
 // Rezervasyon / Kupon Sayfası
