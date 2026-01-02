@@ -173,30 +173,30 @@
         <div id="groupCodePage" class="page">
             <div class="back-button" onclick="backToHome()">← Geri</div>
             
-            <div class="form-container" style="text-align: center; padding: 15px 20px;">
-                <h2 style="font-size: 1.2em; margin: 10px 0 5px 0; font-weight: 600; color: #333;">Gruba Hoşgeldiniz...</h2>
-                <h3 id="groupWelcomeTitle" style="font-size: 1em; margin: 0 0 20px 0; font-weight: 500; color: #666;"></h3>
+            <div class="form-container" style="text-align: center; padding: 8px 15px;">
+                <h2 style="font-size: 1.2em; margin: 5px 0 2px 0; font-weight: 600; color: #333;">Gruba Hoşgeldiniz...</h2>
+                <h3 id="groupWelcomeTitle" style="font-size: 0.95em; margin: 0 0 15px 0; font-weight: 500; color: #666;"></h3>
                 
                 <!-- QR Kodu Container - Sabitlenmiş Genişlik, Kompakt -->
-                <div style="margin: 0 auto 20px auto; width: fit-content;">
-                    <div id="qrCodeContainer" style="display: inline-block; padding: 10px; background: white; border-radius: 8px; border: 2px solid #f0f0f0;"></div>
+                <div style="margin: 0 auto 15px auto; width: fit-content;">
+                    <div id="qrCodeContainer" style="display: inline-block; padding: 8px; background: white; border-radius: 8px; border: 2px solid #f0f0f0;"></div>
                 </div>
                 
                 <!-- 2 Sütunlu Grid: Kod Card ve Paylaş Butonu (QR kodun genişliğine uygun) -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 0 auto 20px; width: fit-content;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 auto 15px; width: fit-content;">
                     <!-- Kod Output Card -->
-                    <div style="background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%); padding: 15px 12px; border-radius: 8px; border: 2px solid #4A90E2; box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1); min-width: 110px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <p style="color: #999; font-size: 0.7em; margin: 0 0 6px 0; font-weight: 600; text-transform: uppercase;">Kod</p>
-                        <p id="groupCodeDisplay" style="font-size: 1.3em; color: #333; font-weight: bold; letter-spacing: 2px; font-family: monospace; margin: 0; text-align: center;"></p>
+                    <div style="background: linear-gradient(135deg, #f5f5f5 0%, #ffffff 100%); padding: 12px 10px; border-radius: 8px; border: 2px solid #4A90E2; box-shadow: 0 2px 8px rgba(74, 144, 226, 0.1); min-width: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                        <p style="color: #999; font-size: 0.65em; margin: 0 0 4px 0; font-weight: 600; text-transform: uppercase;">Kod</p>
+                        <p id="groupCodeDisplay" style="font-size: 1.2em; color: #333; font-weight: bold; letter-spacing: 2px; font-family: monospace; margin: 0; text-align: center;"></p>
                     </div>
                     
                     <!-- Paylaş Butonu -->
                     <div style="display: flex; flex-direction: column; justify-content: center;">
-                        <button onclick="showShareOptions()" style="padding: 15px 12px; font-size: 1em; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(17, 168, 83, 0.3); transition: all 0.3s; height: 100%; display: flex; align-items: center; justify-content: center;">📤 Paylaş</button>
+                        <button onclick="showShareOptions()" style="padding: 12px 10px; font-size: 0.95em; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(17, 168, 83, 0.3); transition: all 0.3s; height: 100%; display: flex; align-items: center; justify-content: center;">📤 Paylaş</button>
                     </div>
                 </div>
                 
-                <p style="color: #666; margin: 0; font-size: 0.85em; line-height: 1.5; text-align: center;">QR kodu ve Grup Kodunu kamera ile okutarak veya Paylaş butonu ile göndererek arkadaşlarınızı Gruba dahil edebilirsiniz.</p>
+                <p style="color: #666; margin: 0; font-size: 0.8em; line-height: 1.4; text-align: center;">QR kodu ve Grup Kodunu kamera ile okutarak veya Paylaş butonu ile göndererek arkadaşlarınızı Gruba dahil edebilirsiniz.</p>
             </div>
         </div>
 
