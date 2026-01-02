@@ -59,9 +59,6 @@ function handleGoogleResponse(response) {
             app.currentUser = response.user;
             
             showPage('homePage');
-            setTimeout(() => {
-                alert(`Hoş geldiniz ${response.user.first_name}! 🎉`);
-            }, 300);
         })
         .catch(error => {
             alert('Google ile giriş başarısız: ' + error.message);
@@ -240,9 +237,6 @@ function handleManualSignup(event) {
             app.currentUser = user;
             
             showPage('homePage');
-            setTimeout(() => {
-                alert(`Hoş geldiniz ${user.first_name}! 🎉\n\nŞimdi hesap bölüşümünü başlatabilirsiniz.`);
-            }, 300);
         })
         .catch(error => {
             alert('Kayıt başarısız oldu: ' + error.message);
@@ -261,10 +255,6 @@ function completeSignup(userData) {
     console.log("Kullanıcı kaydı tamamlandı:", userData);
     
     showPage('homePage');
-    
-    setTimeout(() => {
-        alert(`Hoş geldiniz ${userData.firstName}! 🎉\n\nŞimdi hesap bölüşümünü başlatabilirsiniz.`);
-    }, 300);
 }
 
 // Kaydolmış Kullanıcı Kontrolü
@@ -355,7 +345,6 @@ function handleManualLogin(event) {
             
             // Ana sayfaya yönlendir
             showPage('homePage');
-            alert(`Hoş geldin ${user.firstName}!`);
         })
         .catch(error => {
             console.error('Login error:', error);
@@ -741,12 +730,15 @@ function showGroupCodePage(groupData) {
         const qrContainer = document.getElementById('qrCodeContainer');
         console.log('QR Container:', qrContainer);
         console.log('QR Text:', groupData.fullCode);
+        console.log('QRCode library yüklü mü?', typeof QRCode !== 'undefined');
         
         if (qrContainer) {
+            // Var olan QR kodu temizle
             qrContainer.innerHTML = '';
             
             try {
                 if (typeof QRCode !== 'undefined') {
+                    console.log('QR kod oluşturmaya başlanıyor...');
                     new QRCode(qrContainer, {
                         text: groupData.fullCode,
                         width: 200,
@@ -756,16 +748,18 @@ function showGroupCodePage(groupData) {
                     });
                     console.log('QR kod başarıyla oluşturuldu');
                 } else {
-                    console.log('QRCode kütüphanesi yüklenmedi!');
+                    console.error('QRCode kütüphanesi yüklenmedi! QRCode değeri:', window.QRCode);
+                    qrContainer.textContent = 'QR Kod Oluşturulamadı';
                 }
             } catch (e) {
-                console.log('QR kod oluşturulamadı - Hata:', e.message);
-                console.log('Hata detayları:', e);
+                console.error('QR kod oluşturulamadı - Hata:', e.message);
+                console.error('Hata stack:', e.stack);
+                qrContainer.textContent = 'Hata: ' + e.message;
             }
         } else {
-            console.log('qrCodeContainer bulunamadı!');
+            console.error('qrCodeContainer bulunamadı!');
         }
-    }, 100);
+    }, 200);
 }
 
 // Grup kodu sayfasından devam et
