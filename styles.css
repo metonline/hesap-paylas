@@ -902,6 +902,14 @@ body {
     color: white;
 }
 
+.option-card:nth-child(1) {
+    background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%);
+}
+
+.option-card:nth-child(2) {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
 .option-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
