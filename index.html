@@ -125,21 +125,25 @@
 
         <!-- Ana Sayfa -->
         <div id="homePage" class="page">
-            <div class="header">
-                <h1>
-                    <span class="hesap">Hesap</span>
-                    <span class="slash">/</span>
-                    <span class="paylas">Paylaş</span>
-                </h1>
-                <p class="tagline">hem çok kolay, hem çok adil !</p>
-                
-                <!-- Profil İkonu -->
-                <button class="profile-btn" onclick="goToProfile()" title="Profil">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
-                    </svg>
-                </button>
+            <div class="header" style="background: linear-gradient(135deg, #e8f0ff 0%, #f5e8ff 100%); padding: 20px 15px; border-radius: 0; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1; text-align: center;">
+                        <h1 style="font-size: 1.5em; margin: 0 0 5px 0; letter-spacing: 0.5px;">
+                            <span class="hesap">Hesap</span>
+                            <span class="slash" style="margin: 0 4px;">/</span>
+                            <span class="paylas">Paylaş</span>
+                        </h1>
+                        <p style="font-size: 0.8em; color: #666; font-style: italic; margin: 0; font-family: 'Great Vibes', cursive;">hem çok kolay, hem çok adil !</p>
+                    </div>
+                    
+                    <!-- Profil İkonu -->
+                    <button class="profile-btn" onclick="goToProfile()" title="Profil" style="position: absolute; top: 15px; right: 15px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </button>
+                </div>
             </div>
             
             <div class="options-grid">
