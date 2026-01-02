@@ -118,14 +118,26 @@ const api = {
 
         try {
             const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
-            const result = await response.json();
             
             if (!response.ok) {
-                console.error('API Error:', result);
-                throw new Error(result.error || 'API request failed');
+                const contentType = response.headers.get('content-type');
+                let error;
+                if (contentType && contentType.includes('application/json')) {
+                    const result = await response.json();
+                    error = result.error || 'API request failed';
+                } else {
+                    error = `HTTP ${response.status}: ${response.statusText}`;
+                }
+                console.error('API Error:', error);
+                throw new Error(error);
             }
             
-            return result;
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/json')) {
+                return await response.json();
+            } else {
+                throw new Error('Invalid response format from server');
+            }
         } catch (error) {
             console.error('API Request Error:', error);
             throw error;
