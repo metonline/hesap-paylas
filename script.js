@@ -741,8 +741,8 @@ function showGroupCodePage(groupData) {
     try {
         new QRCode(qrContainer, {
             text: groupData.fullCode,
-            width: 250,
-            height: 250,
+            width: 200,
+            height: 200,
             colorDark: '#11a853',
             colorLight: '#ffffff'
         });
