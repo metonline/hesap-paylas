@@ -643,12 +643,11 @@ function goToGroupMode() {
 // Grup Kurma
 function goToCreateGroup() {
     app.currentMode = 'create_group';
-    document.getElementById('infoTitle').innerText = 'Grup Bilgileri';
-    document.getElementById('groupIdGroup').style.display = 'none';
-    document.getElementById('infoFirstName').value = '';
-    document.getElementById('infoLastName').value = '';
-    document.getElementById('groupId').value = '';
-    showPage('infoPage');
+    // Grubu hemen oluştur - infoPage'i atla
+    const groupData = generateGroupId();
+    app.groupId = groupData.fullCode;
+    app.groupName = groupData.name;
+    showGroupCodePage(groupData);
 }
 
 // Grup Katılma
@@ -694,10 +693,12 @@ function submitInfo() {
     
     // Grup kuruyorsa, grup kodu oluştur
     if (app.currentMode === 'create_group') {
-        app.groupId = generateGroupId();
+        const groupData = generateGroupId();
+        app.groupId = groupData.fullCode;
+        app.groupName = groupData.name;
         
         // Grup kodu göstereceği sayfaya yönlendir
-        showGroupCodePage(app.groupId);
+        showGroupCodePage(groupData);
         return;
     }
     
@@ -712,19 +713,69 @@ function submitInfo() {
 }
 
 // Grup Kodu Sayfası
-function showGroupCodePage(groupCode) {
-    const message = `Grup Kodunuz: ${groupCode}\n\nBu kodu arkadaşlarınıza vererek gruba davet edebilirsiniz.\n\nDevam etmek için butona tıklayın.`;
-    alert(message);
+// Çiçek İsimler
+const flowerNames = [
+    'Gül', 'Lale', 'Papatya', 'Yasemin', 'Orkide', 'Freesia', 'Karanfil',
+    'Krizantem', 'Cezayir', 'Lilac', 'Magolia', 'Azalea', 'Kameya', 'Fersem',
+    'Gerbera', 'Cala', 'Anthurium', 'Strelitzia', 'Aster', 'Hortensiya'
+];
+
+function showGroupCodePage(groupData) {
+    // Grup adını ve kodunu göster
+    document.getElementById('groupNameDisplay').textContent = groupData.name;
+    document.getElementById('groupCodeDisplay').textContent = groupData.code;
     
-    // Devam et
+    // QR kodu temizle
+    const qrContainer = document.getElementById('qrCodeContainer');
+    qrContainer.innerHTML = '';
+    
+    // QR kod oluştur
+    try {
+        new QRCode(qrContainer, {
+            text: groupData.fullCode,
+            width: 250,
+            height: 250,
+            colorDark: '#11a853',
+            colorLight: '#ffffff'
+        });
+    } catch (e) {
+        console.log('QR kod oluşturulamadı:', e);
+    }
+    
+    // Grup kodu sayfasını göster
+    showPage('groupCodePage');
+}
+
+// Grup kodu sayfasından devam et
+function continueFromGroupCode() {
+    // Mevcut kullanıcının adını kullan
+    if (app.currentUser) {
+        app.currentUserName = `${app.currentUser.firstName} ${app.currentUser.lastName}`;
+    } else {
+        app.currentUserName = 'Kullanıcı';
+    }
+    app.cart[app.currentUserName] = [];
     saveToLocalStorage();
     loadRestaurants();
     showPage('restaurantPage');
 }
 
-// Grup Kodu Oluştur
+// Grup Kodu Oluştur (Çiçek Adı + Numara)
 function generateGroupId() {
-    return 'GRP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+    // Rastgele çiçek ismi seç
+    const randomFlower = flowerNames[Math.floor(Math.random() * flowerNames.length)];
+    
+    // 9 haneli numara üret (xxx-xxx-xxx formatında)
+    const num1 = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    const num2 = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    const num3 = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+    const numericCode = `${num1}-${num2}-${num3}`;
+    
+    return {
+        name: randomFlower,
+        code: numericCode,
+        fullCode: `${randomFlower}-${numericCode}`
+    };
 }
 
 // ADIM 3: Restaurant Seçimi

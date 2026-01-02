@@ -169,6 +169,32 @@
             </div>
         </div>
 
+        <!-- Grup Kodu Sayfası -->
+        <div id="groupCodePage" class="page">
+            <div class="back-button" onclick="backToHome()">← Geri</div>
+            
+            <div class="form-container" style="text-align: center;">
+                <h2>🎉 Grup Oluşturuldu!</h2>
+                
+                <div style="margin: 30px 0;">
+                    <p style="color: #999; font-size: 0.9em; margin-bottom: 8px;">Grup Adı:</p>
+                    <h3 id="groupNameDisplay" style="color: #11a853; font-size: 2.2em; margin-bottom: 20px;"></h3>
+                    
+                    <p style="color: #999; font-size: 0.9em; margin-bottom: 8px;">Grup Kodu:</p>
+                    <p id="groupCodeDisplay" style="font-size: 1.4em; color: #333; font-weight: bold; letter-spacing: 3px; font-family: monospace;"></p>
+                </div>
+                
+                <div style="margin: 30px 0;">
+                    <p style="color: #999; font-size: 0.9em; margin-bottom: 15px;">QR Kodu Tarat:</p>
+                    <div id="qrCodeContainer" style="display: inline-block; padding: 15px; background: white; border-radius: 8px; border: 2px solid #f0f0f0;"></div>
+                </div>
+                
+                <p style="color: #666; margin-top: 20px; font-size: 0.95em;">Grup kodunu arkadaşlarınıza vererek veya<br>QR kodu taratarak grupa katılmalarını sağlayabilirsiniz.</p>
+                
+                <button class="btn btn-primary" onclick="continueFromGroupCode()" style="margin-top: 30px;">Devam Et</button>
+            </div>
+        </div>
+
         <div id="infoPage" class="page">
             <div class="back-button" onclick="backToHome()">← Geri</div>
             
@@ -579,6 +605,7 @@
         </div>
     </div>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="script.js?t=20260102022526"></script>
 </body>
 </html>
