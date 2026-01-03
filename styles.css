@@ -63,8 +63,8 @@ body {
 }
 
 .benefits-section {
-    background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
-    padding: 12px 15px;
+    background: transparent;
+    padding: 0px 0px;
     border-radius: var(--border-radius);
 }
 
