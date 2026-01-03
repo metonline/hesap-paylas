@@ -208,8 +208,8 @@ body {
 .auth-tabs {
     display: flex;
     gap: 10px;
-    margin-bottom: 12px;
-    border-bottom: 2px solid #eee;
+    margin-bottom: 8px;
+    border-bottom: none;
 }
 
 .tab-btn {
@@ -239,7 +239,7 @@ body {
 
 /* Form Styles */
 .form-group {
-    margin-bottom: 5px;
+    margin-bottom: 4px;
 }
 
 .form-group input {
