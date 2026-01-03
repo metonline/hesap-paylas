@@ -206,15 +206,15 @@ body {
 
 /* Auth Tabs */
 .auth-tabs {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 4px;
     margin-bottom: 3px;
     border-bottom: none;
 }
 
 .tab-btn {
-    flex: 1;
-    padding: 5px 0;
+    padding: 0;
     background: none;
     border: none;
     font-size: 0.75em;
