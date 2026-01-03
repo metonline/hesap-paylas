@@ -260,6 +260,13 @@ body {
     gap: 4px;
 }
 
+/* Login Form - Dikey Layout */
+#manualLoginForm {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+}
+
 .form-input {
     width: 100%;
     padding: 0px 4px;
