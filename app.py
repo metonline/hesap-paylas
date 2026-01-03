@@ -68,9 +68,10 @@ def signup():
     
     email = data.get('email').lower().strip()
     password = data.get('password')
-    first_name = data.get('first_name', '').strip()
-    last_name = data.get('last_name', '').strip()
-    phone = data.get('phone', '').strip()
+    # Frontend gönderir: firstName, lastName; Backend kullanır: first_name, last_name
+    first_name = (data.get('firstName') or data.get('first_name') or '').strip()
+    last_name = (data.get('lastName') or data.get('last_name') or '').strip()
+    phone = (data.get('phone') or '').strip()
     
     # Check if user already exists
     if email in users_db:
