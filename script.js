@@ -360,11 +360,11 @@ function handleManualLogin(event) {
     const password = document.getElementById('loginPassword').value;
     
     if (!email || !password) {
-        alert('E-posta ve şifre alanlarını dolduru…!');
+        alert('E-posta ve şifre alanlarını doldurunuz!');
         return;
     }
     
-    const form = document.querySelector('.login-form');
+    const form = document.querySelector('#manualLoginForm');
     const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
     
     if (submitBtn) {
