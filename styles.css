@@ -215,6 +215,7 @@ body {
 
 .tab-btn {
     padding: 0;
+    margin: 0;
     background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
     border: none;
     font-size: 0.75em;
@@ -223,14 +224,14 @@ body {
     cursor: pointer;
     transition: all 0.3s ease;
     height: 26px;
-    line-height: 1.2;
+    line-height: 26px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 4px;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    min-width: 0;
+    width: 100%;
 }
 
 .tab-btn.active {
