@@ -824,6 +824,8 @@ function submitJoinCode() {
         proceedToJoinGroup(groupCode);
     }, 500);
 }
+
+function stopQRScanner() {
     qrScannerActive = false;
     const video = document.getElementById('qrVideo');
     
