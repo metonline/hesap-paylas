@@ -78,7 +78,7 @@ body {
 .benefits-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
+    gap: 15px;
 }
 
 .benefit-card {
