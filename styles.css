@@ -215,13 +215,12 @@ body {
 
 .tab-btn {
     padding: 0;
-    background: none;
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
     border: none;
     font-size: 0.75em;
     font-weight: 600;
-    color: #999;
+    color: white;
     cursor: pointer;
-    border-bottom: none;
     transition: all 0.3s ease;
     height: 26px;
     display: flex;
@@ -231,8 +230,13 @@ body {
 }
 
 .tab-btn.active {
-    color: #FF6B6B;
-    border-bottom-color: #FF6B6B;
+    background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
+    color: white;
+}
+
+.tab-btn:not(.active) {
+    background: linear-gradient(135deg, #9B59B6 0%, #8E44AD 100%);
+    color: white;
 }
 
 .auth-form h3 {
