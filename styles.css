@@ -224,8 +224,8 @@ body {
     color: white;
     cursor: pointer;
     transition: all 0.3s ease;
-    height: 22px;
-    line-height: 22px;
+    height: 18px;
+    line-height: 18px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -261,12 +261,12 @@ body {
 
 .form-input {
     width: 100%;
-    padding: 3px 6px;
+    padding: 2px 5px;
     border: 1px solid #ddd;
     border-radius: 3px;
     font-size: 0.75em;
     line-height: 1.1;
-    height: 22px;
+    height: 18px;
     box-sizing: border-box;
     font-family: inherit;
 }
@@ -280,7 +280,7 @@ body {
 .form-submit-btn {
     width: 100%;
     padding: 0;
-    height: 22px;
+    height: 18px;
     border: none;
     border-radius: 3px;
     background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
