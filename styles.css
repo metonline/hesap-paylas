@@ -82,11 +82,11 @@ body {
 }
 
 .benefit-card {
-    background: white;
-    padding: 8px 8px;
+    background: transparent;
+    padding: 4px 4px;
     border-radius: 8px;
     text-align: center;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    box-shadow: none;
     transition: transform 0.3s ease;
 }
 
@@ -110,10 +110,10 @@ body {
 }
 
 .signup-section {
-    background: #f5f5f5;
-    padding: 8px 12px;
+    background: transparent;
+    padding: 2px 0px;
     border-radius: var(--border-radius);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: none;
     margin-top: 2px;
 }
 
