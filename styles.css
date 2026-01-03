@@ -239,21 +239,21 @@ body {
 
 /* Form Styles */
 .form-group {
-    margin-bottom: 6px;
+    margin-bottom: 5px;
 }
 
 .form-group input {
     width: 100%;
-    padding: 5px 8px;
+    padding: 4px 7px;
     border: 1px solid #ddd;
-    border-radius: 5px;
+    border-radius: 4px;
     font-size: 0.8em;
     transition: border-color 0.3s ease;
     height: auto;
     line-height: 1.2;
     pointer-events: auto;
     cursor: text;
-    min-height: 28px;
+    min-height: 26px;
 }
 
 .form-group input:focus {
@@ -265,15 +265,15 @@ body {
 .btn-primary {
     background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
     color: white;
-    padding: 6px 12px;
+    padding: 5px 10px;
     border: none;
-    border-radius: 5px;
+    border-radius: 4px;
     font-size: 0.8em;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-    min-height: 28px;
-    height: 28px;
+    min-height: 26px;
+    height: 26px;
     line-height: 1.2;
 }
 
