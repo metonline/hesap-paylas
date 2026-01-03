@@ -210,12 +210,12 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 4px;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     border-bottom: none;
 }
 
 .tab-btn {
-    padding: 0;
+    padding: 0px 4px;
     margin: 0;
     background: linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%);
     border: none;
@@ -224,15 +224,16 @@ body {
     color: white;
     cursor: pointer;
     transition: all 0.3s ease;
-    height: 16px;
-    line-height: 16px;
+    height: 28px;
+    line-height: 1;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 3px;
+    border-radius: 6px;
     white-space: nowrap;
     min-width: 0;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .tab-btn.active {
@@ -256,19 +257,21 @@ body {
 .signup-form {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 2px;
+    gap: 4px;
 }
 
 .form-input {
     width: 100%;
-    padding: 0px 2px;
+    padding: 0px 4px;
     border: 1px solid #ddd;
-    border-radius: 3px;
+    border-radius: 6px;
     font-size: 0.75em;
     line-height: 1;
-    height: 8px;
+    height: 28px;
     box-sizing: border-box;
     font-family: inherit;
+    display: flex;
+    align-items: center;
 }
 
 .form-input:focus {
@@ -279,18 +282,22 @@ body {
 
 .form-submit-btn {
     width: 100%;
-    padding: 1px 4px;
-    height: 16px;
+    padding: 0px 4px;
+    height: 28px;
     border: none;
-    border-radius: 3px;
+    border-radius: 6px;
     background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
     color: white;
     font-size: 0.75em;
     font-weight: 600;
     cursor: pointer;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s ease;
-    margin-top: 2px;
+    margin-top: 0px;
+    box-sizing: border-box;
 }
 
 .btn-primary {
