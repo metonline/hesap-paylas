@@ -70,25 +70,13 @@
                     
                     <!-- Signup Form -->
                     <div id="signupForm" class="auth-form">
-                        <h3>Hemen Başla</h3>
-
-                        <form id="manualSignupForm" class="signup-form" onsubmit="handleManualSignup(event)" style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px;">
-                            <div class="form-group">
-                                <input type="text" id="signupFirstName" placeholder="Ad" required>
-                            </div>
-                            <div class="form-group">
-                                <input type="text" id="signupLastName" placeholder="Soyad" required>
-                            </div>
-                            <div class="form-group">
-                                <input type="tel" id="phone" placeholder="Telefon (0541 234 5678)" required>
-                            </div>
-                            <div class="form-group">
-                                <input type="email" id="email" placeholder="E-posta" required>
-                            </div>
-                            <div class="form-group" style="grid-column: 1 / 2; margin-bottom: 3px;">
-                                <input type="password" id="password" placeholder="Şifre" required>
-                            </div>
-                            <button type="submit" class="btn-primary" style="grid-column: 2 / 3; height: 26px; margin: 0; align-self: end; background: linear-gradient(135deg, #27ae60 0%, #229954 100%);">OK</button>
+                        <form id="manualSignupForm" class="signup-form" onsubmit="handleManualSignup(event)">
+                            <input type="text" id="signupFirstName" placeholder="Ad" required class="form-input">
+                            <input type="text" id="signupLastName" placeholder="Soyad" required class="form-input">
+                            <input type="tel" id="phone" placeholder="Telefon (0541 234 5678)" required class="form-input">
+                            <input type="email" id="email" placeholder="E-posta" required class="form-input">
+                            <input type="password" id="password" placeholder="Şifre" required class="form-input">
+                            <button type="submit" class="form-submit-btn">OK</button>
                         </form>
 
                         <p class="terms-text">Kaydolarak <a href="#">Şartları</a> kabul etmiş olursunuz</p>

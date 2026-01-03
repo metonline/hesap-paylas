@@ -251,29 +251,44 @@ body {
     font-size: 0.95em;
 }
 
-/* Form Styles */
-.form-group {
-    margin-bottom: 3px;
+/* Signup Form - Yeni Tasarım */
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
 }
 
-.form-group input {
+.form-input {
     width: 100%;
     padding: 4px 7px;
     border: 1px solid #ddd;
     border-radius: 4px;
     font-size: 0.75em;
-    transition: border-color 0.3s ease;
-    height: auto;
     line-height: 1.2;
-    pointer-events: auto;
-    cursor: text;
-    min-height: 26px;
+    height: 26px;
+    box-sizing: border-box;
+    font-family: inherit;
 }
 
-.form-group input:focus {
+.form-input:focus {
     outline: none;
     border-color: #FF6B6B;
-    box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1);
+    box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.1);
+}
+
+.form-submit-btn {
+    width: 100%;
+    padding: 0;
+    height: 26px;
+    border: none;
+    border-radius: 4px;
+    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    color: white;
+    font-size: 0.75em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 2px;
 }
 
 .btn-primary {
