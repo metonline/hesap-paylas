@@ -72,7 +72,7 @@
                     <div id="signupForm" class="auth-form">
                         <h3>Hemen Başla</h3>
 
-                        <form id="manualSignupForm" class="signup-form" onsubmit="handleManualSignup(event)">
+                        <form id="manualSignupForm" class="signup-form" style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;" onsubmit="handleManualSignup(event)">
                             <div class="form-group">
                                 <input type="text" id="signupFirstName" placeholder="Ad" required>
                             </div>
@@ -88,7 +88,8 @@
                             <div class="form-group">
                                 <input type="password" id="password" placeholder="Şifre" required>
                             </div>
-                            <button type="submit" class="btn-primary" style="width: 100%;">Üye Ol</button>
+                            <div class="form-group"></div>
+                            <button type="submit" class="btn-primary" style="width: 100%; grid-column: 1 / -1;">Üye Ol</button>
                         </form>
 
                         <p class="terms-text">Kaydolarak <a href="#">Şartları</a> kabul etmiş olursunuz</p>
