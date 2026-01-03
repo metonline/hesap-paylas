@@ -256,7 +256,7 @@ body {
 .signup-form {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
 }
 
 .form-input {
