@@ -261,11 +261,11 @@ body {
 
 .form-input {
     width: 100%;
-    padding: 2px 5px;
+    padding: 1px 4px;
     border: 1px solid #ddd;
     border-radius: 3px;
     font-size: 0.75em;
-    line-height: 1.1;
+    line-height: 1;
     height: 16px;
     box-sizing: border-box;
     font-family: inherit;
@@ -279,7 +279,7 @@ body {
 
 .form-submit-btn {
     width: 100%;
-    padding: 0;
+    padding: 1px 4px;
     height: 16px;
     border: none;
     border-radius: 3px;
@@ -288,6 +288,7 @@ body {
     font-size: 0.75em;
     font-weight: 600;
     cursor: pointer;
+    line-height: 1;
     transition: all 0.3s ease;
     margin-top: 2px;
 }
