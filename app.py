@@ -4,6 +4,9 @@ A fair and quick bill splitting app for restaurants, travel, and shared expenses
 """
 
 import os
+import json
+import hashlib
+import uuid
 from flask import Flask, render_template, jsonify, request, send_from_directory
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -17,6 +20,18 @@ CORS(app)
 # Configuration
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['DEBUG'] = os.getenv('FLASK_ENV') == 'development'
+
+# In-memory database for demo
+users_db = {}
+sessions = {}
+
+def hash_password(password):
+    """Hash password for storage"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def generate_token():
+    """Generate a unique token"""
+    return str(uuid.uuid4())
 
 # ==================== Routes ====================
 
@@ -47,19 +62,91 @@ def health_check():
 def signup():
     """User signup endpoint"""
     data = request.get_json()
-    # TODO: Implement user signup
+    
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'Email ve şifre gerekli'}), 400
+    
+    email = data.get('email').lower().strip()
+    password = data.get('password')
+    first_name = data.get('first_name', '').strip()
+    last_name = data.get('last_name', '').strip()
+    phone = data.get('phone', '').strip()
+    
+    # Check if user already exists
+    if email in users_db:
+        return jsonify({'error': 'Bu e-posta zaten kayıtlı'}), 409
+    
+    # Create user
+    user_id = str(uuid.uuid4())
+    user = {
+        'id': user_id,
+        'email': email,
+        'password_hash': hash_password(password),
+        'first_name': first_name,
+        'last_name': last_name,
+        'phone': phone,
+        'created_at': str(uuid.uuid4())  # timestamp placeholder
+    }
+    
+    users_db[email] = user
+    
+    # Generate token
+    token = generate_token()
+    sessions[token] = {
+        'user_id': user_id,
+        'email': email
+    }
+    
     return jsonify({
-        'message': 'Signup endpoint - Coming soon',
-        'data': data
+        'message': 'Kaydolma başarılı',
+        'token': token,
+        'user': {
+            'id': user['id'],
+            'email': user['email'],
+            'first_name': user['first_name'],
+            'last_name': user['last_name'],
+            'phone': user['phone']
+        }
     }), 201
 
 @app.route('/api/auth/login', methods=['POST'])
 def login():
     """User login endpoint"""
     data = request.get_json()
-    # TODO: Implement user login
+    
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'E-posta ve şifre gerekli'}), 400
+    
+    email = data.get('email').lower().strip()
+    password = data.get('password')
+    
+    # Check if user exists
+    if email not in users_db:
+        return jsonify({'error': 'E-posta veya şifre hatalı'}), 401
+    
+    user = users_db[email]
+    
+    # Verify password
+    if user['password_hash'] != hash_password(password):
+        return jsonify({'error': 'E-posta veya şifre hatalı'}), 401
+    
+    # Generate token
+    token = generate_token()
+    sessions[token] = {
+        'user_id': user['id'],
+        'email': email
+    }
+    
     return jsonify({
-        'message': 'Login endpoint - Coming soon'
+        'message': 'Giriş başarılı',
+        'token': token,
+        'user': {
+            'id': user['id'],
+            'email': user['email'],
+            'first_name': user['first_name'],
+            'last_name': user['last_name'],
+            'phone': user['phone']
+        }
     }), 200
 
 @app.route('/api/user/profile', methods=['GET'])
