@@ -4,35 +4,41 @@ on:
   push:
     branches: [ main ]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Create build directory
-        run: |
-          mkdir -p build
-          cp -v *.html build/ || true
-          cp -v *.css build/ || true
-          cp -v *.js build/ || true
-          cp -v *.json build/ || true
-          cp -rv logo_images build/ 2>/dev/null || true
-          cp -rv images build/ 2>/dev/null || true
-          touch build/.nojekyll
-          echo "Files in build directory:"
-          ls -la build/
-
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Checkout main branch
+        uses: actions/checkout@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
-          cname: metonline.github.io
+          fetch-depth: 0
+
+      - name: Copy files to gh-pages
+        run: |
+          git config user.name "GitHub Action"
+          git config user.email "action@github.com"
+          
+          # Create gh-pages branch if not exists
+          git checkout --orphan gh-pages 2>/dev/null || git checkout gh-pages
+          
+          # Reset and copy files
+          git rm -rf . 2>/dev/null || true
+          git checkout main -- .
+          git rm -r .github 2>/dev/null || true
+          
+          # Remove unnecessary files
+          rm -f .gitignore .gitattributes Dockerfile docker-compose.yml
+          rm -rf backend/ .git/
+          
+          # Create .nojekyll
+          touch .nojekyll
+          
+          # Add and commit
+          git add .
+          git commit -m "Deploy to GitHub Pages" --allow-empty
+          git push -f origin gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
 
