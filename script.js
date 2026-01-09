@@ -516,38 +516,34 @@ function handleManualSignup(event) {
         return;
     }
     
-    // Offline Mode - localStorage'a kaydet
-    const user = {
-        id: Date.now().toString(),
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        phone: phone,
-        createdAt: new Date().toISOString()
-    };
-    
-    // localStorage'a kullanıcıyı ve şifreyi kaydet (demo amaçlı)
-    const usersData = JSON.parse(localStorage.getItem('hesapPaylas_users') || '{}');
-    usersData[email] = {
-        ...user,
-        password: password // Demo amaçlı (gerçek app'te hash edilmeli)
-    };
-    localStorage.setItem('hesapPaylas_users', JSON.stringify(usersData));
-    
-    // Giriş yap
-    localStorage.setItem('hesapPaylas_token', 'demo-token-' + user.id);
-    localStorage.setItem('hesapPaylas_user', JSON.stringify(user));
-    
-    app.currentUser = user;
-    
-    // Formu temizle
-    document.getElementById('manualSignupForm').reset();
-    
-    // Ana sayfaya git
-    showPage('homePage');
-    
-    // Profil bilgilerini güncelle
-    updateHomePageProfile();
+    // Backend API'ye kayıt isteği gönder
+    api.signup(firstName, lastName, email, password, phone)
+        .then(response => {
+            // Kayıt başarılı - giriş yap
+            localStorage.setItem('hesapPaylas_token', response.token);
+            localStorage.setItem('hesapPaylas_user', JSON.stringify(response.user));
+            
+            app.currentUser = response.user;
+            
+            // Formu temizle
+            document.getElementById('manualSignupForm').reset();
+            
+            // Ana sayfaya git
+            showPage('homePage');
+            updateHomePageProfile();
+        })
+        .catch(error => {
+            console.error('Signup error:', error);
+            let errorMsg = 'Kayıt sırasında hata oluştu';
+            if (error.error) {
+                if (error.error.includes('already exists')) {
+                    errorMsg = 'Bu e-posta adresi zaten kayıtlı!';
+                } else {
+                    errorMsg = error.error;
+                }
+            }
+            alert(errorMsg);
+        });
 }
 
 // Kayıt Tamamlama
@@ -623,39 +619,27 @@ function handleManualLogin(event) {
         return;
     }
     
-    // Offline Mode - localStorage'dan kontrol et
-    const usersData = JSON.parse(localStorage.getItem('hesapPaylas_users') || '{}');
-    const userData = usersData[email];
-    
-    if (!userData || userData.password !== password) {
-        alert('E-posta veya şifre yanlış!');
-        return;
-    }
-    
-    // Giriş başarılı
-    const user = {
-        id: userData.id,
-        firstName: userData.firstName,
-        lastName: userData.lastName,
-        email: userData.email,
-        phone: userData.phone,
-        createdAt: userData.createdAt
-    };
-    
-    localStorage.setItem('hesapPaylas_token', 'demo-token-' + user.id);
-    localStorage.setItem('hesapPaylas_user', JSON.stringify(user));
-    
-    app.currentUser = user;
-    
-    // Form alanlarını temizle
-    document.getElementById('loginEmail').value = '';
-    document.getElementById('loginPassword').value = '';
-    
-    // Ana sayfaya yönlendir
-    showPage('homePage');
-    
-    // Profil bilgilerini güncelle
-    updateHomePageProfile();
+    // Backend API'ye giriş isteği gönder
+    api.login(email, password)
+        .then(response => {
+            // Giriş başarılı
+            localStorage.setItem('hesapPaylas_token', response.token);
+            localStorage.setItem('hesapPaylas_user', JSON.stringify(response.user));
+            
+            app.currentUser = response.user;
+            
+            // Form alanlarını temizle
+            document.getElementById('loginEmail').value = '';
+            document.getElementById('loginPassword').value = '';
+            
+            // Ana sayfaya yönlendir
+            showPage('homePage');
+            updateHomePageProfile();
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+            alert('E-posta veya şifre yanlış!');
+        });
 }
 
 // Profil Sayfasına Git
