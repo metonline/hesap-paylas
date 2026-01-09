@@ -214,8 +214,8 @@ function updateHomePageProfile() {
     if (user) {
         try {
             const userData = JSON.parse(user);
-            // Profil butonunu göster
-            if (profileBtn) profileBtn.style.display = 'block';
+            // Profil butonunu GİZLE (sidebar menüde var)
+            if (profileBtn) profileBtn.style.display = 'none';
             
             // Hoşgeldin mesajını göster
             if (welcomeMessage && userName) {
