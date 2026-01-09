@@ -1137,13 +1137,13 @@ function scanQRCode(video, canvas, resultDiv) {
             // Kamerayı kapat
             stopQRScanner();
             
-            // Deep link formatını kontrol et: hesappaylas://join?code=xxx-xxx-xxx&name=groupname
+            // Deep link formatını kontrol et: hesappaylas://join?code=xxx-xxx&name=groupname
             if (code.data.startsWith('hesappaylas://')) {
                 // Deep link formatı
                 const urlParams = new URLSearchParams(code.data.replace('hesappaylas://join?', ''));
                 const groupCode = urlParams.get('code');
                 
-                if (groupCode && /^\d{3}-\d{3}-\d{3}$/.test(groupCode)) {
+                if (groupCode && /^\d{3}-\d{3}$/.test(groupCode)) {
                     resultDiv.innerHTML = `<p style="color: green; font-weight: bold;">✓ Kod okundu: ${groupCode}</p>`;
                     proceedToJoinGroup(groupCode);
                 } else {
@@ -1152,10 +1152,10 @@ function scanQRCode(video, canvas, resultDiv) {
                     setTimeout(() => scanQRCode(video, canvas, resultDiv), 500);
                 }
             } else {
-                // Eski format uyumluluğu: "groupname-xxx-xxx-xxx"
+                // Eski format uyumluluğu: "groupname-xxx-xxx" (6 haneli format)
                 const parts = code.data.split('-');
-                if (parts.length === 4) {
-                    const groupCode = `${parts[1]}-${parts[2]}-${parts[3]}`;
+                if (parts.length === 3) {
+                    const groupCode = `${parts[1]}-${parts[2]}`;
                     resultDiv.innerHTML = `<p style="color: green; font-weight: bold;">✓ Kod okundu: ${groupCode}</p>`;
                     proceedToJoinGroup(groupCode);
                 } else {
@@ -1203,9 +1203,9 @@ function submitJoinCode() {
         return;
     }
     
-    // Kod formatını doğrula (xxx-xxx-xxx)
-    if (!/^\d{3}-\d{3}-\d{3}$/.test(groupCode)) {
-        resultDiv.innerHTML = '<p style="color: red;">Geçersiz kod formatı! (xxx-xxx-xxx şeklinde olmalı)</p>';
+    // Kod formatını doğrula (xxx-xxx - 6 haneli)
+    if (!/^\d{3}-\d{3}$/.test(groupCode)) {
+        resultDiv.innerHTML = '<p style="color: red;">Geçersiz kod formatı! (xxx-xxx şeklinde olmalı)</p>';
         return;
     }
     
