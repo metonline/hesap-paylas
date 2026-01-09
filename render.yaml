@@ -6,7 +6,7 @@ services:
     startCommand: python wsgi.py
     envVars:
       - key: DATABASE_URL
-        scope: all
+        value: sqlite:///hesap_paylas.db
       - key: JWT_SECRET
         value: jwt-secret-key-change-in-production
       - key: SECRET_KEY
