@@ -232,9 +232,18 @@ function closeMapModal() {
 
 // Haritadan seçilen konumu onayla
 function confirmMapLocation() {
-    // Şimdilik varsayılan konum
+    const locationInput = document.getElementById('locationInput');
+    const location = locationInput.value.trim();
+    
+    if (!location) {
+        alert('Lütfen konum adresini giriniz!');
+        return;
+    }
+    
+    // Seçilen konumu kaydet
     const targetLocationInput = document.getElementById('targetLocation');
-    targetLocationInput.value = 'Kızılay, Ankara (40.9893, 29.0412)';
+    targetLocationInput.value = location;
+    
     closeMapModal();
 }
 
