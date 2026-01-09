@@ -2005,44 +2005,20 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     
     // QR Kod'u göster (xxx-xxx formatında)
     const formattedCode = formatQRCode(qrCode);
+    
+    // QR Server API'si kullanarak garantili siyah-beyaz QR kod oluştur
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCode)}&color=000000&bgcolor=FFFFFF`;
+    
     document.getElementById('detailGroupQR').innerHTML = `
         <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 10px;">
-            <div id="groupQRCanvas" style="display: flex; justify-content: center; margin-bottom: 15px; background: white; padding: 10px; border-radius: 8px;"></div>
+            <img src="${qrImageUrl}" 
+                 alt="QR Code" 
+                 style="width: 200px; height: 200px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 8px;" 
+                 onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22white%22 width=%22200%22 height=%22200%22/><text x=%22100%22 y=%22100%22 font-size=%2220%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>QR</text></svg>'"
+            />
             <div style="font-weight: 600; font-size: 1.2em; letter-spacing: 2px; color: #333;">${formattedCode}</div>
         </div>
     `;
-    
-    // QR kod resmi oluştur - qr-code-styling kütüphanesi kullan
-    setTimeout(() => {
-        const qrContainer = document.getElementById('groupQRCanvas');
-        if (qrContainer && typeof QRCodeStyling !== 'undefined') {
-            qrContainer.innerHTML = '';
-            
-            const qrCode_obj = new QRCodeStyling({
-                width: 200,
-                height: 200,
-                data: qrCode,
-                image: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCBmaWxsPSIjRkY2QjZCIiB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIvPjx0ZXh0IHg9Ijk2IiB5PSIxMTAiIGZvbnQtc2l6ZT0iODAiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5IUDwvdGV4dD48L3N2Zz4=',
-                dotsOptions: {
-                    color: '#000000',
-                    type: 'square'
-                },
-                backgroundOptions: {
-                    color: '#ffffff'
-                },
-                cornersSquareOptions: {
-                    color: '#000000',
-                    type: 'square'
-                },
-                cornersDotOptions: {
-                    color: '#000000',
-                    type: 'square'
-                }
-            });
-            
-            qrCode_obj.append(qrContainer);
-        }
-    }, 100);
     
     window.currentGroupId = groupId;
     detailsModal.style.display = 'flex';
