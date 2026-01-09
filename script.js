@@ -545,11 +545,10 @@ function handleManualSignup(event) {
         return;
     }
     
-    // Telefon validasyonu
-    const phoneRegex = /^(\+90|0)?\d{9,10}$/;
-    const cleanPhone = phone.replace(/\D/g, ''); // Sadece rakamları al
-    if (cleanPhone.length < 10 || cleanPhone.length > 12) {
-        alert('Geçerli bir telefon numarası giriniz!');
+    // Telefon validasyonu (11 hane)
+    const cleanPhone = phone.replace(/\D/g, '');
+    if (cleanPhone.length !== 11) {
+        alert('Telefon numarası 11 haneli olmalıdır (örn: 05323332222)!');
         return;
     }
     
@@ -758,14 +757,14 @@ function handlePasswordReset(event) {
 }
 
 // Profil Sayfasına Git
-// Telefon numarasını mask formatı ile göster: 0(532) 313-32-77
+// Telefon numarasını mask formatı ile göster: 0532 333 22 22 (11 hane)
 function formatPhoneDisplay(phone) {
     if (!phone) return '-';
     // Sadece rakamları al
     const cleaned = phone.replace(/\D/g, '');
-    // Türk telefon formatı: 0(XXX) XXX-XX-XX
-    if (cleaned.length === 10) {
-        return cleaned.replace(/(\d)(\d{3})(\d{3})(\d{2})(\d{2})/, '$1($2) $3-$4-$5');
+    // Türk telefon formatı: 0XXXX XXX XX XX (11 hane)
+    if (cleaned.length === 11) {
+        return cleaned.replace(/(\d{4})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
     }
     return phone;
 }
@@ -775,15 +774,15 @@ function formatPhoneInput(value) {
     if (!value) return '';
     // Sadece rakamları al
     let cleaned = value.replace(/\D/g, '');
-    // Maksimum 10 haneli
-    if (cleaned.length > 10) cleaned = cleaned.slice(0, 10);
+    // Maksimum 11 haneli
+    if (cleaned.length > 11) cleaned = cleaned.slice(0, 11);
     
-    // Format uygula: 0(XXX) XXX-XX-XX
+    // Format uygula: 0XXXX XXX XX XX
     if (cleaned.length === 0) return '';
-    if (cleaned.length <= 1) return cleaned;
-    if (cleaned.length <= 4) return cleaned.replace(/(\d)(\d{0,3})/, '$1($2');
-    if (cleaned.length <= 7) return cleaned.replace(/(\d)(\d{3})(\d{0,3})/, '$1($2) $3');
-    return cleaned.replace(/(\d)(\d{3})(\d{3})(\d{0,2})(\d{0,2})/, '$1($2) $3-$4-$5');
+    if (cleaned.length <= 4) return cleaned;
+    if (cleaned.length <= 7) return cleaned.replace(/(\d{4})(\d{0,3})/, '$1 $2');
+    if (cleaned.length <= 9) return cleaned.replace(/(\d{4})(\d{3})(\d{0,2})/, '$1 $2 $3');
+    return cleaned.replace(/(\d{4})(\d{3})(\d{2})(\d{0,2})/, '$1 $2 $3 $4');
 }
 
 // Input event handler
