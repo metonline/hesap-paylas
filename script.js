@@ -1453,12 +1453,6 @@ const colorNames = [
     'Kestane', 'Açık Mavi', 'Açık Yeşil', 'Açık Kırmızı', 'Koyu Mavi', 'Koyu Yeşil'
 ];
 
-function showGroupsPage() {
-    const groupsModal = document.getElementById('groupsPage');
-    groupsModal.style.display = 'flex';
-    loadUserGroups();
-}
-
 // Grup kodu sayfasından devam et
 function continueFromGroupCode() {
     // Mevcut kullanıcının adını kullan
@@ -2159,6 +2153,89 @@ function joinGroupWithCode(code) {
         console.error('Hata:', error);
         document.getElementById('joinGroupMessage').textContent = '❌ Bir hata oluştu. Tekrar deneyin.';
         document.getElementById('joinGroupMessage').style.color = '#e74c3c';
+    });
+}
+
+// ===== YENİ GRUP OLUŞTURMA FONKSİYONLARI =====
+
+function showCreateGroupForm() {
+    // Input'ları temizle
+    document.getElementById('newGroupName').value = '';
+    document.getElementById('newGroupDesc').value = '';
+    document.getElementById('createGroupMessage').textContent = '';
+    
+    // Modal'ı göster
+    document.getElementById('createGroupModal').style.display = 'block';
+}
+
+function closeCreateGroupModal() {
+    document.getElementById('createGroupModal').style.display = 'none';
+    document.getElementById('createGroupMessage').textContent = '';
+}
+
+function createNewGroup() {
+    const groupName = document.getElementById('newGroupName').value.trim();
+    const groupDesc = document.getElementById('newGroupDesc').value.trim();
+    const messageDiv = document.getElementById('createGroupMessage');
+    
+    // Validasyon
+    if (!groupName) {
+        messageDiv.textContent = '❌ Lütfen grup adı gir';
+        messageDiv.style.color = '#e74c3c';
+        return;
+    }
+    
+    if (groupName.length < 2) {
+        messageDiv.textContent = '❌ Grup adı en az 2 karakter olmalı';
+        messageDiv.style.color = '#e74c3c';
+        return;
+    }
+    
+    const baseURL = getBaseURL();
+    const token = localStorage.getItem('hesapPaylas_token');
+    
+    messageDiv.textContent = '⏳ Grup oluşturuluyor...';
+    messageDiv.style.color = '#f39c12';
+    
+    fetch(`${baseURL}/api/groups`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            name: groupName,
+            description: groupDesc || ''
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const newGroup = data.group;
+            messageDiv.textContent = '✅ Grup başarıyla oluşturuldu!';
+            messageDiv.style.color = '#27ae60';
+            
+            // 2 saniye sonra QR kodu göster ve modal'ı kapat
+            setTimeout(() => {
+                showGroupDetails(
+                    newGroup.id,
+                    newGroup.name,
+                    newGroup.description || '',
+                    new Date(newGroup.created_at).toLocaleDateString('tr-TR'),
+                    newGroup.qr_code
+                );
+                closeCreateGroupModal();
+                loadUserGroups(); // Grupları yenile
+            }, 1500);
+        } else {
+            messageDiv.textContent = `❌ ${data.message || 'Grup oluşturulamadı'}`;
+            messageDiv.style.color = '#e74c3c';
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        messageDiv.textContent = '❌ Bir hata oluştu. Tekrar deneyin.';
+        messageDiv.style.color = '#e74c3c';
     });
 }
 
