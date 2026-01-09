@@ -19,6 +19,10 @@ sys.path.insert(0, str(project_root))
 from dotenv import load_dotenv
 load_dotenv()
 
+# Global processes for cleanup
+flask_process = None
+static_process = None
+
 def create_db():
     """Create SQLite database"""
     print("\n📦 Creating database...")
@@ -29,30 +33,32 @@ def create_db():
 
 def run_flask():
     """Run Flask development server"""
+    global flask_process
     print("\n🚀 Starting Flask backend on http://localhost:5000")
-    from backend.app import app
-    app.run(
-        host='127.0.0.1',
-        port=5000,
-        debug=True,
-        use_reloader=False  # Disable reloader to avoid port conflicts
-    )
+    flask_process = subprocess.Popen([
+        sys.executable, '-m', 'flask',
+        '--app', 'backend.app',
+        'run',
+        '--host', '127.0.0.1',
+        '--port', '5000'
+    ], stdout=None, stderr=None)
+    flask_process.wait()
 
 def run_static_server():
     """Run static file server for frontend"""
+    global static_process
     print("📄 Starting frontend server on http://localhost:8000")
     os.chdir(project_root)
-    import http.server
-    import socketserver
-    
-    PORT = 8000
-    Handler = http.server.SimpleHTTPRequestHandler
-    
-    with socketserver.TCPServer(("", PORT), Handler) as httpd:
-        print(f"✓ Serving at http://localhost:8000")
-        httpd.serve_forever()
+    static_process = subprocess.Popen([
+        sys.executable, '-m', 'http.server',
+        '8000',
+        '--directory', str(project_root)
+    ], stdout=None, stderr=None)
+    static_process.wait()
 
 def main():
+    global flask_process, static_process
+    
     print("=" * 60)
     print("Hesap Paylaş - Local Development Server")
     print("=" * 60)
@@ -87,6 +93,10 @@ def main():
     
     except KeyboardInterrupt:
         print("\n\n✓ Shutting down...")
+        if flask_process:
+            flask_process.terminate()
+        if static_process:
+            static_process.terminate()
         sys.exit(0)
     except Exception as e:
         print(f"\n❌ Error: {e}")
