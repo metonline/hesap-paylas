@@ -569,6 +569,25 @@ def health():
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        
+        # Initialize default user if doesn't exist
+        user = User.query.filter_by(email='metonline@gmail.com').first()
+        if not user:
+            user = User(
+                first_name='Metin',
+                last_name='Güven',
+                email='metonline@gmail.com',
+                phone='05323332222'
+            )
+            user.set_password('test123')
+            db.session.add(user)
+            db.session.commit()
+            print("[INIT] Default user created")
+        else:
+            # Reset password if exists (for deployment stability)
+            user.set_password('test123')
+            db.session.commit()
+            print("[INIT] Default user password reset")
     
     port = int(os.getenv('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
