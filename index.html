@@ -99,6 +99,13 @@
         <!-- Ana Sayfa -->
         <div id="homePage" class="page">
             <div class="header" style="position: relative; background: linear-gradient(135deg, #e8f0ff 0%, #f5e8ff 100%); padding: 12px 15px; border-radius: 0; margin-bottom: 12px;">
+                <!-- Hamburger Menu Butonu -->
+                <button id="menuToggleBtn" class="menu-toggle-btn" onclick="toggleSideMenu()" title="Menu" style="position: absolute !important; top: 15px !important; left: 15px !important; background: white; border: none; border-radius: 8px; width: 40px; height: 40px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0;">
+                    <span style="width: 20px; height: 2px; background: #333; transition: all 0.3s;"></span>
+                    <span style="width: 20px; height: 2px; background: #333; transition: all 0.3s;"></span>
+                    <span style="width: 20px; height: 2px; background: #333; transition: all 0.3s;"></span>
+                </button>
+
                 <!-- Profil İkonu -->
                 <button id="homeProfileBtn" class="profile-btn" onclick="goToProfile()" title="Profil" style="position: absolute !important; top: 15px !important; right: 15px !important; left: auto !important; display: none; background: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; z-index: 10; flex-shrink: 0;">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#333" stroke-width="2">
@@ -514,6 +521,38 @@
                 <div id="restaurantList" class="restaurant-grid"></div>
             </div>
         </div>
+
+        <!-- Sidebar Menü -->
+        <div id="sideMenu" class="side-menu" style="position: fixed; top: 0; left: -280px; width: 280px; height: 100vh; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 9998; transition: left 0.3s ease; overflow-y: auto;">
+            <div style="padding: 20px 15px;">
+                <button onclick="toggleSideMenu()" style="float: right; background: none; border: none; font-size: 24px; cursor: pointer; color: #333;">×</button>
+                <h3 style="margin: 0 0 20px 0; clear: both; color: #333; font-size: 1.2em;">Menü</h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <button onclick="navigateToMenu('groups')" class="menu-item" style="padding: 12px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.95em; transition: all 0.3s;">
+                        👥 Gruplarım
+                    </button>
+                    <button onclick="navigateToMenu('reservations')" class="menu-item" style="padding: 12px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.95em; transition: all 0.3s;">
+                        📅 Rezervasyonlarım
+                    </button>
+                    <button onclick="navigateToMenu('orders')" class="menu-item" style="padding: 12px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.95em; transition: all 0.3s;">
+                        🛒 Siparişlerim
+                    </button>
+                    <button onclick="navigateToMenu('favorites')" class="menu-item" style="padding: 12px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.95em; transition: all 0.3s;">
+                        ⭐ Favori Yerlerim
+                    </button>
+                    <button onclick="navigateToMenu('coupons')" class="menu-item" style="padding: 12px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.95em; transition: all 0.3s;">
+                        🎟️ Kuponlarım
+                    </button>
+                    <button onclick="navigateToMenu('rewards')" class="menu-item" style="padding: 12px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.95em; transition: all 0.3s;">
+                        🏆 Ödül Puanlarım
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Overlay -->
+        <div id="sideMenuOverlay" onclick="toggleSideMenu()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0); z-index: 9997; transition: background 0.3s; display: none;"></div>
 
         <!-- Profil Sayfası - Modal -->
         <div id="profilePage" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: none; align-items: center; justify-content: center;">

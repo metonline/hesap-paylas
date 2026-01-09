@@ -90,6 +90,50 @@ const API_BASE_URL = (() => {
 
 console.log('API Base URL:', API_BASE_URL);
 
+// ==================== Sidebar Menu Functions ====================
+
+// Sidebar menüyü aç/kapat
+function toggleSideMenu() {
+    const menu = document.getElementById('sideMenu');
+    const overlay = document.getElementById('sideMenuOverlay');
+    
+    if (menu.style.left === '-280px' || menu.style.left === '') {
+        menu.style.left = '0';
+        overlay.style.background = 'rgba(0,0,0,0.5)';
+        overlay.style.display = 'block';
+    } else {
+        menu.style.left = '-280px';
+        overlay.style.background = 'rgba(0,0,0,0)';
+        overlay.style.display = 'none';
+    }
+}
+
+// Menu öğelerine tıklandığında
+function navigateToMenu(item) {
+    toggleSideMenu(); // Menüyü kapat
+    
+    switch(item) {
+        case 'groups':
+            alert('👥 Gruplarım sayfası yakında açılacak!');
+            break;
+        case 'reservations':
+            alert('📅 Rezervasyonlarım sayfası yakında açılacak!');
+            break;
+        case 'orders':
+            alert('🛒 Siparişlerim sayfası yakında açılacak!');
+            break;
+        case 'favorites':
+            alert('⭐ Favori Yerlerim sayfası yakında açılacak!');
+            break;
+        case 'coupons':
+            alert('🎟️ Kuponlarım sayfası yakında açılacak!');
+            break;
+        case 'rewards':
+            alert('🏆 Ödül Puanlarım sayfası yakından açılacak!');
+            break;
+    }
+}
+
 const GOOGLE_CLIENT_ID = '625132087724-43j0qmqgh8kds471d73oposqthr8tt1h.apps.googleusercontent.com';
 
 // Initialize Google Sign-In
