@@ -2007,29 +2007,44 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     const formattedCode = formatQRCode(qrCode);
     document.getElementById('detailGroupQR').innerHTML = `
         <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 10px;">
-            <div id="groupQRCanvas" style="display: flex; justify-content: center; margin-bottom: 15px;"></div>
+            <div id="groupQRCanvas" style="display: flex; justify-content: center; margin-bottom: 15px; background: white; padding: 10px; border-radius: 8px;"></div>
             <div style="font-weight: 600; font-size: 1.2em; letter-spacing: 2px; color: #333;">${formattedCode}</div>
         </div>
     `;
     
-    // QR kod resmi oluştur
+    // QR kod resmi oluştur - qr-code-styling kütüphanesi kullan
     setTimeout(() => {
         const qrContainer = document.getElementById('groupQRCanvas');
-        if (qrContainer && typeof QRCode !== 'undefined') {
+        if (qrContainer && typeof QRCodeStyling !== 'undefined') {
             qrContainer.innerHTML = '';
-            new QRCode(qrContainer, {
-                text: qrCode,
-                width: 150,
-                height: 150,
-                colorDark: '#000000',
-                colorLight: '#ffffff'
+            
+            const qrCode_obj = new QRCodeStyling({
+                width: 200,
+                height: 200,
+                data: qrCode,
+                image: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxOTIgMTkyIj48cmVjdCBmaWxsPSIjRkY2QjZCIiB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIvPjx0ZXh0IHg9Ijk2IiB5PSIxMTAiIGZvbnQtc2l6ZT0iODAiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1mYW1pbHk9IkFyaWFsIj5IUDwvdGV4dD48L3N2Zz4=',
+                dotsOptions: {
+                    color: '#000000',
+                    type: 'square'
+                },
+                backgroundOptions: {
+                    color: '#ffffff'
+                },
+                cornersSquareOptions: {
+                    color: '#000000',
+                    type: 'square'
+                },
+                cornersDotOptions: {
+                    color: '#000000',
+                    type: 'square'
+                }
             });
+            
+            qrCode_obj.append(qrContainer);
         }
     }, 100);
     
-    // Global grup ID'sini sakla (edit/delete için)
     window.currentGroupId = groupId;
-    
     detailsModal.style.display = 'flex';
 }
 
