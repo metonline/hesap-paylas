@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: hesap-paylas-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn backend.app:app
+    envVars:
+      - key: DATABASE_URL
+        scope: all
+      - key: JWT_SECRET
+        value: jwt-secret-key-change-in-production
+      - key: SECRET_KEY
+        value: secret-key-change-in-production
+      - key: FLASK_ENV
+        value: production

@@ -74,7 +74,20 @@ function handleDeepLink() {
 
 // ===== API CONFIGURATION =====
 
-const API_BASE_URL = 'http://localhost:5000/api';
+// Detect environment and set API base URL
+const API_BASE_URL = (() => {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        return 'http://localhost:5000/api';
+    } else if (window.location.hostname === 'metonline.github.io') {
+        // Production API URL - change this to your Render.com URL after deployment
+        return 'https://hesap-paylas-api.onrender.com/api';
+    } else {
+        return 'http://localhost:5000/api';
+    }
+})();
+
+console.log('API Base URL:', API_BASE_URL);
+
 const GOOGLE_CLIENT_ID = '625132087724-43j0qmqgh8kds471d73oposqthr8tt1h.apps.googleusercontent.com';
 
 // Initialize Google Sign-In

@@ -20,7 +20,21 @@ load_dotenv()
 
 # Initialize
 app = Flask(__name__)
-CORS(app)
+
+# CORS configuration for GitHub Pages and local development
+CORS(app, resources={
+    r"/api/*": {
+        "origins": [
+            "https://metonline.github.io",
+            "http://localhost:8000",
+            "http://localhost:3000",
+            "http://127.0.0.1:8000"
+        ],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": True
+    }
+})
 
 # Config
 database_url = os.getenv('DATABASE_URL', 'sqlite:///hesap_paylas.db')
