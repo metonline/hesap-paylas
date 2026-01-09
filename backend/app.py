@@ -183,14 +183,29 @@ def login():
     
     user = User.query.filter_by(email=data['email']).first()
     
-    if not user or not user.check_password(data['password']):
+    if not user:
+        print(f"[LOGIN] User not found: {data['email']}")
         return jsonify({'error': 'Invalid email or password'}), 401
     
+    if not user.check_password(data['password']):
+        print(f"[LOGIN] Password mismatch for user: {data['email']}")
+        return jsonify({'error': 'Invalid email or password'}), 401
+    
+    print(f"[LOGIN] Successful login for: {data['email']}")
     token = generate_token(user.id)
     return jsonify({
         'message': 'Login successful',
         'user': user.to_dict(),
         'token': token
+    }), 200
+
+@app.route('/api/auth/debug-users', methods=['GET'])
+def debug_users():
+    """Debug endpoint - list all users (remove in production)"""
+    users = User.query.all()
+    return jsonify({
+        'total_users': len(users),
+        'users': [{'id': u.id, 'email': u.email, 'name': f"{u.first_name} {u.last_name}"} for u in users]
     }), 200
 
 @app.route('/api/auth/google', methods=['POST'])
