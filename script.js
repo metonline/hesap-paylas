@@ -756,6 +756,39 @@ function handlePasswordReset(event) {
 }
 
 // Profil Sayfasına Git
+// Telefon numarasını mask formatı ile göster: 0(532) 313-32-77
+function formatPhoneDisplay(phone) {
+    if (!phone) return '-';
+    // Sadece rakamları al
+    const cleaned = phone.replace(/\D/g, '');
+    // Türk telefon formatı: 0(XXX) XXX-XX-XX
+    if (cleaned.length === 10) {
+        return cleaned.replace(/(\d)(\d{3})(\d{3})(\d{2})(\d{2})/, '$1($2) $3-$4-$5');
+    }
+    return phone;
+}
+
+// Telefon input için mask
+function formatPhoneInput(value) {
+    if (!value) return '';
+    // Sadece rakamları al
+    let cleaned = value.replace(/\D/g, '');
+    // Maksimum 10 haneli
+    if (cleaned.length > 10) cleaned = cleaned.slice(0, 10);
+    
+    // Format uygula: 0(XXX) XXX-XX-XX
+    if (cleaned.length === 0) return '';
+    if (cleaned.length <= 1) return cleaned;
+    if (cleaned.length <= 4) return cleaned.replace(/(\d)(\d{0,3})/, '$1($2');
+    if (cleaned.length <= 7) return cleaned.replace(/(\d)(\d{3})(\d{0,3})/, '$1($2) $3');
+    return cleaned.replace(/(\d)(\d{3})(\d{3})(\d{0,2})(\d{0,2})/, '$1($2) $3-$4-$5');
+}
+
+// Input event handler
+function handlePhoneInput(input) {
+    input.value = formatPhoneInput(input.value);
+}
+
 function goToProfile() {
     console.log('goToProfile called');
     
@@ -788,16 +821,13 @@ function goToProfile() {
     const profileEmail = document.getElementById('profileEmail');
     const profilePhone = document.getElementById('profilePhone');
     const profileEmailInfo = document.getElementById('profileEmailInfo');
-    const profileDate = document.getElementById('profileDate');
     
     if (profileName) profileName.textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Kullanıcı';
     if (profileEmail) profileEmail.textContent = user.email || '';
-    if (profilePhone) profilePhone.textContent = user.phone || '-';
+    // Telefonu mask formatı ile göster
+    if (profilePhone) profilePhone.textContent = formatPhoneDisplay(user.phone || '-');
     if (profileEmailInfo) profileEmailInfo.textContent = user.email || '';
-    
-    // Üyelik tarihi
-    const memberDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR');
-    if (profileDate) profileDate.textContent = memberDate;
+
     
     console.log('Opening profile modal');
     openProfileModal();

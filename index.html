@@ -57,7 +57,7 @@
                         <form id="manualSignupForm" class="login-form" onsubmit="handleManualSignup(event)">
                             <input type="text" id="signupFirstName" placeholder="Ad" required class="login-input">
                             <input type="text" id="signupLastName" placeholder="Soyad" required class="login-input">
-                            <input type="tel" id="phone" placeholder="Telefon (0541 234 5678)" required class="login-input">
+                            <input type="tel" id="phone" placeholder="Telefon (0(532) 313-32-77)" required class="login-input" oninput="handlePhoneInput(this)">
                             <input type="email" id="email" placeholder="E-posta" required class="login-input">
                             <input type="password" id="password" placeholder="Şifre" required class="login-input">
                             <button type="submit" class="login-btn">KAYDOL</button>
@@ -532,13 +532,9 @@
                         <span style="color: #666; font-size: 0.9em;">📧 E-posta</span>
                         <span id="profileEmail" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0;">
                         <span style="color: #666; font-size: 0.9em;">📱 Telefon</span>
                         <span id="profilePhone" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-                        <span style="color: #666; font-size: 0.9em;">📅 Üyelik</span>
-                        <span id="profileDate" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
                     </div>
                 </div>
             </div>
