@@ -51,6 +51,20 @@
                 </div>
 
                 <div class="signup-section">
+                    <!-- Signup Form -->
+                    <div id="signupForm" class="auth-form login-card" style="display: none;">
+                        <div class="login-header">ÜYEOL</div>
+                        <form id="manualSignupForm" class="login-form" onsubmit="handleManualSignup(event)">
+                            <input type="text" id="signupFirstName" placeholder="Ad" required class="login-input">
+                            <input type="text" id="signupLastName" placeholder="Soyad" required class="login-input">
+                            <input type="tel" id="phone" placeholder="Telefon (0541 234 5678)" required class="login-input">
+                            <input type="email" id="email" placeholder="E-posta" required class="login-input">
+                            <input type="password" id="password" placeholder="Şifre" required class="login-input">
+                            <button type="submit" class="login-btn">KAYDOL</button>
+                        </form>
+                        <p class="signup-text" style="padding: 0 20px 20px 20px;">Kaydolarak <a href="#">Şartları</a> kabul etmiş olursunuz</p>
+                    </div>
+                    
                     <!-- Login Form -->
                     <div id="loginForm" class="auth-form login-card">
                         <div class="login-header">ÜYE GİRİŞİ</div>
@@ -363,7 +377,6 @@
             </div>
             
             <div class="form-container" style="text-align: center; padding: 8px 15px;">
-                <h2 style="font-size: 1.2em; margin: 2px 0 0px 0; font-weight: 600; color: #333;">Hoşgeldiniz !</h2>
                 <h3 style="font-size: 1.3em; margin: 5px 0 15px 0; font-weight: 600; color: #333;">Grup Adınız : <span id="groupWelcomeTitle"></span></h3>
                 
                 <!-- QR Kodu Container - Sabitlenmiş Genişlik, Kompakt -->

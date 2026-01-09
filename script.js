@@ -547,8 +547,6 @@ function handleManualSignup(event) {
     
     // Profil bilgilerini güncelle
     updateHomePageProfile();
-    
-    alert('Hoşgeldiniz ' + firstName + '!');
 }
 
 // Kayıt Tamamlama
@@ -657,8 +655,6 @@ function handleManualLogin(event) {
     
     // Profil bilgilerini güncelle
     updateHomePageProfile();
-    
-    alert('Hoşgeldiniz ' + user.firstName + '!');
 }
 
 // Profil Sayfasına Git
@@ -948,43 +944,39 @@ function closeProfileModal() {
 
 // Çıkış Yap
 function logout() {
-    if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
-        // FORCE HIDE EVERYTHING from home page IMMEDIATELY
-        const homeMenu = document.getElementById('homeUserMenu');
-        if (homeMenu) {
-            homeMenu.style.display = 'none';
-            homeMenu.style.visibility = 'hidden';
-            homeMenu.style.opacity = '0';
-            homeMenu.style.zIndex = '-9999';
-        }
-        
-        const profileBtn = document.getElementById('homeProfileBtn');
-        if (profileBtn) {
-            profileBtn.style.display = 'none';
-        }
-        
-        const homePage = document.getElementById('homePage');
-        if (homePage) {
-            homePage.style.display = 'none';
-            homePage.style.visibility = 'hidden';
-            homePage.style.zIndex = '-9999';
-            homePage.style.opacity = '0';
-        }
-        
-        app.currentUser = null;
-        localStorage.removeItem('hesapPaylas_user');
-        localStorage.removeItem('hesapPaylas_token');
-        
-        // Close profile modal if open
-        closeProfileModal();
-        
-        // Profil bilgilerini gizle
-        updateHomePageProfile();
-        
-        showPage('onboardingPage');
-        alert('Başarıyla çıkış yaptınız. Hoşça kalın! 👋');
+    // FORCE HIDE EVERYTHING from home page IMMEDIATELY
+    const homeMenu = document.getElementById('homeUserMenu');
+    if (homeMenu) {
+        homeMenu.style.display = 'none';
+        homeMenu.style.visibility = 'hidden';
+        homeMenu.style.opacity = '0';
+        homeMenu.style.zIndex = '-9999';
     }
-}
+    
+    const profileBtn = document.getElementById('homeProfileBtn');
+    if (profileBtn) {
+        profileBtn.style.display = 'none';
+    }
+    
+    const homePage = document.getElementById('homePage');
+    if (homePage) {
+        homePage.style.display = 'none';
+        homePage.style.visibility = 'hidden';
+        homePage.style.zIndex = '-9999';
+        homePage.style.opacity = '0';
+    }
+    
+    app.currentUser = null;
+    localStorage.removeItem('hesapPaylas_user');
+    localStorage.removeItem('hesapPaylas_token');
+    
+    // Close profile modal if open
+    closeProfileModal();
+    
+    // Profil bilgilerini gizle
+    updateHomePageProfile();
+    
+    showPage('onboardingPage');
 
 // localStorage işlemleri
 function saveToLocalStorage() {
@@ -1297,8 +1289,36 @@ const colorNames = [
 
 function showGroupCodePage(groupData) {
     console.log('showGroupCodePage çağrıldı, groupData:', groupData);
-    // Başlık güncelle - sadece renk adı göster
-    document.getElementById('groupWelcomeTitle').textContent = groupData.name;
+    
+    // Renk kodu haritası
+    const colorMap = {
+        'Kırmızı': '#e74c3c',
+        'Mavi': '#3498db',
+        'Yeşil': '#27ae60',
+        'Sarı': '#f1c40f',
+        'Turuncu': '#e67e22',
+        'Mor': '#9b59b6',
+        'Pembe': '#e91e63',
+        'Siyah': '#2c3e50',
+        'Beyaz': '#ecf0f1',
+        'Gri': '#95a5a6',
+        'Kahverengi': '#8b4513',
+        'Turkuaz': '#1abc9c',
+        'İndigo': '#4b0082',
+        'Lila': '#da70d6',
+        'Kestane': '#a0522d',
+        'Açık Mavi': '#5dade2',
+        'Açık Yeşil': '#52be80',
+        'Açık Kırmızı': '#f5b7b1',
+        'Koyu Mavi': '#1b4965',
+        'Koyu Yeşil': '#186a3b'
+    };
+    
+    // Başlık güncelle - renk adı göster ve rengi uygula
+    const titleSpan = document.getElementById('groupWelcomeTitle');
+    titleSpan.textContent = groupData.name;
+    titleSpan.style.color = colorMap[groupData.name] || '#333';
+    
     document.getElementById('groupCodeDisplay').textContent = groupData.code;
     console.log('Kod yazıldı:', groupData.code);
     
