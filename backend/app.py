@@ -97,7 +97,15 @@ class Group(db.Model):
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Many-to-many relationship with users
+    members = db.relationship('User', secondary='group_members', backref='groups')
     orders = db.relationship('Order', backref='group', lazy=True)
+
+# Association table for group members (many-to-many)
+group_members = db.Table('group_members',
+    db.Column('group_id', db.Integer, db.ForeignKey('groups.id'), primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), primary_key=True)
+)
 
 class Order(db.Model):
     __tablename__ = 'orders'
@@ -392,9 +400,45 @@ def get_group(group_id):
         'id': group.id,
         'name': group.name,
         'description': group.description,
-        'members': [u.to_dict() for u in group.users],
+        'members': [u.to_dict() for u in group.members],
         'orders': [o.id for o in group.orders]
     }), 200
+
+@app.route('/api/groups/join', methods=['POST'])
+@token_required
+def join_group():
+    """Join group using QR code"""
+    data = request.get_json()
+    qr_code = data.get('qr_code')
+    
+    if not qr_code:
+        return jsonify({'error': 'QR code is required'}), 400
+    
+    # QR kodu ile grup bul
+    group = Group.query.filter_by(qr_code=qr_code).first()
+    
+    if not group:
+        return jsonify({'error': 'Group not found'}), 404
+    
+    # Kullanıcıyı grup üyelerine ekle (zaten üyeyse kontrol et)
+    user = User.query.get(request.user_id)
+    
+    if user in group.members:
+        return jsonify({
+            'message': 'Already a member of this group',
+            'id': group.id,
+            'name': group.name
+        }), 200
+    
+    group.members.append(user)
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Successfully joined group',
+        'id': group.id,
+        'name': group.name,
+        'description': group.description
+    }), 201
 
 # ==================== Order Routes ====================
 

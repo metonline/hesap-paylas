@@ -8,6 +8,7 @@
   "orientation": "portrait-primary",
   "background_color": "#ffffff",
   "theme_color": "#FF6B6B",
+  "permissions": ["camera"],
   "icons": [
     {
       "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23FF6B6B' width='192' height='192'/><text x='96' y='110' font-size='80' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>HP</text></svg>",

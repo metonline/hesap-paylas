@@ -2039,12 +2039,187 @@ function editGroup() {
     loadUserGroups();
 }
 
-function deleteGroup() {
-    if (confirm('Bu grubu silmek istediğinize emin misiniz?')) {
-        alert('✅ Grup silindi');
-        closeGroupDetailsModal();
-        loadUserGroups();
+// ==================== QR Kod Okuyucu Fonksiyonları ====================
+
+let html5QrcodeScanner = null;
+
+function openJoinGroupModal() {
+    document.getElementById('joinGroupModal').style.display = 'flex';
+    document.getElementById('qr-reader-results').textContent = '';
+    document.getElementById('groupCodeInput').value = '';
+    document.getElementById('joinGroupMessage').textContent = '';
+}
+
+function closeJoinGroupModal() {
+    document.getElementById('joinGroupModal').style.display = 'none';
+    stopQRScanner();
+}
+
+function switchJoinTab(tab) {
+    // Sekmeleri göster/gizle
+    document.getElementById('scanTab').style.display = tab === 'scan' ? 'block' : 'none';
+    document.getElementById('manualTab').style.display = tab === 'manual' ? 'block' : 'none';
+    
+    // Buton stillerini güncelle
+    document.querySelectorAll('.join-tab-btn').forEach(btn => {
+        btn.style.color = btn.textContent.includes(tab === 'scan' ? '📱' : '✏️') ? '#333' : '#999';
+        btn.style.borderBottomColor = btn.textContent.includes(tab === 'scan' ? '📱' : '✏️') ? '#4A90E2' : 'transparent';
+    });
+    
+    // Kamerayı kapat eğer manuel sekmeye geçiyorsa
+    if (tab === 'manual') {
+        stopQRScanner();
     }
+}
+
+function startQRScanner() {
+    const startBtn = document.getElementById('startScanBtn');
+    const stopBtn = document.getElementById('stopScanBtn');
+    
+    startBtn.style.display = 'none';
+    stopBtn.style.display = 'block';
+    
+    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    
+    // Kamera izni iste
+    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+        onQRCodeScanned(decodedText);
+    };
+    
+    const config = {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        rememberLastUsedCamera: true,
+        supportedScanTypes: ['IMAGE', 'CAMERA']
+    };
+    
+    html5QrcodeScanner.start(
+        { facingMode: "environment" },
+        config,
+        qrCodeSuccessCallback,
+        (errorMessage) => {
+            // Hata yapma, sessiz tut
+        }
+    ).catch(err => {
+        console.error('Kamera açılamadı:', err);
+        document.getElementById('qr-reader-results').textContent = '❌ Kamera izni gerekli';
+        document.getElementById('qr-reader-results').style.color = '#e74c3c';
+        startBtn.style.display = 'block';
+        stopBtn.style.display = 'none';
+    });
+}
+
+function stopQRScanner() {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().catch(err => console.error('Kamera kapatılamadı:', err));
+        html5QrcodeScanner = null;
+    }
+    
+    const startBtn = document.getElementById('startScanBtn');
+    const stopBtn = document.getElementById('stopScanBtn');
+    
+    startBtn.style.display = 'block';
+    stopBtn.style.display = 'none';
+}
+
+function onQRCodeScanned(decodedText) {
+    // Kodu temizle (sadece rakamları al)
+    const cleanCode = decodedText.replace(/[^\d]/g, '');
+    
+    if (cleanCode.length === 6) {
+        // Kodu xxx-xxx formatına çevir
+        const formattedCode = cleanCode.slice(0, 3) + '-' + cleanCode.slice(3);
+        
+        // Sonucu göster
+        document.getElementById('qr-reader-results').textContent = `✅ Kod okundu: ${formattedCode}`;
+        document.getElementById('qr-reader-results').style.color = '#27ae60';
+        
+        // Kamerayı kapat
+        stopQRScanner();
+        
+        // 1.5 saniye sonra gruba katıl
+        setTimeout(() => {
+            joinGroupWithCode(cleanCode);
+        }, 1500);
+    } else {
+        document.getElementById('qr-reader-results').textContent = '⚠️ Geçersiz QR kod';
+        document.getElementById('qr-reader-results').style.color = '#f39c12';
+    }
+}
+
+function handleManualCodeInput(input) {
+    // Sadece rakamları kabul et
+    let value = input.value.replace(/[^\d]/g, '');
+    
+    // Maksimum 6 rakam
+    if (value.length > 6) {
+        value = value.slice(0, 6);
+    }
+    
+    // xxx-xxx formatına çevir
+    if (value.length > 3) {
+        input.value = value.slice(0, 3) + '-' + value.slice(3);
+    } else {
+        input.value = value;
+    }
+}
+
+function joinGroupWithManualCode() {
+    const code = document.getElementById('groupCodeInput').value;
+    const cleanCode = code.replace(/[^\d]/g, '');
+    
+    if (cleanCode.length !== 6) {
+        document.getElementById('joinGroupMessage').textContent = '❌ Lütfen 6 haneli bir kod gir';
+        document.getElementById('joinGroupMessage').style.color = '#e74c3c';
+        return;
+    }
+    
+    joinGroupWithCode(cleanCode);
+}
+
+function joinGroupWithCode(code) {
+    const token = localStorage.getItem('authToken');
+    const baseURL = getBaseURL();
+    
+    if (!token) {
+        alert('❌ Lütfen önce giriş yap');
+        closeJoinGroupModal();
+        return;
+    }
+    
+    document.getElementById('joinGroupMessage').textContent = '⏳ Gruba katılınıyor...';
+    document.getElementById('joinGroupMessage').style.color = '#3498db';
+    
+    fetch(`${baseURL}/api/groups/join`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            qr_code: code
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success || data.id) {
+            document.getElementById('joinGroupMessage').textContent = '✅ Gruba başarıyla katıldınız!';
+            document.getElementById('joinGroupMessage').style.color = '#27ae60';
+            
+            setTimeout(() => {
+                closeJoinGroupModal();
+                loadUserGroups(); // Grupları yenile
+            }, 1500);
+        } else {
+            document.getElementById('joinGroupMessage').textContent = `❌ ${data.message || 'Grup bulunamadı'}`;
+            document.getElementById('joinGroupMessage').style.color = '#e74c3c';
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        document.getElementById('joinGroupMessage').textContent = '❌ Bir hata oluştu. Tekrar deneyin.';
+        document.getElementById('joinGroupMessage').style.color = '#e74c3c';
+    });
 }
 
 // Yardımcı Fonksiyonlar
