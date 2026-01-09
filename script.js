@@ -76,13 +76,14 @@ function handleDeepLink() {
 
 // Detect environment and set API base URL
 const API_BASE_URL = (() => {
+    // Always use localhost for now (testing)
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return 'http://localhost:5000/api';
     } else if (window.location.hostname === 'metonline.github.io') {
-        // Production API URL - Render.com deployment (use HTTPS on GitHub Pages)
-        return 'https://hesap-paylas-api.onrender.com/api';
+        // For GitHub Pages, try local API first for testing, then fall back to Render
+        return 'http://localhost:5000/api';  // TEMP: Local backend for testing
     } else {
-        // For other environments, use same protocol as current page
+        // For other environments
         const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
         return `${protocol}://localhost:5000/api`;
     }
