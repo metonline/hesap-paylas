@@ -546,9 +546,9 @@ function handleManualSignup(event) {
     }
     
     // Telefon validasyonu
-    const phoneRegex = /^(\+90|0)?\d{10}$/;
-    const cleanPhone = phone.replace(/\s/g, '');
-    if (!phoneRegex.test(cleanPhone)) {
+    const phoneRegex = /^(\+90|0)?\d{9,10}$/;
+    const cleanPhone = phone.replace(/\D/g, ''); // Sadece rakamları al
+    if (cleanPhone.length < 10 || cleanPhone.length > 12) {
         alert('Geçerli bir telefon numarası giriniz!');
         return;
     }
