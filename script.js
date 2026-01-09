@@ -90,6 +90,11 @@ const API_BASE_URL = (() => {
 
 console.log('API Base URL:', API_BASE_URL);
 
+// Helper function to get base URL for API
+function getBaseURL() {
+    return API_BASE_URL.replace('/api', '');
+}
+
 // ==================== Sidebar Menu Functions ====================
 
 // Sidebar menüyü aç/kapat
@@ -1916,7 +1921,7 @@ function closeGroupsModal() {
 }
 
 function loadUserGroups() {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('hesapPaylas_token');
     const baseURL = getBaseURL();
     
     if (!token) {
@@ -2210,7 +2215,7 @@ function joinGroupWithManualCode() {
 }
 
 function joinGroupWithCode(code) {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('hesapPaylas_token');
     const baseURL = getBaseURL();
     
     if (!token) {
