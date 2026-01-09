@@ -4,47 +4,35 @@ on:
   push:
     branches: [ main ]
 
-concurrency:
-  group: "pages"
-  cancel-in-progress: false
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-
-      - name: Build site
-        run: |
-          mkdir -p _site
-          cp *.html _site/ 2>/dev/null || true
-          cp *.css _site/ 2>/dev/null || true
-          cp *.js _site/ 2>/dev/null || true
-          cp *.json _site/ 2>/dev/null || true
-          cp -r logo_images _site/ 2>/dev/null || true
-          cp -r images _site/ 2>/dev/null || true
-          touch _site/.nojekyll
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '_site'
-
   deploy:
-    needs: build
     runs-on: ubuntu-latest
-    permissions:
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v3
+      - uses: actions/checkout@v4
+
+      - name: Create build directory
+        run: |
+          mkdir -p build
+          cp -v *.html build/ || true
+          cp -v *.css build/ || true
+          cp -v *.js build/ || true
+          cp -v *.json build/ || true
+          cp -rv logo_images build/ 2>/dev/null || true
+          cp -rv images build/ 2>/dev/null || true
+          touch build/.nojekyll
+          echo "Files in build directory:"
+          ls -la build/
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
+          cname: metonline.github.io
+
 
