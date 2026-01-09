@@ -3,45 +3,42 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pages: write
       id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup Pages
-      uses: actions/configure-pages@v3
+      uses: actions/configure-pages@v4
 
     - name: Build
       run: |
-        # Create clean directory with only frontend files
         mkdir -p _site
-        cp index.html _site/ || true
-        cp styles.css _site/ || true
-        cp script.js _site/ || true
-        cp service-worker.js _site/ || true
-        cp manifest.json _site/ || true
-        # Copy optional directories if they exist
-        [ -d logo_images ] && cp -r logo_images _site/ || true
-        [ -d images ] && cp -r images _site/ || true
-        # Ensure .nojekyll exists
+        cp index.html _site/ 2>/dev/null || true
+        cp styles.css _site/ 2>/dev/null || true
+        cp script.js _site/ 2>/dev/null || true
+        cp service-worker.js _site/ 2>/dev/null || true
+        cp manifest.json _site/ 2>/dev/null || true
+        [ -d logo_images ] && cp -r logo_images _site/ 2>/dev/null || true
+        [ -d images ] && cp -r images _site/ 2>/dev/null || true
         touch _site/.nojekyll
-        ls -la _site/
 
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v2
+      uses: actions/upload-pages-artifact@v3
       with:
         path: '_site'
 
     - name: Deploy to GitHub Pages
       id: deployment
-      uses: actions/deploy-pages@v2
+      uses: actions/deploy-pages@v3
