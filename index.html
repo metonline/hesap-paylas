@@ -71,10 +71,26 @@
                         <form id="manualLoginForm" class="login-form" onsubmit="handleManualLogin(event)">
                             <input type="email" id="loginEmail" placeholder="E-posta" required class="login-input" style="pointer-events: auto;">
                             <input type="password" id="loginPassword" placeholder="Şifre" required class="login-input" style="pointer-events: auto;">
-                            <p class="forgot-link"><a href="#">Şifreni mi unuttun?</a></p>
+                            <p class="forgot-link"><a href="#" onclick="showPasswordResetForm(); return false;">Şifreni mi unuttun?</a></p>
                             <button type="submit" class="login-btn" style="pointer-events: auto;">ÜYE GİRİŞİ</button>
                         </form>
                         <p class="signup-text">Hesabın yok mu? <a href="#" onclick="showAuthForm('signup'); return false;">ÜYE OL</a></p>
+                    </div>
+
+                    <!-- Şifre Sıfırlama Formu -->
+                    <div id="resetPasswordForm" class="auth-form login-card" style="display: none;">
+                        <div class="login-header">ŞİFRE SIFIRLA</div>
+                        <form id="resetForm" class="login-form" onsubmit="handlePasswordReset(event)">
+                            <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">E-posta adresinizi girin, size sıfırlama kodu göndereceğiz.</p>
+                            <input type="email" id="resetEmail" placeholder="E-posta" required class="login-input" style="pointer-events: auto;">
+                            <input type="hidden" id="resetToken">
+                            <div id="resetCodeSection" style="display: none;">
+                                <input type="text" id="resetCode" placeholder="Sıfırlama Kodu" class="login-input" style="pointer-events: auto;">
+                                <input type="password" id="newPassword" placeholder="Yeni Şifre" class="login-input" style="pointer-events: auto;">
+                            </div>
+                            <button type="submit" class="login-btn" id="resetSubmitBtn" style="pointer-events: auto;">KOD GÖNDER</button>
+                        </form>
+                        <p class="signup-text"><a href="#" onclick="showAuthForm('login'); return false;">Giriş Sayfasına Dön</a></p>
                     </div>
                 </div>
             </div>

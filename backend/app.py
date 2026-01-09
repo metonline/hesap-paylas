@@ -62,6 +62,8 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=True)
     avatar_url = db.Column(db.String(255), nullable=True)
     bonus_points = db.Column(db.Integer, default=0)
+    reset_token = db.Column(db.String(255), nullable=True)
+    reset_token_expires = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -229,6 +231,79 @@ def google_signup():
     
     except Exception as e:
         return jsonify({'error': f'Invalid token: {str(e)}'}), 401
+
+@app.route('/api/auth/request-password-reset', methods=['POST'])
+def request_password_reset():
+    """Request password reset - send reset code to email"""
+    data = request.get_json()
+    
+    if not data or 'email' not in data:
+        return jsonify({'error': 'Email is required'}), 400
+    
+    user = User.query.filter_by(email=data['email']).first()
+    
+    if not user:
+        # Don't reveal if email exists
+        return jsonify({'message': 'If email exists, reset instructions have been sent'}), 200
+    
+    # Generate reset token (simple approach: use JWT)
+    reset_payload = {
+        'user_id': user.id,
+        'purpose': 'password_reset',
+        'exp': datetime.utcnow() + timedelta(hours=1)  # 1 hour expiration
+    }
+    reset_token = jwt.encode(reset_payload, app.config['JWT_SECRET'], algorithm='HS256')
+    
+    # Store reset token in database
+    user.reset_token = reset_token
+    user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+    db.session.commit()
+    
+    # In a real app, send email here with reset link/code
+    # For now, return the token in response (frontend will store it)
+    return jsonify({
+        'message': 'Password reset token generated',
+        'resetToken': reset_token,
+        'expiresIn': 3600  # 1 hour in seconds
+    }), 200
+
+@app.route('/api/auth/reset-password', methods=['POST'])
+def reset_password():
+    """Reset password using reset token"""
+    data = request.get_json()
+    
+    if not data or not all(k in data for k in ['resetToken', 'newPassword']):
+        return jsonify({'error': 'Reset token and new password are required'}), 400
+    
+    try:
+        # Verify reset token
+        payload = jwt.decode(data['resetToken'], app.config['JWT_SECRET'], algorithms=['HS256'])
+        
+        if payload.get('purpose') != 'password_reset':
+            return jsonify({'error': 'Invalid reset token'}), 401
+        
+        user = User.query.get(payload['user_id'])
+        
+        if not user or user.reset_token != data['resetToken']:
+            return jsonify({'error': 'Invalid or expired reset token'}), 401
+        
+        if user.reset_token_expires < datetime.utcnow():
+            return jsonify({'error': 'Reset token has expired'}), 401
+        
+        # Update password
+        user.set_password(data['newPassword'])
+        user.reset_token = None
+        user.reset_token_expires = None
+        db.session.commit()
+        
+        return jsonify({'message': 'Password reset successful'}), 200
+        
+    except jwt.ExpiredSignatureError:
+        return jsonify({'error': 'Reset token has expired'}), 401
+    except jwt.InvalidTokenError:
+        return jsonify({'error': 'Invalid reset token'}), 401
+    except Exception as e:
+        return jsonify({'error': f'Password reset failed: {str(e)}'}), 500
 
 # ==================== Helper Functions ====================
 

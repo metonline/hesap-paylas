@@ -439,6 +439,19 @@ const api = {
         });
     },
 
+    requestPasswordReset(email) {
+        return this.request('POST', '/auth/request-password-reset', {
+            email
+        });
+    },
+
+    resetPassword(resetToken, newPassword) {
+        return this.request('POST', '/auth/reset-password', {
+            resetToken,
+            newPassword
+        });
+    },
+
     googleSignup(token) {
         return this.request('POST', '/auth/google', {
             token
@@ -612,17 +625,20 @@ function checkExistingUser() {
 function showAuthForm(formType) {
     const signupForm = document.getElementById('signupForm');
     const loginForm = document.getElementById('loginForm');
+    const resetForm = document.getElementById('resetPasswordForm');
     const signupTabBtn = document.getElementById('signupTabBtn');
     const loginTabBtn = document.getElementById('loginTabBtn');
     
     if (formType === 'signup') {
         signupForm.style.display = 'block';
         loginForm.style.display = 'none';
+        resetForm.style.display = 'none';
         signupTabBtn.classList.add('active');
         loginTabBtn.classList.remove('active');
     } else {
         signupForm.style.display = 'none';
         loginForm.style.display = 'block';
+        resetForm.style.display = 'none';
         signupTabBtn.classList.remove('active');
         loginTabBtn.classList.add('active');
     }
@@ -662,6 +678,81 @@ function handleManualLogin(event) {
             const errorStr = error.message || error.toString();
             alert(errorStr.includes('401') || errorStr.includes('Invalid') ? 'E-posta veya şifre yanlış!' : 'Giriş sırasında hata oluştu: ' + errorStr);
         });
+}
+
+// Şifre Sıfırlama Formu Göster
+function showPasswordResetForm() {
+    const loginForm = document.getElementById('loginForm');
+    const resetForm = document.getElementById('resetPasswordForm');
+    
+    loginForm.style.display = 'none';
+    resetForm.style.display = 'block';
+}
+
+// Şifre Sıfırlama İşlemi
+function handlePasswordReset(event) {
+    event.preventDefault();
+    
+    const email = document.getElementById('resetEmail').value.trim();
+    const resetCodeSection = document.getElementById('resetCodeSection');
+    const resetCode = document.getElementById('resetCode').value.trim();
+    const newPassword = document.getElementById('newPassword').value;
+    const resetToken = document.getElementById('resetToken').value;
+    const submitBtn = document.getElementById('resetSubmitBtn');
+    
+    // Step 1: Request reset code
+    if (!resetCode && !resetToken) {
+        if (!email) {
+            alert('E-posta adresi gereklidir!');
+            return;
+        }
+        
+        // Request password reset
+        api.requestPasswordReset(email)
+            .then(response => {
+                alert('Sıfırlama kodu e-posta adresinize gönderilmiştir!');
+                
+                // Store reset token
+                document.getElementById('resetToken').value = response.resetToken;
+                
+                // Show code input section
+                resetCodeSection.style.display = 'block';
+                submitBtn.textContent = 'ŞİFREYİ SIFIRLA';
+                
+                // For demo: show the token in console (in production, user gets it via email)
+                console.log('Reset Token (for demo):', response.resetToken);
+            })
+            .catch(error => {
+                alert('Hata: ' + (error.message || error.toString()));
+            });
+    }
+    // Step 2: Reset password with code
+    else if (resetCode && newPassword && resetToken) {
+        if (!newPassword || newPassword.length < 6) {
+            alert('Şifre en az 6 karakter olmalıdır!');
+            return;
+        }
+        
+        // Reset password
+        api.resetPassword(resetToken, newPassword)
+            .then(response => {
+                alert('Şifreniz başarıyla değiştirilmiştir! Giriş yapabilirsiniz.');
+                
+                // Clear form
+                document.getElementById('resetForm').reset();
+                document.getElementById('resetToken').value = '';
+                resetCodeSection.style.display = 'none';
+                submitBtn.textContent = 'KOD GÖNDER';
+                
+                // Go back to login
+                showAuthForm('login');
+            })
+            .catch(error => {
+                alert('Hata: ' + (error.message || error.toString()));
+            });
+    } else {
+        alert('Lütfen tüm alanları doldurunuz!');
+    }
 }
 
 // Profil Sayfasına Git
