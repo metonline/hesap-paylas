@@ -21,7 +21,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23FF6B6B' width='192' height='192'/><text x='96' y='110' font-size='80' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>HP</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23FF6B6B' width='180' height='180' rx='40'/><text x='90' y='105' font-size='70' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>HP</text></svg>">
     
-    <link rel="stylesheet" href="styles.css?v=34">
+    <link rel="stylesheet" href="styles.css?v=32">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
@@ -51,35 +51,16 @@
                 </div>
 
                 <div class="signup-section">
-                    <!-- Tab butonları -->
-                    <div class="auth-tabs">
-                        <button class="tab-btn" id="signupTabBtn" onclick="showAuthForm('signup')">Üye Ol</button>
-                        <button class="tab-btn active" id="loginTabBtn" onclick="showAuthForm('login')">Üye Girişi</button>
-                    </div>
-                    
-                    <!-- Signup Form -->
-                    <div id="signupForm" class="auth-form" style="display: none;">
-                        <form id="manualSignupForm" class="signup-form" onsubmit="handleManualSignup(event)">
-                            <input type="text" id="signupFirstName" placeholder="Ad" required class="form-input">
-                            <input type="text" id="signupLastName" placeholder="Soyad" required class="form-input">
-                            <input type="tel" id="phone" placeholder="Telefon (0541 234 5678)" required class="form-input">
-                            <input type="email" id="email" placeholder="E-posta" required class="form-input">
-                            <input type="password" id="password" placeholder="Şifre" required class="form-input">
-                            <button type="submit" class="form-submit-btn" style="width: 100%; padding: 0px 20px; height: 50px; border: 2px solid #27ae60; border-radius: 8px; background: #27ae60; color: white; font-size: 0.9em; font-weight: 700; cursor: pointer; line-height: 1.2; display: flex; align-items: center; justify-content: center; transition: all 0.4s ease; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px;">Kaydol</button>
-                        </form>
-
-                        <p class="terms-text">Kaydolarak <a href="#">Şartları</a> kabul etmiş olursunuz</p>
-                    </div>
-                    
                     <!-- Login Form -->
-                    <div id="loginForm" class="auth-form">
-                        <form id="manualLoginForm" class="signup-form" onsubmit="handleManualLogin(event)">
-                            <input type="email" id="loginEmail" placeholder="E-posta" required class="form-input" style="pointer-events: auto;">
-                            <input type="password" id="loginPassword" placeholder="Şifre" required class="form-input" style="pointer-events: auto;">
-                            <button type="submit" class="form-submit-btn" style="pointer-events: auto; width: 100%; padding: 0px 20px; height: 50px; border: 2px solid #27ae60; border-radius: 8px; background: #27ae60; color: white; font-size: 0.9em; font-weight: 700; cursor: pointer; line-height: 1.2; display: flex; align-items: center; justify-content: center; transition: all 0.4s ease; margin-top: 8px; text-transform: uppercase; letter-spacing: 1px;">Üye Girişi</button>
+                    <div id="loginForm" class="auth-form login-card">
+                        <div class="login-header">ÜYE GİRİŞİ</div>
+                        <form id="manualLoginForm" class="login-form" onsubmit="handleManualLogin(event)">
+                            <input type="email" id="loginEmail" placeholder="E-posta" required class="login-input" style="pointer-events: auto;">
+                            <input type="password" id="loginPassword" placeholder="Şifre" required class="login-input" style="pointer-events: auto;">
+                            <p class="forgot-link"><a href="#">Şifreni mi unuttun?</a></p>
+                            <button type="submit" class="login-btn" style="pointer-events: auto;">ÜYE GİRİŞİ</button>
                         </form>
-
-                        <p class="terms-text" style="margin-top: 15px;"><a href="#" onclick="showAuthForm('signup'); return false;">Hesabın yok mu? Üye ol</a></p>
+                        <p class="signup-text">Hesabın yok mu? <a href="#" onclick="showAuthForm('signup'); return false;">ÜYE OL</a></p>
                     </div>
                 </div>
             </div>
