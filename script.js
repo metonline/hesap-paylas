@@ -45,9 +45,10 @@ window.addEventListener('beforeinstallprompt', (e) => {
 // Deep Link Handler - URL parametrelerini kontrol et
 function handleDeepLink() {
     const params = new URLSearchParams(window.location.search);
-    const groupCode = params.get('code');
+    // Both 'code' (9 digit: xxx-xxx-xxx) and 'groupCode' (6 digit: xxx-xxx) parameters supported
+    let groupCode = params.get('code') || params.get('groupCode');
     
-    if (groupCode && /^\d{3}-\d{3}-\d{3}$/.test(groupCode)) {
+    if (groupCode && (/^\d{3}-\d{3}-\d{3}$/.test(groupCode) || /^\d{3}-\d{3}$/.test(groupCode))) {
         console.log('Deep link detected with code:', groupCode);
         
         // Eğer user login'se direkt gruba katıl
@@ -1418,16 +1419,25 @@ function smartShareGroup() {
     const user = localStorage.getItem('hesapPaylas_user');
     
     if (user) {
-        // Kullanıcı giriş yapmış, doğrudan WhatsApp'ta paylaş
-        shareViaWhatsApp();
+        // Kullanıcı giriş yapmış, doğrudan WhatsApp'ta paylaş (URL ile)
+        shareViaWhatsAppWithUrl();
     } else {
         // Kullanıcı giriş yapmamış, giriş sayfasına yönlendir
         showPage('onboardingPage');
     }
 }
 
+// URL parametresi ile WhatsApp paylaşımı
+function shareViaWhatsAppWithUrl() {
+    const appUrl = 'https://metonline.github.io/hesap-paylas/?groupCode=' + app.currentGroupCode;
+    const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl:\n\n${appUrl}`;
+    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
+}
+
 function shareViaWhatsApp() {
-    const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl: ${app.currentGroupCode}`;
+    // Uygulama URL'sine grup kodu parametresi ile beraber
+    const appUrl = 'https://metonline.github.io/hesap-paylas/?groupCode=' + app.currentGroupCode;
+    const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl:\n\n${appUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     closeShareModal();
 }
