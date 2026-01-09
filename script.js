@@ -1,4 +1,11 @@
-// Service Worker Registration (PWA desteği)
+/**
+ * Hesap Paylaş - Main Application Script
+ * Version: 2.0.0
+ * Last Updated: 2026-01-09
+ */
+
+// Service Worker DISABLED - Caching issues
+/*
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js').then(registration => {
@@ -8,6 +15,21 @@ if ('serviceWorker' in navigator) {
         });
         
         // Deep link'i handle et
+        handleDeepLink();
+    });
+}
+*/
+
+// Unregister existing service workers
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        registrations.forEach(registration => {
+            registration.unregister();
+            console.log('Service Worker unregistered');
+        });
+    });
+    
+    window.addEventListener('load', () => {
         handleDeepLink();
     });
 }
@@ -95,6 +117,239 @@ function handleGoogleResponse(response) {
         .catch(error => {
             alert('Google ile giriş başarısız: ' + error.message);
         });
+}
+
+// Grup Kur/Katıl butonuna tıklandığında kullanıcı kontrolü
+function checkUserAndNavigate() {
+    const user = localStorage.getItem('hesapPaylas_user');
+    if (user) {
+        // User zaten login'se direkt grup kur sayfasına git
+        showPage('groupChoicePage');
+    } else {
+        // User login değilse üye girişi sayfasına git
+        showPage('onboardingPage');
+    }
+}
+
+// Rezervasyon için kullanıcı kontrolü
+function checkUserForReservation() {
+    const user = localStorage.getItem('hesapPaylas_user');
+    if (user) {
+        // User login'se rezervasyon sayfasına git
+        showPage('reservationPage');
+    } else {
+        // User login değilse üye girişi sayfasına git
+        showPage('onboardingPage');
+    }
+}
+
+// Ana sayfada profil bilgilerini güncelle
+function updateHomePageProfile() {
+    const user = localStorage.getItem('hesapPaylas_user');
+    const profileBtn = document.getElementById('homeProfileBtn');
+    const welcomeMessage = document.getElementById('homeWelcomeMessage');
+    const userName = document.getElementById('homeUserName');
+    const userMenu = document.getElementById('homeUserMenu');
+    
+    if (user) {
+        try {
+            const userData = JSON.parse(user);
+            // Profil butonunu göster
+            if (profileBtn) profileBtn.style.display = 'block';
+            
+            // Hoşgeldin mesajını göster
+            if (welcomeMessage && userName) {
+                userName.textContent = userData.firstName || userData.name || 'Kullanıcı';
+                welcomeMessage.style.display = 'block';
+            }
+            
+            // User menu göster
+            if (userMenu) userMenu.style.display = 'block';
+            
+        } catch (e) {
+            console.error('User data parse error:', e);
+        }
+    } else {
+        // Login yoksa profil ve menu gizle
+        if (profileBtn) profileBtn.style.display = 'none';
+        if (welcomeMessage) welcomeMessage.style.display = 'none';
+        if (userMenu) userMenu.style.display = 'none';
+    }
+}
+
+// Sayfa yüklenince profil bilgilerini güncelle
+window.addEventListener('DOMContentLoaded', () => {
+    updateHomePageProfile();
+});
+
+// Örnek mekanlar
+// Merkez konum: 40°59'21.6"N 29°02'28.3"E (40.9893, 29.0412)
+const userLocation = { lat: 40.9893, lng: 29.0412 };
+
+const venues = {
+    restaurant: [
+        { name: 'Tarihi Kebapçı', phone: '+90 541 234 5678', address: 'Kızılay, Ankara', lat: 40.9910, lng: 29.0430, distance: 0.3 },
+        { name: 'Modern Pizza House', phone: '+90 542 345 6789', address: 'Tunalı Hilmi Cad., Ankara', lat: 40.9875, lng: 29.0390, distance: 0.4 },
+        { name: 'Lezzetli Cafe', phone: '+90 543 456 7890', address: 'Çankaya, Ankara', lat: 40.9850, lng: 29.0450, distance: 0.6 },
+        { name: 'Deniz Restaurant', phone: '+90 532 111 2233', address: 'Ulus, Ankara', lat: 40.9925, lng: 29.0380, distance: 0.7 },
+        { name: 'Köşe Kahvaltı', phone: '+90 533 222 3344', address: 'Bahçelievler, Ankara', lat: 40.9800, lng: 29.0500, distance: 1.2 },
+        { name: 'Izgara Köfte Salonu', phone: '+90 534 333 4455', address: 'Keçiören, Ankara', lat: 41.0050, lng: 29.0300, distance: 1.8 },
+        { name: 'Tatlı Dünyası', phone: '+90 535 444 5566', address: 'Etimesgut, Ankara', lat: 40.9700, lng: 29.0600, distance: 2.5 },
+        { name: 'Saray Lokantası', phone: '+90 536 555 6677', address: 'Yenimahalle, Ankara', lat: 41.0100, lng: 29.0200, distance: 3.2 },
+        { name: 'Ev Yemekleri', phone: '+90 537 666 7788', address: 'Mamak, Ankara', lat: 40.9600, lng: 29.0700, distance: 4.1 },
+        { name: 'Burger Station', phone: '+90 538 777 8899', address: 'Batıkent, Ankara', lat: 41.0200, lng: 29.0100, distance: 4.8 },
+        { name: 'Sushi Bar', phone: '+90 539 888 9900', address: 'Çayyolu, Ankara', lat: 40.9500, lng: 29.0800, distance: 5.5 },
+        { name: 'Kebap Durağı', phone: '+90 531 999 0011', address: 'Gölbaşı, Ankara', lat: 40.9400, lng: 29.0900, distance: 6.8 }
+    ],
+    hotel: [
+        { name: 'Luxor Otel', phone: '+90 541 111 2222', address: 'Kızılay Meydanı, Ankara', lat: 40.9905, lng: 29.0425, distance: 0.2 },
+        { name: 'Grand Hotel', phone: '+90 542 333 4444', address: 'Çankaya, Ankara', lat: 40.9860, lng: 29.0445, distance: 0.5 },
+        { name: 'Modern Suites', phone: '+90 543 555 6666', address: 'Tunalı, Ankara', lat: 40.9880, lng: 29.0385, distance: 0.4 },
+        { name: 'Ankara Palace Hotel', phone: '+90 312 468 5400', address: 'Ulus, Ankara', lat: 40.9930, lng: 29.0375, distance: 0.8 },
+        { name: 'Sheraton Ankara', phone: '+90 312 457 6000', address: 'Kavaklidere, Ankara', lat: 40.9840, lng: 29.0460, distance: 0.9 },
+        { name: 'Hilton SA', phone: '+90 312 455 0000', address: 'Tahran Cad., Ankara', lat: 40.9820, lng: 29.0480, distance: 1.3 },
+        { name: 'Divan Çukurhan', phone: '+90 312 306 6400', address: 'Çukurhan, Ankara', lat: 40.9940, lng: 29.0360, distance: 1.5 },
+        { name: 'JW Marriott', phone: '+90 312 248 8888', address: 'Kızılırmak, Ankara', lat: 41.0020, lng: 29.0320, distance: 2.1 },
+        { name: 'Swissotel Ankara', phone: '+90 312 409 3000', address: 'José Marti Cad., Ankara', lat: 40.9780, lng: 29.0520, distance: 2.6 },
+        { name: 'Radisson Blu', phone: '+90 312 310 6060', address: 'Ulus, Ankara', lat: 40.9950, lng: 29.0350, distance: 3.0 },
+        { name: 'The Green Park', phone: '+90 312 457 1000', address: 'Kavaklıdere, Ankara', lat: 40.9760, lng: 29.0540, distance: 3.5 },
+        { name: 'Neva Palas Hotel', phone: '+90 312 420 8090', address: 'Sıhhiye, Ankara', lat: 40.9720, lng: 29.0580, distance: 4.2 }
+    ]
+};
+
+// Harita modal'ını aç
+function openMapSelection() {
+    const mapModal = document.getElementById('mapModal');
+    mapModal.style.display = 'flex';
+}
+
+// Harita modal'ını kapat
+function closeMapModal() {
+    const mapModal = document.getElementById('mapModal');
+    mapModal.style.display = 'none';
+}
+
+// Haritadan seçilen konumu onayla
+function confirmMapLocation() {
+    // Şimdilik varsayılan konum
+    const targetLocationInput = document.getElementById('targetLocation');
+    targetLocationInput.value = 'Kızılay, Ankara (40.9893, 29.0412)';
+    closeMapModal();
+}
+
+// Mekan detaylarını göster (yeni sayfa)
+function showVenueDetail(venue) {
+    // Venue bilgilerini sakla
+    window.currentVenue = venue;
+    
+    // Sayfa bilgilerini doldur
+    document.getElementById('venueDetailName').textContent = venue.name;
+    document.getElementById('venueDetailAddress').textContent = venue.address;
+    document.getElementById('venuePhoneText').textContent = venue.phone;
+    document.getElementById('venuePhoneButton').href = 'tel:' + venue.phone;
+    
+    // Mesafe ve tür bilgisi
+    if (venue.distance) {
+        document.getElementById('venueDetailDistance').textContent = venue.distance + ' km uzaklıkta';
+    }
+    
+    // Tür bilgisi
+    const venueType = window.reservationSelectedType === 'restaurant' ? 'Cafe / Restaurant' : 'Hotel';
+    document.getElementById('venueDetailType').textContent = venueType;
+    
+    // Yeni sayfayı aç
+    showPage('venueDetailPage');
+}
+
+// E-rezervasyon işlemi
+function handleEreservation() {
+    const venue = window.currentVenue;
+    if (venue) {
+        alert('📧 ' + venue.name + ' için e-rezervasyon sayfası yakında açılacak...');
+    }
+}
+
+// Adrese navigasyon
+function navigateToVenue() {
+    const venue = window.currentVenue;
+    if (venue && venue.lat && venue.lng) {
+        // Google Maps'te navigasyon başlat (yeni sekmede)
+        const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${venue.lat},${venue.lng}&travelmode=driving`;
+        window.open(mapsUrl, '_blank');
+    } else if (venue && venue.address) {
+        // Adres varsa adresi kullan
+        const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(venue.address)}`;
+        window.open(mapsUrl, '_blank');
+    }
+}
+
+// Rezervasyon arama işlemi
+function handleReservationSearch() {
+    const manualVenueName = document.getElementById('manualVenueName').value.trim();
+    const selectedType = window.reservationSelectedType;
+    
+    if (manualVenueName) {
+        // Manuel giriş varsa onu göster
+        showVenueDetail({
+            name: manualVenueName,
+            phone: '+90 541 234 5678',
+            address: 'Ankara'
+        });
+    } else if (selectedType) {
+        // Seçilen türün sonuçlarını göster (her zaman 2 km çapında filtrele)
+        let results = venues[selectedType];
+        
+        // Hedef konuma göre 2 km içindekileri göster
+        results = results.filter(venue => venue.distance <= 2);
+        
+        if (results && results.length > 0) {
+            displaySearchResults(results);
+        } else {
+            alert('Yakınınızda mekan bulunamadı.');
+        }
+    } else {
+        alert('Lütfen bir mekan türü seçin veya mekan adı girin.');
+    }
+}
+
+// Arama sonuçlarını göster
+function displaySearchResults(results) {
+    const resultsList = document.getElementById('resultsList');
+    resultsList.innerHTML = '';
+    
+    // Mesafeye göre sırala
+    const sortedResults = [...results].sort((a, b) => a.distance - b.distance);
+    
+    // Başlığı güncelle
+    const venueType = window.reservationSelectedType === 'restaurant' ? 'Cafe / Restaurant' : 'Hotel';
+    document.getElementById('searchResultsTitle').textContent = venueType + ' Arama Sonuçları (' + sortedResults.length + ')';
+    
+    sortedResults.forEach(venue => {
+        const resultItem = document.createElement('div');
+        resultItem.style.cssText = 'padding: 12px; background: white; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; transition: all 0.3s;';
+        resultItem.innerHTML = `
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div>
+                    <h4 style="margin: 0 0 4px 0; color: #333;">${venue.name}</h4>
+                    <p style="margin: 0; font-size: 0.85em; color: #999;">${venue.address}</p>
+                    <p style="margin: 4px 0 0 0; font-size: 0.8em; color: #4A90E2;">📍 ${venue.distance} km uzaklıkta</p>
+                </div>
+                <span style="font-size: 1.2em;">→</span>
+            </div>
+        `;
+        resultItem.onmouseover = () => resultItem.style.background = '#f5f5f5';
+        resultItem.onmouseout = () => resultItem.style.background = 'white';
+        resultItem.onclick = () => showVenueDetail(venue);
+        resultsList.appendChild(resultItem);
+    });
+    
+    // Yeni sayfayı aç
+    showPage('searchResultsPage');
+}
+
+// Seçim türünü kaydet
+function setReservationType(type) {
+    window.reservationSelectedType = type;
 }
 
 // API Helper Functions
@@ -260,35 +515,40 @@ function handleManualSignup(event) {
         return;
     }
     
-    // API'ye kaydol
-    const form = document.querySelector('.signup-form');
-    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    // Offline Mode - localStorage'a kaydet
+    const user = {
+        id: Date.now().toString(),
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        phone: phone,
+        createdAt: new Date().toISOString()
+    };
     
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Kaydediliyor...';
-    }
+    // localStorage'a kullanıcıyı ve şifreyi kaydet (demo amaçlı)
+    const usersData = JSON.parse(localStorage.getItem('hesapPaylas_users') || '{}');
+    usersData[email] = {
+        ...user,
+        password: password // Demo amaçlı (gerçek app'te hash edilmeli)
+    };
+    localStorage.setItem('hesapPaylas_users', JSON.stringify(usersData));
     
-    api.signup(firstName, lastName, email, password, phone)
-        .then(response => {
-            const user = response.user;
-            const token = response.token;
-            
-            // Token ve user'ı localStorage'a kaydet
-            localStorage.setItem('hesapPaylas_token', token);
-            localStorage.setItem('hesapPaylas_user', JSON.stringify(user));
-            
-            app.currentUser = user;
-            
-            showPage('homePage');
-        })
-        .catch(error => {
-            alert('Kayıt başarısız oldu: ' + error.message);
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Kaydol';
-            }
-        });
+    // Giriş yap
+    localStorage.setItem('hesapPaylas_token', 'demo-token-' + user.id);
+    localStorage.setItem('hesapPaylas_user', JSON.stringify(user));
+    
+    app.currentUser = user;
+    
+    // Formu temizle
+    document.getElementById('manualSignupForm').reset();
+    
+    // Ana sayfaya git
+    showPage('homePage');
+    
+    // Profil bilgilerini güncelle
+    updateHomePageProfile();
+    
+    alert('Hoşgeldiniz ' + firstName + '!');
 }
 
 // Kayıt Tamamlama
@@ -364,80 +624,131 @@ function handleManualLogin(event) {
         return;
     }
     
-    const form = document.querySelector('#manualLoginForm');
-    const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+    // Offline Mode - localStorage'dan kontrol et
+    const usersData = JSON.parse(localStorage.getItem('hesapPaylas_users') || '{}');
+    const userData = usersData[email];
     
-    if (submitBtn) {
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Giriş yapılıyor...';
+    if (!userData || userData.password !== password) {
+        alert('E-posta veya şifre yanlış!');
+        return;
     }
     
-    api.login(email, password)
-        .then(response => {
-            const user = response.user;
-            const token = response.token;
-            
-            // Token ve user'ı localStorage'a kaydet
-            localStorage.setItem('hesapPaylas_token', token);
-            localStorage.setItem('hesapPaylas_user', JSON.stringify(user));
-            
-            app.currentUser = user;
-            
-            // Form alanlarını temizle
-            document.getElementById('loginEmail').value = '';
-            document.getElementById('loginPassword').value = '';
-            
-            // Ana sayfaya yönlendir
-            showPage('homePage');
-        })
-        .catch(error => {
-            console.error('Login error:', error);
-            const errorMsg = error.message || 'Giriş başarısız oldu';
-            alert(errorMsg);
-            
-            if (submitBtn) {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Giriş Yap';
-            }
-        });
+    // Giriş başarılı
+    const user = {
+        id: userData.id,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+        email: userData.email,
+        phone: userData.phone,
+        createdAt: userData.createdAt
+    };
+    
+    localStorage.setItem('hesapPaylas_token', 'demo-token-' + user.id);
+    localStorage.setItem('hesapPaylas_user', JSON.stringify(user));
+    
+    app.currentUser = user;
+    
+    // Form alanlarını temizle
+    document.getElementById('loginEmail').value = '';
+    document.getElementById('loginPassword').value = '';
+    
+    // Ana sayfaya yönlendir
+    showPage('homePage');
+    
+    // Profil bilgilerini güncelle
+    updateHomePageProfile();
+    
+    alert('Hoşgeldiniz ' + user.firstName + '!');
 }
 
 // Profil Sayfasına Git
 function goToProfile() {
-    if (!app.currentUser) {
-        alert('Lütfen önce üye olunuz!');
+    console.log('goToProfile called');
+    
+    // localStorage'dan kullanıcı bilgisini al
+    const storedUser = localStorage.getItem('hesapPaylas_user');
+    console.log('Stored user:', storedUser);
+    
+    if (!storedUser) {
+        alert('Lütfen önce giriş yapınız!');
+        showPage('onboardingPage');
         return;
     }
     
+    let user;
+    try {
+        user = JSON.parse(storedUser);
+        console.log('Parsed user:', user);
+    } catch (e) {
+        console.error('User parse error:', e);
+        alert('Lütfen tekrar giriş yapınız!');
+        showPage('onboardingPage');
+        return;
+    }
+    
+    // app.currentUser'ı da güncelle
+    app.currentUser = user;
+    
     // Profil bilgilerini doldur
-    document.getElementById('profileName').textContent = 
-        `${app.currentUser.firstName} ${app.currentUser.lastName}`;
-    document.getElementById('profileEmail').textContent = app.currentUser.email;
-    document.getElementById('profilePhone').textContent = app.currentUser.phone;
-    document.getElementById('profileEmailInfo').textContent = app.currentUser.email;
+    const profileName = document.getElementById('profileName');
+    const profileEmail = document.getElementById('profileEmail');
+    const profilePhone = document.getElementById('profilePhone');
+    const profileEmailInfo = document.getElementById('profileEmailInfo');
+    const profileDate = document.getElementById('profileDate');
+    
+    if (profileName) profileName.textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Kullanıcı';
+    if (profileEmail) profileEmail.textContent = user.email || '';
+    if (profilePhone) profilePhone.textContent = user.phone || '-';
+    if (profileEmailInfo) profileEmailInfo.textContent = user.email || '';
     
     // Üyelik tarihi
-    const today = new Date().toLocaleDateString('tr-TR');
-    document.getElementById('profileDate').textContent = today;
+    const memberDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('tr-TR') : new Date().toLocaleDateString('tr-TR');
+    if (profileDate) profileDate.textContent = memberDate;
     
-    // Bonus puanlarını göster
-    updateBonusPoints();
-    
-    showPage('profilePage');
+    console.log('Opening profile modal');
+    openProfileModal();
+}
+
+// Profile Modal Functions
+function openProfileModal() {
+    const modal = document.getElementById('profilePage');
+    if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeProfileModal() {
+    const modal = document.getElementById('profilePage');
+    if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = 'auto';
+    }
 }
 
 // Bonus Puanlarını Güncelle
 function updateBonusPoints() {
     // Demo veri - gerçek uygulamada database'ten gelecek
-    const bonusPoints = app.currentUser.bonusPoints || 2450;
+    const bonusPoints = (app.currentUser && app.currentUser.bonusPoints) || 2450;
     const status = calculateMemberStatus(bonusPoints);
     
-    document.getElementById('bonusPoints').textContent = `${bonusPoints.toLocaleString('tr-TR')} Puan`;
-    document.getElementById('statusBadge').textContent = status.name;
+    const bonusPointsEl = document.getElementById('bonusPoints');
+    const statusBadgeEl = document.getElementById('statusBadge');
+    const progressFillEl = document.getElementById('progressFill');
+    
+    if (bonusPointsEl) {
+        bonusPointsEl.textContent = `${bonusPoints.toLocaleString('tr-TR')} Puan`;
+    }
+    
+    if (statusBadgeEl) {
+        statusBadgeEl.textContent = status.name;
+    }
     
     // Progress bar'ı güncelle
     const progressPercentage = (bonusPoints / 5000) * 100;
-    document.getElementById('progressFill').style.width = Math.min(progressPercentage, 100) + '%';
+    if (progressFillEl) {
+        progressFillEl.style.width = Math.min(progressPercentage, 100) + '%';
+    }
     
     // Seviyeler ve avantajları güncelle
     updateLevelDisplay(status);
@@ -484,9 +795,11 @@ function updateLevelDisplay(status) {
     
     // Avantajları güncelle
     const benefitsList = document.querySelector('.level-benefits ul');
-    benefitsList.innerHTML = status.benefits.map(benefit => 
-        `<li>✅ ${benefit}</li>`
-    ).join('');
+    if (benefitsList && status.benefits) {
+        benefitsList.innerHTML = status.benefits.map(benefit => 
+            `<li>✅ ${benefit}</li>`
+        ).join('');
+    }
 }
 
 // Profil Düzenle
@@ -607,12 +920,67 @@ function changePassword() {
     alert('Şifreniz başarıyla değiştirildi! 🔐');
 }
 
+// Profile Modal Functions
+function openProfileModal() {
+    const modal = document.getElementById('profilePage');
+    console.log('Modal element:', modal);
+    console.log('Modal BEFORE - display:', modal.style.display, 'zIndex:', modal.style.zIndex);
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        modal.style.zIndex = '9999';
+        modal.style.opacity = '1';
+        console.log('Modal AFTER - display:', modal.style.display, 'zIndex:', modal.style.zIndex);
+        document.body.style.overflow = 'hidden';
+    } else {
+        console.error('profilePage modal not found!');
+    }
+}
+
+function closeProfileModal() {
+    const modal = document.getElementById('profilePage');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.style.visibility = 'hidden';
+        document.body.style.overflow = 'auto';
+    }
+}
+
 // Çıkış Yap
 function logout() {
     if (confirm('Çıkış yapmak istediğinize emin misiniz?')) {
+        // FORCE HIDE EVERYTHING from home page IMMEDIATELY
+        const homeMenu = document.getElementById('homeUserMenu');
+        if (homeMenu) {
+            homeMenu.style.display = 'none';
+            homeMenu.style.visibility = 'hidden';
+            homeMenu.style.opacity = '0';
+            homeMenu.style.zIndex = '-9999';
+        }
+        
+        const profileBtn = document.getElementById('homeProfileBtn');
+        if (profileBtn) {
+            profileBtn.style.display = 'none';
+        }
+        
+        const homePage = document.getElementById('homePage');
+        if (homePage) {
+            homePage.style.display = 'none';
+            homePage.style.visibility = 'hidden';
+            homePage.style.zIndex = '-9999';
+            homePage.style.opacity = '0';
+        }
+        
         app.currentUser = null;
         localStorage.removeItem('hesapPaylas_user');
         localStorage.removeItem('hesapPaylas_token');
+        
+        // Close profile modal if open
+        closeProfileModal();
+        
+        // Profil bilgilerini gizle
+        updateHomePageProfile();
+        
         showPage('onboardingPage');
         alert('Başarıyla çıkış yaptınız. Hoşça kalın! 👋');
     }
@@ -632,15 +1000,45 @@ function loadFromLocalStorage() {
 
 // Sayfa yönetimi
 function showPage(pageId) {
-    // Tüm sayfaları gizle
+    // FORCE hide ALL home menu elements first
+    const homeMenu = document.getElementById('homeUserMenu');
+    if (homeMenu) {
+        homeMenu.style.display = 'none';
+        homeMenu.style.visibility = 'hidden';
+        homeMenu.style.opacity = '0';
+    }
+    
+    const profileBtn = document.getElementById('homeProfileBtn');
+    if (profileBtn) {
+        profileBtn.style.display = 'none';
+    }
+    
+    // Hide ALL pages completely
     document.querySelectorAll('.page').forEach(page => {
+        page.style.display = 'none';
+        page.style.visibility = 'hidden';
+        page.style.opacity = '0';
+        page.style.zIndex = '-1';
         page.classList.remove('active');
     });
     
-    // Seçili sayfayı göster
+    // Show ONLY the requested page
     const page = document.getElementById(pageId);
     if (page) {
+        page.style.display = 'block';
+        page.style.visibility = 'visible';
+        page.style.opacity = '1';
+        page.style.position = 'relative';
+        page.style.zIndex = pageId === 'onboardingPage' ? '100' : '1';
         page.classList.add('active');
+        
+        // If showing homePage, show the menu
+        if (pageId === 'homePage' && homeMenu) {
+            homeMenu.style.display = 'block';
+            homeMenu.style.visibility = 'visible';
+            homeMenu.style.opacity = '1';
+        }
+        
         window.scrollTo(0, 0);
     }
 }

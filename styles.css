@@ -45,7 +45,9 @@ body {
     background: white;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow);
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    position: relative;
 }
 
 /* Onboarding Sayfası */
@@ -217,7 +219,7 @@ body {
 
 .standard-header h1 {
     font-size: 1.5em;
-    margin: 0 0 2px 0;
+    margin: 0 0 -10px 0;
     letter-spacing: 0.5px;
     line-height: 1;
     display: flex;
@@ -250,11 +252,11 @@ body {
 }
 
 .standard-header p {
-    font-size: 1.4em;
+    font-size: 1.1em;
     color: #666;
     font-style: italic;
-    margin: 0;
-    font-family: 'Brush Script MT', 'Great Vibes', cursive;
+    margin: 8px 0 0 0;
+    font-family: 'Pacifico', 'Brush Script MT', 'Great Vibes', cursive;
     font-weight: 400;
     white-space: nowrap;
     letter-spacing: 0.5px;
@@ -883,13 +885,13 @@ body {
 
 /* Sayfalar */
 .page {
-    display: none;
+    display: none !important;
     padding: 30px;
     animation: slideIn 0.3s ease-in-out;
 }
 
 .page.active {
-    display: block;
+    display: block !important;
 }
 
 @keyframes slideIn {
@@ -922,6 +924,15 @@ body {
 .hesap {
     color: #4A90E2;
     font-weight: 900;
+}
+
+.percent-sign {
+    color: #27ae60;
+    font-weight: 400;
+    font-size: 1.2em;
+    line-height: 1;
+    flex-shrink: 0;
+    margin: 0;
 }
 
 .slash {
