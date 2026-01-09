@@ -544,12 +544,11 @@ function handleManualSignup(event) {
         .catch(error => {
             console.error('Signup error:', error);
             let errorMsg = 'Kayıt sırasında hata oluştu';
-            if (error.error) {
-                if (error.error.includes('already exists')) {
-                    errorMsg = 'Bu e-posta adresi zaten kayıtlı!';
-                } else {
-                    errorMsg = error.error;
-                }
+            const errorStr = error.message || error.toString();
+            if (errorStr.includes('already exists') || errorStr.includes('Email already exists')) {
+                errorMsg = 'Bu e-posta adresi zaten kayıtlı!';
+            } else {
+                errorMsg = errorStr;
             }
             alert(errorMsg);
         });
@@ -647,7 +646,8 @@ function handleManualLogin(event) {
         })
         .catch(error => {
             console.error('Login error:', error);
-            alert('E-posta veya şifre yanlış!');
+            const errorStr = error.message || error.toString();
+            alert(errorStr.includes('401') || errorStr.includes('Invalid') ? 'E-posta veya şifre yanlış!' : 'Giriş sırasında hata oluştu: ' + errorStr);
         });
 }
 
