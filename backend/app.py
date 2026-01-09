@@ -396,13 +396,21 @@ def create_group():
     db.session.add(group)
     db.session.commit()
     
+    # Add creator to group members
+    user = User.query.get(request.user_id)
+    group.members.append(user)
+    db.session.commit()
+    
     return jsonify({
-        'message': 'Group created',
-        'id': group.id,
-        'name': group.name,
-        'qr_code': group.qr_code
-    }), 201
-        'groupId': group.id
+        'success': True,
+        'message': 'Group created successfully',
+        'group': {
+            'id': group.id,
+            'name': group.name,
+            'description': group.description,
+            'qr_code': group.qr_code,
+            'created_at': group.created_at.isoformat()
+        }
     }), 201
 
 @app.route('/api/groups/<int:group_id>', methods=['GET'])

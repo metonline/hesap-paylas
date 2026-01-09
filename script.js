@@ -1954,16 +1954,6 @@ function closeGroupDetailsModal() {
     detailsModal.style.display = 'none';
 }
 
-function showCreateGroupForm() {
-    const groupName = prompt('Grup adı girin:');
-    if (!groupName) return;
-    
-    const groupDesc = prompt('Grup açıklaması girin:');
-    
-    alert('✅ Grup oluşturuldu: ' + groupName);
-    loadUserGroups(); // Listeyi yenile
-}
-
 function editGroup() {
     const newName = prompt('Yeni grup adı girin:');
     if (!newName) return;
