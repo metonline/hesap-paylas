@@ -977,6 +977,7 @@ function logout() {
     updateHomePageProfile();
     
     showPage('onboardingPage');
+}
 
 // localStorage işlemleri
 function saveToLocalStorage() {
@@ -1319,8 +1320,11 @@ function showGroupCodePage(groupData) {
     titleSpan.textContent = groupData.name;
     titleSpan.style.color = colorMap[groupData.name] || '#333';
     
-    document.getElementById('groupCodeDisplay').textContent = groupData.code;
-    console.log('Kod yazıldı:', groupData.code);
+    // Format code as xxx-xxx (6 digits with one dash)
+    const codeStr = groupData.code.toString().padStart(6, '0');
+    const formattedCode = codeStr.replace(/(\d{3})(\d{3})/, '$1-$2');
+    document.getElementById('groupCodeDisplay').textContent = formattedCode;
+    console.log('Kod yazıldı:', formattedCode);
     
     // Paylaşma için global değişkene kaydet
     app.currentGroupCode = groupData.code;
@@ -1388,11 +1392,10 @@ function generateGroupId() {
     // Rastgele renk ismi seç
     const randomColor = colorNames[Math.floor(Math.random() * colorNames.length)];
     
-    // 9 haneli numara üret (xxx-xxx-xxx formatında)
+    // 6 haneli numara üret (xxx-xxx formatında)
     const num1 = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
     const num2 = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-    const num3 = String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-    const numericCode = `${num1}-${num2}-${num3}`;
+    const numericCode = `${num1}-${num2}`;
     
     return {
         name: randomColor,
