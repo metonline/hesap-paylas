@@ -30,12 +30,12 @@ jobs:
         cp script.js _site/ || true
         cp service-worker.js _site/ || true
         cp manifest.json _site/ || true
-        cp .nojekyll _site/ || true
         # Copy optional directories if they exist
         [ -d logo_images ] && cp -r logo_images _site/ || true
         [ -d images ] && cp -r images _site/ || true
         # Ensure .nojekyll exists
         touch _site/.nojekyll
+        ls -la _site/
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v2
