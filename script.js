@@ -1413,6 +1413,19 @@ function closeShareModal() {
     document.getElementById('shareModal').style.display = 'none';
 }
 
+// Akıllı Paylaş: Giriş yapılmışsa WhatsApp'ta paylaş, yoksa giriş sayfasına yönlendir
+function smartShareGroup() {
+    const user = localStorage.getItem('hesapPaylas_user');
+    
+    if (user) {
+        // Kullanıcı giriş yapmış, doğrudan WhatsApp'ta paylaş
+        shareViaWhatsApp();
+    } else {
+        // Kullanıcı giriş yapmamış, giriş sayfasına yönlendir
+        showPage('onboardingPage');
+    }
+}
+
 function shareViaWhatsApp() {
     const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl: ${app.currentGroupCode}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
