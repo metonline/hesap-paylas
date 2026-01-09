@@ -440,6 +440,28 @@ def join_group():
         'description': group.description
     }), 201
 
+@app.route('/api/user/groups', methods=['GET'])
+@token_required
+def get_user_groups():
+    """Get all groups for current user"""
+    user = User.query.get(request.user_id)
+    
+    # Kullanıcının üyesi olduğu grupları getir
+    user_groups = user.groups
+    
+    groups_data = []
+    for group in user_groups:
+        groups_data.append({
+            'id': group.id,
+            'name': group.name,
+            'description': group.description,
+            'qr_code': group.qr_code,
+            'created_at': group.created_at.isoformat(),
+            'status': 'active'  # TODO: Gerçek status kontrolü (kapalı/açık)
+        })
+    
+    return jsonify(groups_data), 200
+
 # ==================== Order Routes ====================
 
 @app.route('/api/orders', methods=['POST'])

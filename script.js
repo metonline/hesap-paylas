@@ -1916,28 +1916,60 @@ function closeGroupsModal() {
 }
 
 function loadUserGroups() {
-    const token = localStorage.getItem('hesapPaylas_token');
+    const token = localStorage.getItem('authToken');
+    const baseURL = getBaseURL();
     
-    // Örnek veriler (backend API henüz user groups endpoint'i yok)
-    // Şimdilik sabit veriler gösterelim (6 haneli QR kod ekledik)
-    const activeGroups = [
-        { id: 1, name: 'Öğle Yemeği Grubu', description: 'Pazartesi öğle yemeği', created_at: '2026-01-09', status: 'active', qrCode: '123456' },
-        { id: 2, name: 'Akşam Yemeği', description: 'Cuma akşamı', created_at: '2026-01-08', status: 'active', qrCode: '789012' }
-    ];
+    if (!token) {
+        console.log('Token yok, test verisi gösterilecek');
+        showTestGroups();
+        return;
+    }
     
-    const closedGroups = [
-        { id: 3, name: 'Geçen Hafta Grubu', description: 'Tamamlandı', created_at: '2026-01-01', status: 'closed', qrCode: '345678' }
+    // Backend'den gerçek grupları yükle
+    fetch(`${baseURL}/api/user/groups`, {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && Array.isArray(data)) {
+            displayGroups(data);
+        } else {
+            showTestGroups();
+        }
+    })
+    .catch(error => {
+        console.error('Gruplar yüklenirken hata:', error);
+        showTestGroups();
+    });
+}
+
+function showTestGroups() {
+    // Test verisi - demo için
+    const allGroups = [
+        { id: 1, name: 'Öğle Yemeği Grubu', description: 'Pazartesi öğle yemeği', created_at: '2026-01-09', qr_code: '123456', status: 'active' },
+        { id: 2, name: 'Akşam Yemeği', description: 'Cuma akşamı', created_at: '2026-01-08', qr_code: '789012', status: 'active' },
+        { id: 3, name: 'Geçen Hafta Grubu', description: 'Tamamlandı', created_at: '2026-01-01', qr_code: '345678', status: 'closed' }
     ];
+    displayGroups(allGroups);
+}
+
+function displayGroups(groups) {
+    const activeGroups = groups.filter(g => g.status === 'active');
+    const closedGroups = groups.filter(g => g.status === 'closed');
     
     // Aktif grupları göster
     const activeList = document.getElementById('activeGroupsList');
     if (activeGroups.length > 0) {
         activeList.innerHTML = activeGroups.map(group => `
-            <div onclick="showGroupDetails(${group.id}, '${group.name}', '${group.description}', '${group.created_at}', '${group.qrCode}')" 
+            <div onclick="showGroupDetails(${group.id}, '${group.name.replace(/'/g, "\\'")}', '${(group.description || '').replace(/'/g, "\\'")}', '${group.created_at}', '${group.qr_code}')" 
                  style="padding: 12px; background: #e8f8f5; border-left: 4px solid #27ae60; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
                 <div style="font-weight: 600; color: #27ae60;">${group.name}</div>
-                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description}</div>
-                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qrCode)}</div>
+                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description || 'Açıklama yok'}</div>
+                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qr_code)}</div>
             </div>
         `).join('');
     } else {
@@ -1948,11 +1980,11 @@ function loadUserGroups() {
     const closedList = document.getElementById('closedGroupsList');
     if (closedGroups.length > 0) {
         closedList.innerHTML = closedGroups.map(group => `
-            <div onclick="showGroupDetails(${group.id}, '${group.name}', '${group.description}', '${group.created_at}', '${group.qrCode}')" 
+            <div onclick="showGroupDetails(${group.id}, '${group.name.replace(/'/g, "\\'")}', '${(group.description || '').replace(/'/g, "\\'")}', '${group.created_at}', '${group.qr_code}')" 
                  style="padding: 12px; background: #ecf0f1; border-left: 4px solid #95a5a6; border-radius: 8px; cursor: pointer; opacity: 0.8; transition: all 0.3s;">
                 <div style="font-weight: 600; color: #7f8c8d;">${group.name}</div>
-                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description}</div>
-                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qrCode)}</div>
+                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description || 'Açıklama yok'}</div>
+                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qr_code)}</div>
             </div>
         `).join('');
     } else {
