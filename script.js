@@ -79,10 +79,12 @@ const API_BASE_URL = (() => {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return 'http://localhost:5000/api';
     } else if (window.location.hostname === 'metonline.github.io') {
-        // Production API URL - Render.com deployment
+        // Production API URL - Render.com deployment (use HTTPS on GitHub Pages)
         return 'https://hesap-paylas.onrender.com/api';
     } else {
-        return 'http://localhost:5000/api';
+        // For other environments, use same protocol as current page
+        const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
+        return `${protocol}://localhost:5000/api`;
     }
 })();
 
