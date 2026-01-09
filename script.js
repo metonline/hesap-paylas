@@ -2155,7 +2155,10 @@ function showCreateGroupForm() {
     document.getElementById('createGroupMessage').textContent = '';
     
     // Modal'ı göster
-    document.getElementById('createGroupModal').style.display = 'block';
+    const modal = document.getElementById('createGroupModal');
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
 }
 
 function closeCreateGroupModal() {
