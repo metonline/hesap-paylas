@@ -4,43 +4,47 @@ on:
   push:
     branches: [ main ]
 
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Build site
+        run: |
+          mkdir -p _site
+          cp *.html _site/ 2>/dev/null || true
+          cp *.css _site/ 2>/dev/null || true
+          cp *.js _site/ 2>/dev/null || true
+          cp *.json _site/ 2>/dev/null || true
+          cp -r logo_images _site/ 2>/dev/null || true
+          cp -r images _site/ 2>/dev/null || true
+          touch _site/.nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
   deploy:
+    needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: read
       pages: write
       id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v3
 
-    - name: Setup Pages
-      uses: actions/configure-pages@v4
-
-    - name: Build
-      run: |
-        mkdir -p _site
-        cp index.html _site/ || echo "Warning: index.html not found"
-        cp styles.css _site/ || echo "Warning: styles.css not found"
-        cp script.js _site/ || echo "Warning: script.js not found"
-        cp service-worker.js _site/ || echo "Warning: service-worker.js not found"
-        cp manifest.json _site/ || echo "Warning: manifest.json not found"
-        [ -d logo_images ] && cp -r logo_images _site/ || true
-        [ -d images ] && cp -r images _site/ || true
-        touch _site/.nojekyll
-        ls -la _site/
-        echo "Build completed successfully"
-
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: '_site'
-
-    - name: Deploy to GitHub Pages
-      id: deployment
-      uses: actions/deploy-pages@v3
