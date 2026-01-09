@@ -25,12 +25,17 @@ jobs:
       run: |
         # Create clean directory with only frontend files
         mkdir -p _site
-        cp index.html _site/
-        cp styles.css _site/
-        cp script.js _site/
-        cp service-worker.js _site/
-        cp manifest.json _site/
-        cp .nojekyll _site/
+        cp index.html _site/ || true
+        cp styles.css _site/ || true
+        cp script.js _site/ || true
+        cp service-worker.js _site/ || true
+        cp manifest.json _site/ || true
+        cp .nojekyll _site/ || true
+        # Copy optional directories if they exist
+        [ -d logo_images ] && cp -r logo_images _site/ || true
+        [ -d images ] && cp -r images _site/ || true
+        # Ensure .nojekyll exists
+        touch _site/.nojekyll
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v2
