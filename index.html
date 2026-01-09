@@ -650,12 +650,15 @@
                             <span style="color: #666; font-size: 0.9em;">Açıklama</span>
                             <span id="detailGroupDesc" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
                             <span style="color: #666; font-size: 0.9em;">Oluşturma Tarihi</span>
                             <span id="detailGroupDate" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
                         </div>
                     </div>
                 </div>
+                
+                <!-- QR Kod Bölümü -->
+                <div id="detailGroupQR" style="margin-bottom: 20px;"></div>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <button onclick="editGroup()" style="padding: 12px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
@@ -762,6 +765,8 @@
         </div>
     </div>
 
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="script.js?v=2.0.0"></script>
 </body>
 </html>

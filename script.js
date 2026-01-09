@@ -1919,25 +1919,25 @@ function loadUserGroups() {
     const token = localStorage.getItem('hesapPaylas_token');
     
     // Örnek veriler (backend API henüz user groups endpoint'i yok)
-    // Şimdilik sabit veriler gösterelim
+    // Şimdilik sabit veriler gösterelim (6 haneli QR kod ekledik)
     const activeGroups = [
-        { id: 1, name: 'Öğle Yemeği Grubu', description: 'Pazartesi öğle yemeği', created_at: '2026-01-09', status: 'active' },
-        { id: 2, name: 'Akşam Yemeği', description: 'Cuma akşamı', created_at: '2026-01-08', status: 'active' }
+        { id: 1, name: 'Öğle Yemeği Grubu', description: 'Pazartesi öğle yemeği', created_at: '2026-01-09', status: 'active', qrCode: '123456' },
+        { id: 2, name: 'Akşam Yemeği', description: 'Cuma akşamı', created_at: '2026-01-08', status: 'active', qrCode: '789012' }
     ];
     
     const closedGroups = [
-        { id: 3, name: 'Geçen Hafta Grubu', description: 'Tamamlandı', created_at: '2026-01-01', status: 'closed' }
+        { id: 3, name: 'Geçen Hafta Grubu', description: 'Tamamlandı', created_at: '2026-01-01', status: 'closed', qrCode: '345678' }
     ];
     
     // Aktif grupları göster
     const activeList = document.getElementById('activeGroupsList');
     if (activeGroups.length > 0) {
         activeList.innerHTML = activeGroups.map(group => `
-            <div onclick="showGroupDetails(${group.id}, '${group.name}', '${group.description}', '${group.created_at}')" 
+            <div onclick="showGroupDetails(${group.id}, '${group.name}', '${group.description}', '${group.created_at}', '${group.qrCode}')" 
                  style="padding: 12px; background: #e8f8f5; border-left: 4px solid #27ae60; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
                 <div style="font-weight: 600; color: #27ae60;">${group.name}</div>
                 <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description}</div>
-                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')}</div>
+                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qrCode)}</div>
             </div>
         `).join('');
     } else {
@@ -1948,11 +1948,11 @@ function loadUserGroups() {
     const closedList = document.getElementById('closedGroupsList');
     if (closedGroups.length > 0) {
         closedList.innerHTML = closedGroups.map(group => `
-            <div onclick="showGroupDetails(${group.id}, '${group.name}', '${group.description}', '${group.created_at}')" 
+            <div onclick="showGroupDetails(${group.id}, '${group.name}', '${group.description}', '${group.created_at}', '${group.qrCode}')" 
                  style="padding: 12px; background: #ecf0f1; border-left: 4px solid #95a5a6; border-radius: 8px; cursor: pointer; opacity: 0.8; transition: all 0.3s;">
                 <div style="font-weight: 600; color: #7f8c8d;">${group.name}</div>
                 <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description}</div>
-                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')}</div>
+                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qrCode)}</div>
             </div>
         `).join('');
     } else {
@@ -1960,16 +1960,59 @@ function loadUserGroups() {
     }
 }
 
-function showGroupDetails(groupId, groupName, groupDesc, groupDate) {
+function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     const detailsModal = document.getElementById('groupDetailsModal');
     document.getElementById('detailGroupName').textContent = groupName;
     document.getElementById('detailGroupDesc').textContent = groupDesc || 'Açıklama yok';
     document.getElementById('detailGroupDate').textContent = new Date(groupDate).toLocaleDateString('tr-TR');
     
+    // QR Kod'u göster (xxx-xxx formatında)
+    const formattedCode = formatQRCode(qrCode);
+    document.getElementById('detailGroupQR').innerHTML = `
+        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 10px;">
+            <div id="groupQRCanvas" style="display: flex; justify-content: center; margin-bottom: 15px;"></div>
+            <div style="font-weight: 600; font-size: 1.2em; letter-spacing: 2px; color: #333;">${formattedCode}</div>
+        </div>
+    `;
+    
+    // QR kod resmi oluştur
+    setTimeout(() => {
+        const qrContainer = document.getElementById('groupQRCanvas');
+        if (qrContainer && typeof QRCode !== 'undefined') {
+            qrContainer.innerHTML = '';
+            new QRCode(qrContainer, {
+                text: qrCode,
+                width: 150,
+                height: 150,
+                colorDark: '#000000',
+                colorLight: '#ffffff'
+            });
+        }
+    }, 100);
+    
     // Global grup ID'sini sakla (edit/delete için)
     window.currentGroupId = groupId;
     
     detailsModal.style.display = 'flex';
+}
+
+// QR Kod'u xxx-xxx formatında göster
+function formatQRCode(code) {
+    if (!code) return '---';
+    const cleanCode = code.toString().replace(/\D/g, '').slice(0, 6);
+    return cleanCode.length === 6 ? cleanCode.slice(0, 3) + '-' + cleanCode.slice(3) : cleanCode;
+}
+
+// QR Kod input maskesi (0532 333 22 22 formatında)
+function formatQRCodeInput(value) {
+    const cleaned = value.replace(/\D/g, '').slice(0, 6);
+    if (cleaned.length <= 3) return cleaned;
+    return cleaned.slice(0, 3) + '-' + cleaned.slice(3);
+}
+
+// QR Kod input handler
+function handleQRCodeInput(input) {
+    input.value = formatQRCodeInput(input.value);
 }
 
 function closeGroupDetailsModal() {
