@@ -1244,20 +1244,15 @@ function goToGroupMode() {
 
 // Grup Kurma
 function goToCreateGroup() {
-    app.currentMode = 'create_group';
-    // Grubu hemen oluştur - infoPage'i atla
-    const groupData = generateGroupId();
-    console.log('Grup Oluşturuldu:', groupData);
-    app.groupId = groupData.fullCode;
-    app.groupName = groupData.name;
-    showGroupCodePage(groupData);
+    alert('Grubu oluşturmak için lütfen ana sayfadaki "Yeni Grup Oluştur" seçeneğini kullanın');
 }
 
 // Grup Katılma
 function goToJoinGroup() {
     app.currentMode = 'join_group';
     
-    // Manuel kod girişi seçeneği göster
+    // Gruba katılmak için modalı aç
+    openJoinGroupModal();
     showPage('joinCodePage');
     document.getElementById('joinGroupCode').value = '';
     document.getElementById('joinCodeResult').innerHTML = '';
@@ -1437,14 +1432,10 @@ function submitInfo() {
     app.currentUser = `${firstName} ${lastName}`;
     app.cart[app.currentUser] = [];
     
-    // Grup kuruyorsa, grup kodu oluştur
+    // Grup kuruyorsa, Backend API'ye istek gönder
     if (app.currentMode === 'create_group') {
-        const groupData = generateGroupId();
-        app.groupId = groupData.fullCode;
-        app.groupName = groupData.name;
-        
-        // Grup kodu göstereceği sayfaya yönlendir
-        showGroupCodePage(groupData);
+        // Yeni grup oluşturma başarılı, ana sayfaya dön
+        backToHome();
         return;
     }
     
@@ -1466,89 +1457,10 @@ const colorNames = [
     'Kestane', 'Açık Mavi', 'Açık Yeşil', 'Açık Kırmızı', 'Koyu Mavi', 'Koyu Yeşil'
 ];
 
-function showGroupCodePage(groupData) {
-    console.log('showGroupCodePage çağrıldı, groupData:', groupData);
-    
-    // Renk kodu haritası
-    const colorMap = {
-        'Kırmızı': '#e74c3c',
-        'Mavi': '#3498db',
-        'Yeşil': '#27ae60',
-        'Sarı': '#f1c40f',
-        'Turuncu': '#e67e22',
-        'Mor': '#9b59b6',
-        'Pembe': '#e91e63',
-        'Siyah': '#2c3e50',
-        'Beyaz': '#ecf0f1',
-        'Gri': '#95a5a6',
-        'Kahverengi': '#8b4513',
-        'Turkuaz': '#1abc9c',
-        'İndigo': '#4b0082',
-        'Lila': '#da70d6',
-        'Kestane': '#a0522d',
-        'Açık Mavi': '#5dade2',
-        'Açık Yeşil': '#52be80',
-        'Açık Kırmızı': '#f5b7b1',
-        'Koyu Mavi': '#1b4965',
-        'Koyu Yeşil': '#186a3b'
-    };
-    
-    // Başlık güncelle - renk adı göster ve rengi uygula
-    const titleSpan = document.getElementById('groupWelcomeTitle');
-    titleSpan.textContent = groupData.name;
-    titleSpan.style.color = colorMap[groupData.name] || '#333';
-    
-    // Format code as xxx-xxx (6 digits with one dash)
-    const codeStr = groupData.code.toString().padStart(6, '0');
-    const formattedCode = codeStr.replace(/(\d{3})(\d{3})/, '$1-$2');
-    document.getElementById('groupCodeDisplay').textContent = formattedCode;
-    console.log('Kod yazıldı:', formattedCode);
-    
-    // Paylaşma için global değişkene kaydet
-    app.currentGroupCode = groupData.code;
-    app.currentGroupName = groupData.name;
-    app.currentGroupFullCode = groupData.fullCode;
-    
-    // Grup kodu sayfasını göster
-    showPage('groupCodePage');
-    
-    // QR kod oluşturma işlemini biraz sonra yap (sayfaydın render olduktan sonra)
-    setTimeout(() => {
-        const qrContainer = document.getElementById('qrCodeContainer');
-        console.log('QR Container:', qrContainer);
-        
-        // QR kodunda deep link formatı kullan: hesappaylas://join?code=xxx-xxx-xxx&name=groupname
-        const deepLinkUrl = `hesappaylas://join?code=${groupData.code}&name=${encodeURIComponent(groupData.name)}`;
-        console.log('Deep Link URL:', deepLinkUrl);
-        
-        if (qrContainer) {
-            // Var olan QR kodu temizle
-            qrContainer.innerHTML = '';
-            
-            try {
-                if (typeof QRCode !== 'undefined') {
-                    console.log('QR kod oluşturmaya başlanıyor...');
-                    new QRCode(qrContainer, {
-                        text: deepLinkUrl,
-                        width: 200,
-                        height: 200,
-                        colorDark: '#11a853',
-                        colorLight: '#ffffff'
-                    });
-                    console.log('QR kod başarıyla oluşturuldu');
-                } else {
-                    console.error('QRCode kütüphanesi yüklenmedi! QRCode değeri:', window.QRCode);
-                    qrContainer.textContent = 'QR Kod Oluşturulamadı';
-                }
-            } catch (e) {
-                console.error('QR kod oluşturulamadı - Hata:', e.message);
-                console.error('Hata stack:', e.stack);
-                qrContainer.textContent = 'Hata: ' + e.message;
-            }
-        } else {
-            console.error('qrCodeContainer bulunamadı!');
-        }
-    }, 200);
+function showGroupsPage() {
+    const groupsModal = document.getElementById('groupsPage');
+    groupsModal.style.display = 'flex';
+    loadUserGroups();
 }
 
 // Grup kodu sayfasından devam et
