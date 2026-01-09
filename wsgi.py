@@ -1,5 +1,5 @@
 """
-WSGI entry point for Gunicorn
+WSGI entry point for Flask
 """
 import os
 import sys
@@ -19,6 +19,10 @@ from backend.app import app, db
 # Create tables on startup
 with app.app_context():
     db.create_all()
+    print("✓ Database initialized")
 
 if __name__ == '__main__':
-    app.run()
+    port = int(os.getenv('PORT', 5000))
+    print(f"Starting Flask server on port {port}")
+    app.run(host='0.0.0.0', port=port, debug=False)
+
