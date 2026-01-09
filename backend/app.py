@@ -5,6 +5,8 @@ Flask + SQLAlchemy + PostgreSQL
 
 import os
 import jwt
+import random
+import string
 from datetime import datetime, timedelta
 from functools import wraps
 from flask import Flask, jsonify, request
@@ -374,12 +376,20 @@ def update_profile():
 @app.route('/api/groups', methods=['POST'])
 @token_required
 def create_group():
-    """Create new group"""
+    """Create new group with random 6-digit QR code"""
     data = request.get_json()
+    
+    # Generate unique 6-digit QR code
+    qr_code = ''.join(random.choices(string.digits, k=6))
+    
+    # Ensure QR code is unique
+    while Group.query.filter_by(qr_code=qr_code).first():
+        qr_code = ''.join(random.choices(string.digits, k=6))
     
     group = Group(
         name=data.get('name', 'New Group'),
         description=data.get('description'),
+        qr_code=qr_code,
         created_by=request.user_id
     )
     
@@ -388,6 +398,10 @@ def create_group():
     
     return jsonify({
         'message': 'Group created',
+        'id': group.id,
+        'name': group.name,
+        'qr_code': group.qr_code
+    }), 201
         'groupId': group.id
     }), 201
 
