@@ -79,7 +79,7 @@ const API_BASE_URL = (() => {
     if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         return 'http://localhost:5000/api';
     } else if (window.location.hostname === 'metonline.github.io') {
-        // Production API URL - change this to your Render.com URL after deployment
+        // Production API URL - Render.com deployment
         return 'https://hesap-paylas-api.onrender.com/api';
     } else {
         return 'http://localhost:5000/api';
