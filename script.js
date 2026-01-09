@@ -80,7 +80,7 @@ const API_BASE_URL = (() => {
         return 'http://localhost:5000/api';
     } else if (window.location.hostname === 'metonline.github.io') {
         // Production API URL - Render.com deployment
-        return 'https://hesap-paylas-api.onrender.com/api';
+        return 'https://hesap-paylas.onrender.com/api';
     } else {
         return 'http://localhost:5000/api';
     }
