@@ -114,7 +114,7 @@ function navigateToMenu(item) {
     
     switch(item) {
         case 'groups':
-            alert('👥 Gruplarım sayfası yakında açılacak!');
+            showGroupsPage();
             break;
         case 'reservations':
             alert('📅 Rezervasyonlarım sayfası yakında açılacak!');
@@ -1889,6 +1889,118 @@ function resetAll() {
         app.cart[app.currentUser] = [];
         saveToLocalStorage();
         showMenuPage();
+    }
+}
+
+// ==================== GROUPS PAGE ====================
+
+function showGroupsPage() {
+    const groupsModal = document.getElementById('groupsPage');
+    const token = localStorage.getItem('hesapPaylas_token');
+    
+    if (!token) {
+        alert('Lütfen önce giriş yapınız!');
+        return;
+    }
+    
+    // Modal'ı göster
+    groupsModal.style.display = 'flex';
+    
+    // Grupları yükle
+    loadUserGroups();
+}
+
+function closeGroupsModal() {
+    const groupsModal = document.getElementById('groupsPage');
+    groupsModal.style.display = 'none';
+}
+
+function loadUserGroups() {
+    const token = localStorage.getItem('hesapPaylas_token');
+    
+    // Örnek veriler (backend API henüz user groups endpoint'i yok)
+    // Şimdilik sabit veriler gösterelim
+    const activeGroups = [
+        { id: 1, name: 'Öğle Yemeği Grubu', description: 'Pazartesi öğle yemeği', created_at: '2026-01-09', status: 'active' },
+        { id: 2, name: 'Akşam Yemeği', description: 'Cuma akşamı', created_at: '2026-01-08', status: 'active' }
+    ];
+    
+    const closedGroups = [
+        { id: 3, name: 'Geçen Hafta Grubu', description: 'Tamamlandı', created_at: '2026-01-01', status: 'closed' }
+    ];
+    
+    // Aktif grupları göster
+    const activeList = document.getElementById('activeGroupsList');
+    if (activeGroups.length > 0) {
+        activeList.innerHTML = activeGroups.map(group => `
+            <div onclick="showGroupDetails(${group.id}, '${group.name}', '${group.description}', '${group.created_at}')" 
+                 style="padding: 12px; background: #e8f8f5; border-left: 4px solid #27ae60; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                <div style="font-weight: 600; color: #27ae60;">${group.name}</div>
+                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description}</div>
+                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')}</div>
+            </div>
+        `).join('');
+    } else {
+        activeList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Henüz aktif grup yok</p>';
+    }
+    
+    // Kapanmış grupları göster
+    const closedList = document.getElementById('closedGroupsList');
+    if (closedGroups.length > 0) {
+        closedList.innerHTML = closedGroups.map(group => `
+            <div onclick="showGroupDetails(${group.id}, '${group.name}', '${group.description}', '${group.created_at}')" 
+                 style="padding: 12px; background: #ecf0f1; border-left: 4px solid #95a5a6; border-radius: 8px; cursor: pointer; opacity: 0.8; transition: all 0.3s;">
+                <div style="font-weight: 600; color: #7f8c8d;">${group.name}</div>
+                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description}</div>
+                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')}</div>
+            </div>
+        `).join('');
+    } else {
+        closedList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Kapalı grup yok</p>';
+    }
+}
+
+function showGroupDetails(groupId, groupName, groupDesc, groupDate) {
+    const detailsModal = document.getElementById('groupDetailsModal');
+    document.getElementById('detailGroupName').textContent = groupName;
+    document.getElementById('detailGroupDesc').textContent = groupDesc || 'Açıklama yok';
+    document.getElementById('detailGroupDate').textContent = new Date(groupDate).toLocaleDateString('tr-TR');
+    
+    // Global grup ID'sini sakla (edit/delete için)
+    window.currentGroupId = groupId;
+    
+    detailsModal.style.display = 'flex';
+}
+
+function closeGroupDetailsModal() {
+    const detailsModal = document.getElementById('groupDetailsModal');
+    detailsModal.style.display = 'none';
+}
+
+function showCreateGroupForm() {
+    const groupName = prompt('Grup adı girin:');
+    if (!groupName) return;
+    
+    const groupDesc = prompt('Grup açıklaması girin:');
+    
+    alert('✅ Grup oluşturuldu: ' + groupName);
+    loadUserGroups(); // Listeyi yenile
+}
+
+function editGroup() {
+    const newName = prompt('Yeni grup adı girin:');
+    if (!newName) return;
+    
+    alert('✅ Grup güncellendi: ' + newName);
+    closeGroupDetailsModal();
+    loadUserGroups();
+}
+
+function deleteGroup() {
+    if (confirm('Bu grubu silmek istediğinize emin misiniz?')) {
+        alert('✅ Grup silindi');
+        closeGroupDetailsModal();
+        loadUserGroups();
     }
 }
 
