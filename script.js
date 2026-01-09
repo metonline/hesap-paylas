@@ -1242,20 +1242,16 @@ function goToGroupMode() {
     showPage('groupChoicePage');
 }
 
-// Grup Kurma
+// Grup Kurma (eski - şimdi hamburger menüde)
 function goToCreateGroup() {
-    alert('Grubu oluşturmak için lütfen ana sayfadaki "Yeni Grup Oluştur" seçeneğini kullanın');
+    // Yeni sistem: hamburger menüdeki Gruplarım → Yeni Grup Oluştur
+    showPage('homePage');
 }
 
-// Grup Katılma
+// Grup Katılma (eski - şimdi hamburger menüde)
 function goToJoinGroup() {
-    app.currentMode = 'join_group';
-    
-    // Gruba katılmak için modalı aç
+    // Yeni sistem: hamburger menüdeki Gruba Katıl
     openJoinGroupModal();
-    showPage('joinCodePage');
-    document.getElementById('joinGroupCode').value = '';
-    document.getElementById('joinCodeResult').innerHTML = '';
 }
 
 // QR Kod Okuyucu Fonksiyonları
