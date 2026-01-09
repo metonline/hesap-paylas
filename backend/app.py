@@ -26,15 +26,10 @@ app = Flask(__name__)
 # CORS configuration for GitHub Pages and local development
 CORS(app, resources={
     r"/api/*": {
-        "origins": [
-            "https://metonline.github.io",
-            "http://localhost:8000",
-            "http://localhost:3000",
-            "http://127.0.0.1:8000"
-        ],
+        "origins": "*",
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": True
+        "supports_credentials": False
     }
 })
 
@@ -173,12 +168,17 @@ def signup():
         'token': token
     }), 201
 
-@app.route('/api/auth/login', methods=['POST'])
+@app.route('/api/auth/login', methods=['POST', 'OPTIONS'])
 def login():
     """User login"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     data = request.get_json()
+    print(f"[LOGIN] Request - Email: {data.get('email') if data else 'No data'}")
     
     if not data or not all(k in data for k in ['email', 'password']):
+        print("[LOGIN] Missing email or password")
         return jsonify({'error': 'Missing email or password'}), 400
     
     user = User.query.filter_by(email=data['email']).first()
