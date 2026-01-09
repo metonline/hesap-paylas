@@ -339,22 +339,34 @@ body {
 
 .form-submit-btn {
     width: 100%;
-    padding: 0px 4px;
-    height: 28px;
-    border: none;
-    border-radius: 6px;
-    background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
+    padding: 0px 20px;
+    height: 50px;
+    border: 2px solid #27ae60;
+    border-radius: 8px;
+    background: #27ae60;
     color: white;
-    font-size: 0.75em;
-    font-weight: 600;
+    font-size: 0.9em;
+    font-weight: 700;
     cursor: pointer;
-    line-height: 1;
+    line-height: 1.2;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-    margin-top: 0px;
+    transition: all 0.4s ease;
+    margin-top: 8px;
     box-sizing: border-box;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.form-submit-btn:hover {
+    background: #1b3815;
+    border-color: #1b3815;
+    box-shadow: 0 4px 12px rgba(27, 56, 21, 0.3);
+}
+
+.form-submit-btn:active {
+    transform: scale(0.98);
 }
 
 .btn-primary {
