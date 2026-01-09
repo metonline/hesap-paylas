@@ -2003,11 +2003,15 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     document.getElementById('detailGroupDesc').textContent = groupDesc || 'Açıklama yok';
     document.getElementById('detailGroupDate').textContent = new Date(groupDate).toLocaleDateString('tr-TR');
     
+    // Temiz QR code (sadece 6 rakam)
+    const cleanQRCode = qrCode.toString().replace(/\D/g, '').slice(0, 6);
+    
     // QR Kod'u göster (xxx-xxx formatında)
-    const formattedCode = formatQRCode(qrCode);
+    const formattedCode = formatQRCode(cleanQRCode);
     
     // QR Server API'si kullanarak garantili siyah-beyaz QR kod oluştur
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCode)}&color=000000&bgcolor=FFFFFF`;
+    // ÖNEMLI: cleanQRCode (hyphen'sız) göndermek
+    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(cleanQRCode)}&color=000000&bgcolor=FFFFFF`;
     
     document.getElementById('detailGroupQR').innerHTML = `
         <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 10px;">
