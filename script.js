@@ -80,7 +80,7 @@ const API_BASE_URL = (() => {
         return 'http://localhost:5000/api';
     } else if (window.location.hostname === 'metonline.github.io') {
         // Production API URL - Render.com deployment (use HTTPS on GitHub Pages)
-        return 'https://hesap-paylas.onrender.com/api';
+        return 'https://hesap-paylas-api.onrender.com/api';
     } else {
         // For other environments, use same protocol as current page
         const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
