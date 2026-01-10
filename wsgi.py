@@ -63,7 +63,8 @@ with app.app_context():
                     name='Test Grubu',
                     category='Cafe/Restaurant',
                     description='Test için oluşturulmuş grup',
-                    is_active=True
+                    is_active=True,
+                    created_by=user.id
                 )
                 test_group.members.append(user)
                 db.session.add(test_group)
