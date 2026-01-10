@@ -838,7 +838,7 @@ def health():
 # ==================== Static Files Routes ====================
 
 # Root index.html - must be BEFORE wildcard route
-@app.route('/api/admin/init-db', methods=['POST'])
+@app.route('/api/admin/init-db', methods=['POST', 'GET'])
 def init_db_admin():
     """Initialize database with default user and test group - Admin endpoint"""
     try:
