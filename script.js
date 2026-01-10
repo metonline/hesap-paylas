@@ -2224,19 +2224,11 @@ function openCreateGroupModal() {
     const randomColor = getRandomColor();
     selectedColor = randomColor;  // Global variable'a sakla
     
-    // Renk kutusunu güncelle
-    document.getElementById('groupColorBox').style.backgroundColor = randomColor.code;
-    document.getElementById('groupColorName').textContent = randomColor.name;
-    document.getElementById('groupColorCode').textContent = randomColor.code;
-    
-    // Hidden input'u güncelle
-    document.getElementById('newGroupName').value = randomColor.name;
-    
     // Başlığı ayarla
-    document.getElementById('modalTitle').textContent = 'Grup Adınız';
+    document.getElementById('modalTitle').textContent = 'Kategori Seç';
     
-    // Grup Adı bölümünü göster
-    document.getElementById('groupNameSection').style.display = 'block';
+    // Grup Adı bölümünü GIZLE (henüz grup kurulmadı)
+    document.getElementById('groupNameSection').style.display = 'none';
     
     // Success section'ı gizle
     document.getElementById('groupSuccessSection').style.display = 'none';
@@ -2351,6 +2343,7 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, qrCode) {
     // Renk kutusunu ve adını güncelle
     document.getElementById('successColorBox').style.backgroundColor = colorCode;
     document.getElementById('successColorName').textContent = colorName;
+    document.getElementById('successColorCode').textContent = colorCode;
     
     // QR kodu göster (QR Server API kullanarak)
     const qrCodeContainer = document.getElementById('successQRCode');
