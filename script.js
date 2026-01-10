@@ -2805,11 +2805,10 @@ function loadActiveGroups() {
                 const memberCount = group.members_count || 0;
                 const description = group.description || '';
                 
-                let html = `<div style="font-weight: 600; color: #333; margin-bottom: 4px;">${groupName} (${memberCount} kişi)</div>`;
-                
-                if (description) {
-                    html += `<div style="font-size: 0.85em; color: #666; margin-top: 4px;">${description}</div>`;
-                }
+                let html = `<div style="font-weight: 600; color: #333; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span>${groupName} (${memberCount} kişi)</span>
+                    ${description ? `<span style="font-weight: normal; color: #666; font-size: 0.9em;">${description}</span>` : ''}
+                </div>`;
                 
                 groupItem.innerHTML = html;
                 listContainer.appendChild(groupItem);
