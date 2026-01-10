@@ -66,6 +66,8 @@ class User(db.Model):
     bonus_points = db.Column(db.Integer, default=0)
     reset_token = db.Column(db.String(255), nullable=True)
     reset_token_expires = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)  # Hesap kapalı/açık
+    is_deleted = db.Column(db.Boolean, default=False)  # Hesap silindi mi?
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -391,6 +393,70 @@ def update_profile():
     
     db.session.commit()
     return jsonify({'message': 'Profile updated', 'user': user.to_dict()}), 200
+
+@app.route('/api/user/close-account', methods=['POST'])
+@token_required
+def close_account():
+    """Close user account (deactivate) - keeps all data"""
+    user = User.query.get(request.user_id)
+    
+    if not user.is_active:
+        return jsonify({'error': 'Account is already closed'}), 400
+    
+    user.is_active = False
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Account closed successfully. Your data is preserved.',
+        'is_active': user.is_active
+    }), 200
+
+@app.route('/api/user/delete-account', methods=['DELETE'])
+@token_required
+def delete_account():
+    """Permanently delete user account - only for active accounts"""
+    user = User.query.get(request.user_id)
+    data = request.get_json() or {}
+    
+    # Kapalı hesaplar silinemez
+    if not user.is_active:
+        return jsonify({
+            'error': 'Cannot delete closed accounts. Open the account first or contact support.'
+        }), 400
+    
+    # İsteğe bağlı şifre doğrulama
+    password = data.get('password')
+    if password and not user.check_password(password):
+        return jsonify({'error': 'Invalid password'}), 401
+    
+    # Hesabı mark as deleted yap (hard delete yerine soft delete)
+    user.is_deleted = True
+    user.is_active = False
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Account permanently deleted. All data has been removed.'
+    }), 200
+
+@app.route('/api/user/reopen-account', methods=['POST'])
+@token_required
+def reopen_account():
+    """Reopen a closed account"""
+    user = User.query.get(request.user_id)
+    
+    if user.is_deleted:
+        return jsonify({'error': 'Cannot reopen deleted accounts'}), 400
+    
+    if user.is_active:
+        return jsonify({'error': 'Account is already active'}), 400
+    
+    user.is_active = True
+    db.session.commit()
+    
+    return jsonify({
+        'message': 'Account reopened successfully',
+        'is_active': user.is_active
+    }), 200
 
 # ==================== Group Routes ====================
 
