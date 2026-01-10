@@ -2829,16 +2829,21 @@ function selectActiveGroup(groupId, groupName) {
     const panel = document.getElementById('activeGroupPanel');
     if (panel) {
         panel.style.display = 'none';
+        console.log('activeGroupPanel kapatıldı');
     }
     
     // Gruplarım modal'ını kapat
     const groupsModal = document.getElementById('groupsPage');
     if (groupsModal) {
         groupsModal.style.display = 'none';
+        console.log('groupsPage kapatıldı');
     }
     
-    // Grup detaylarını göster
-    showGroupMembersModal(groupId);
+    // Biraz bekle ve sonra detayları göster
+    setTimeout(() => {
+        console.log('Timeout sonrası showGroupMembersModal çağrılıyor');
+        showGroupMembersModal(groupId);
+    }, 100);
 }
 
 function showGroupMembersModal(groupId) {
@@ -2879,6 +2884,12 @@ function showGroupMembersModal(groupId) {
     })
     .then(group => {
         console.log('Grup verisi başarıyla yüklendi:', group);
+        console.log('Modal açık mı?', modal.style.display);
+        
+        // Modal'ı tekrar aç (emin olmak için)
+        modal.style.display = 'flex';
+        console.log('Modal yeniden flex olarak ayarlandı');
+        
         memberModalTitle.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                 <span>${group.name || 'İsimsiz Grup'}</span>
