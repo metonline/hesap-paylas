@@ -46,7 +46,13 @@ self.addEventListener('activate', event => {
 
 // Network first, then cache stratejisi
 self.addEventListener('fetch', event => {
-  // GET istekleri için cache-first strateji
+  // API istekleri network-only - cache yapma
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
+  // GET istekleri için cache-first strateji (sadece assets için)
   if (event.request.method === 'GET') {
     event.respondWith(
       caches.match(event.request).then(response => {
