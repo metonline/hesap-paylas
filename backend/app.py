@@ -932,9 +932,9 @@ if __name__ == '__main__':
         print("[INIT] Fresh database created with default user (account_type='owner')")
         print(f"[INIT] Created {len(active_groups)} ACTIVE groups and 2 CLOSED groups")
         for g in active_groups:
-            print(f"       ✓ Active: '{g.name}' (QR: {g.qr_code}, Orders: {len(g.orders)})")
-        print(f"       ✓ Closed: 'Geçen Yaz Tatili' (QR: {qr4}, Orders: 2)")
-        print(f"       ✓ Closed: 'Yıl Başı Kutlaması' (QR: {qr5}, Orders: 1)")
+            print(f"       [OK] Active: '{g.name}' (QR: {g.qr_code}, Orders: {len(g.orders)})")
+        print(f"       [OK] Closed: 'Geçen Yaz Tatili' (QR: {qr4}, Orders: 2)")
+        print(f"       [OK] Closed: 'Yıl Başı Kutlaması' (QR: {qr5}, Orders: 1)")
     
     port = int(os.getenv('PORT', 5000))
     # Always run in production mode - file watcher causes crashes
