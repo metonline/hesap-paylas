@@ -909,6 +909,19 @@ Konaklama
         </div>
     </div>
 
+    <!-- Yüzen Aktif Grup Buton -->
+    <div id="activeGroupButton" style="position: fixed; bottom: 30px; right: 30px; z-index: 999; cursor: pointer;">
+        <button id="activeGroupToggle" onclick="toggleActiveGroupPanel()" style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); border: none; color: white; font-size: 2em; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+            👥
+        </button>
+        <div id="activeGroupPanel" style="display: none; position: absolute; bottom: 90px; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 280px; max-height: 400px; overflow-y: auto; padding: 15px;">
+            <h3 style="margin: 0 0 15px 0; color: #333; font-size: 1.1em; text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">Aktif Gruplarım</h3>
+            <div id="activeGroupsList" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Gruplar buraya dinamikman eklenir -->
+            </div>
+        </div>
+    </div>
+
     <!-- QR Code Libraries -->
     <script src="https://unpkg.com/html5-qrcode@2.1.48/dist/html5-qrcode.min.js"></script>
     <script src="script.js?v=2.0.0"></script>

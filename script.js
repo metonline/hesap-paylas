@@ -2367,9 +2367,75 @@ function shareGroupOnWhatsapp() {
     window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
 }
 
+// Aktif Grupları Yönetme
+function toggleActiveGroupPanel() {
+    const panel = document.getElementById('activeGroupPanel');
+    if (panel.style.display === 'none' || panel.style.display === '') {
+        panel.style.display = 'block';
+        loadActiveGroups();
+    } else {
+        panel.style.display = 'none';
+    }
+}
+
+function loadActiveGroups() {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    
+    fetch(`${API_URL}/api/groups`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(groups => {
+        const listContainer = document.getElementById('activeGroupsList');
+        listContainer.innerHTML = '';
+        
+        if (groups.length === 0) {
+            listContainer.innerHTML = '<p style="color: #999; text-align: center; padding: 20px 0;">Henüz gruba katılmadınız</p>';
+        } else {
+            groups.forEach(group => {
+                const groupItem = document.createElement('div');
+                groupItem.style.cssText = `
+                    padding: 12px;
+                    background: #f9f9f9;
+                    border-radius: 8px;
+                    border-left: 4px solid #4A90E2;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                `;
+                groupItem.onmouseover = () => groupItem.style.background = '#f0f0f0';
+                groupItem.onmouseout = () => groupItem.style.background = '#f9f9f9';
+                groupItem.onclick = () => selectActiveGroup(group.id, group.name);
+                
+                groupItem.innerHTML = `
+                    <div style="font-weight: 600; color: #333; margin-bottom: 4px;">${group.name}</div>
+                    <div style="font-size: 0.85em; color: #666;">Kod: ${group.qr_code.substring(0, 3)}-${group.qr_code.substring(3, 6)}</div>
+                `;
+                listContainer.appendChild(groupItem);
+            });
+        }
+    })
+    .catch(error => console.error('Gruplar yüklenemedi:', error));
+}
+
+function selectActiveGroup(groupId, groupName) {
+    // Aktif grup seçildi - buraya grup detay göstermek için kod eklenebilir
+    console.log('Seçilen grup:', groupName, groupId);
+    // TODO: Grup detayını açmak veya gerekli işlemi yapmak
+}
+
 // Yardımcı Fonksiyonlar
 // Sayfa Yüklendiğinde
 document.addEventListener('DOMContentLoaded', function() {
     loadFromLocalStorage();
     checkExistingUser();
+    // Kullanıcı giriş yaparsa aktif grupları yükle
+    setTimeout(() => {
+        if (localStorage.getItem('token')) {
+            loadActiveGroups();
+        }
+    }, 1000);
 });
+
