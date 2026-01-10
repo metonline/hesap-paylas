@@ -2162,11 +2162,69 @@ function showCreateGroupForm() {
     modal.style.justifyContent = 'center';
 }
 
+// Rastgele renk listesi
+const COLOR_LIST = [
+    { name: 'Kırmızı', code: '#FF0000' },
+    { name: 'Mavi', code: '#0066FF' },
+    { name: 'Yeşil', code: '#00AA00' },
+    { name: 'Sarı', code: '#FFD700' },
+    { name: 'Mor', code: '#9933FF' },
+    { name: 'Turuncu', code: '#FF8800' },
+    { name: 'Pembe', code: '#FF69B4' },
+    { name: 'Cyan', code: '#00FFFF' },
+    { name: 'Kahverengi', code: '#8B4513' },
+    { name: 'Gri', code: '#808080' }
+];
+
+function getRandomColor() {
+    return COLOR_LIST[Math.floor(Math.random() * COLOR_LIST.length)];
+}
+
+function selectCategory(category) {
+    // Kategori butonlarının stilini güncelle
+    const buttons = ['cat-cafe', 'cat-life', 'cat-travel'];
+    buttons.forEach(btn => {
+        const element = document.getElementById(btn);
+        element.style.border = '2px solid #ddd';
+        element.style.background = 'white';
+    });
+    
+    // Seçili kategori butonunu vurgula
+    let selectedBtn;
+    if (category === 'Cafe / Restaurant') {
+        selectedBtn = 'cat-cafe';
+    } else if (category === 'Genel Yaşam') {
+        selectedBtn = 'cat-life';
+    } else if (category === 'Seyahat / Konaklama') {
+        selectedBtn = 'cat-travel';
+    }
+    
+    if (selectedBtn) {
+        const element = document.getElementById(selectedBtn);
+        element.style.border = '2px solid #0066ff';
+        element.style.background = '#e6f0ff';
+    }
+    
+    // Hidden input'u güncelle
+    document.getElementById('newGroupCategory').value = category;
+}
+
 function openCreateGroupModal() {
-    // Clear form
-    document.getElementById('newGroupName').value = '';
-    document.getElementById('newGroupDesc').value = '';
+    // Rastgele renk seç
+    const randomColor = getRandomColor();
+    
+    // Renk kutusunu güncelle
+    document.getElementById('groupColorBox').style.backgroundColor = randomColor.code;
+    document.getElementById('groupColorName').textContent = randomColor.name;
+    document.getElementById('groupColorCode').textContent = randomColor.code;
+    
+    // Hidden input'u güncelle
+    document.getElementById('newGroupName').value = randomColor.name;
+    
+    // Kategoriyi sıfırla (Genel Yaşam seçili)
     document.getElementById('newGroupCategory').value = 'Genel Yaşam';
+    selectCategory('Genel Yaşam');
+    
     document.getElementById('createGroupMessage').textContent = '';
     
     // Show modal
@@ -2183,19 +2241,12 @@ function closeCreateGroupModal() {
 
 function createNewGroup() {
     const groupName = document.getElementById('newGroupName').value.trim();
-    const groupDesc = document.getElementById('newGroupDesc').value.trim();
     const groupCategory = document.getElementById('newGroupCategory').value;
     const messageDiv = document.getElementById('createGroupMessage');
     
-    // Validasyon
-    if (!groupName) {
-        messageDiv.textContent = '❌ Lütfen grup adı gir';
-        messageDiv.style.color = '#e74c3c';
-        return;
-    }
-    
-    if (groupName.length < 2) {
-        messageDiv.textContent = '❌ Grup adı en az 2 karakter olmalı';
+    // Validasyon - Kategori seçilmiş mi?
+    if (!groupCategory) {
+        messageDiv.textContent = '❌ Lütfen bir kategori seç';
         messageDiv.style.color = '#e74c3c';
         return;
     }
@@ -2214,7 +2265,6 @@ function createNewGroup() {
         },
         body: JSON.stringify({
             name: groupName,
-            description: groupDesc || '',
             category: groupCategory
         })
     })

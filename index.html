@@ -807,40 +807,56 @@
 
     <!-- Yeni Grup Oluştur Modal -->
     <div id="createGroupModal" class="modal" style="display: none; z-index: 10000;">
-        <div class="modal-content" style="max-width: 90%; width: 100%;">
+        <div class="modal-content" style="max-width: 90%; width: 100%; max-height: 90vh; overflow-y: auto;">
             <span class="close" onclick="closeCreateGroupModal()">&times;</span>
             
             <div style="text-align: center; margin-bottom: 20px;">
                 <h2 style="margin: 0 0 10px 0; color: #333;">Yeni Grup Oluştur</h2>
-                <p style="color: #666; margin: 0;">Grup adı ve açıklamasını gir</p>
             </div>
 
-            <input 
-                type="text" 
-                id="newGroupName" 
-                placeholder="Grup adı (örn: Öğle Yemeği)" 
-                style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; margin-bottom: 15px;"
-            >
-            
-            <textarea 
-                id="newGroupDesc" 
-                placeholder="Grup açıklaması (isteğe bağlı)" 
-                style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; min-height: 80px; margin-bottom: 15px; resize: vertical;"
-            ></textarea>
+            <!-- Rastgele Renk Adı -->
+            <div style="margin-bottom: 15px; text-align: center;">
+                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600;">Grup Adı:</label>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                    <div id="groupColorBox" style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #ddd; background-color: #FF0000;"></div>
+                    <div style="text-align: left;">
+                        <div style="font-weight: 600; font-size: 1.1em; color: #333;" id="groupColorName">Kırmızı</div>
+                        <div style="font-size: 0.9em; color: #666;" id="groupColorCode">#FF0000</div>
+                    </div>
+                </div>
+                <input type="hidden" id="newGroupName" value="">
+            </div>
 
+            <!-- Kategori Seçimi - Butonlar -->
             <div style="margin-bottom: 15px;">
-                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600;">Grup Kategorisi Seç:</label>
-                <select 
-                    id="newGroupCategory" 
-                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; background-color: white;"
-                >
-                    <option value="Cafe / Restaurant">🍽️ Cafe / Restaurant</option>
-                    <option value="Genel Yaşam" selected>🌍 Genel Yaşam</option>
-                    <option value="Seyahat / Konaklama">✈️ Seyahat / Konaklama</option>
-                </select>
+                <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">Harcama Kategorisi Seç:</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <button 
+                        id="cat-cafe" 
+                        onclick="selectCategory('Cafe / Restaurant')" 
+                        style="padding: 12px; border: 2px solid #ddd; border-radius: 8px; background: white; cursor: pointer; font-size: 0.9em; transition: all 0.2s; font-weight: 500;"
+                    >
+                        🍽️ Cafe / Restaurant
+                    </button>
+                    <button 
+                        id="cat-life" 
+                        onclick="selectCategory('Genel Yaşam')" 
+                        style="padding: 12px; border: 2px solid #0066ff; background: #e6f0ff; border-radius: 8px; cursor: pointer; font-size: 0.9em; transition: all 0.2s; font-weight: 500;"
+                    >
+                        🌍 Genel Yaşam
+                    </button>
+                    <button 
+                        id="cat-travel" 
+                        onclick="selectCategory('Seyahat / Konaklama')" 
+                        style="padding: 12px; border: 2px solid #ddd; border-radius: 8px; background: white; cursor: pointer; font-size: 0.9em; transition: all 0.2s; font-weight: 500;"
+                    >
+                        ✈️ Seyahat / Konaklama
+                    </button>
+                </div>
+                <input type="hidden" id="newGroupCategory" value="Genel Yaşam">
             </div>
 
-            <button class="btn btn-primary" onclick="createNewGroup()" style="width: 100%; margin-bottom: 10px;">✅ Grubu Oluştur</button>
+            <button class="btn btn-primary" onclick="createNewGroup()" style="width: 100%; margin-bottom: 10px;">✅ Grubu Kur</button>
             
             <div id="createGroupMessage" style="text-align: center; margin-top: 15px; min-height: 20px; color: #27ae60; font-weight: 600;"></div>
         </div>
