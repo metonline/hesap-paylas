@@ -445,8 +445,16 @@ def get_group(group_id):
         'id': group.id,
         'name': group.name,
         'description': group.description,
+        'category': group.category,
+        'qr_code': group.qr_code,
+        'created_at': group.created_at.isoformat(),
         'members': [u.to_dict() for u in group.members],
-        'orders': [o.id for o in group.orders]
+        'orders': [{
+            'id': o.id,
+            'restaurant': o.restaurant,
+            'total_amount': o.total_amount,
+            'created_at': o.created_at.isoformat() if o.created_at else None
+        } for o in group.orders]
     }), 200
 
 @app.route('/api/groups/join', methods=['POST'])
@@ -503,7 +511,7 @@ def get_user_groups():
             'category': group.category,
             'qr_code': group.qr_code,
             'created_at': group.created_at.isoformat(),
-            'members_count': len(group.users),
+            'members_count': len(group.members),
             'status': 'active'  # TODO: Gerçek status kontrolü (kapalı/açık)
         })
     

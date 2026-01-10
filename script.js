@@ -1967,9 +1967,60 @@ function displayGroups(groups) {
 
 function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     const detailsModal = document.getElementById('groupDetailsModal');
-    document.getElementById('detailGroupName').textContent = groupName;
-    document.getElementById('detailGroupDesc').textContent = groupDesc || 'Açıklama yok';
-    document.getElementById('detailGroupDate').textContent = new Date(groupDate).toLocaleDateString('tr-TR');
+    
+    // Backend'den detaylı grup bilgisini çek
+    const token = localStorage.getItem('hesapPaylas_token');
+    fetch(`${API_BASE_URL}/groups/${groupId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(r => r.json())
+    .then(group => {
+        // Grup bilgilerini doldur
+        document.getElementById('detailGroupName').textContent = group.name || '-';
+        document.getElementById('detailGroupCode').textContent = formatQRCode(group.qr_code || '');
+        document.getElementById('detailGroupCategory').textContent = group.category || 'Genel Yaşam';
+        document.getElementById('detailGroupDate').textContent = new Date(group.created_at).toLocaleDateString('tr-TR');
+        
+        // Üyeleri göster
+        if (group.members && group.members.length > 0) {
+            const membersList = group.members.map(m => 
+                `<div style="padding: 6px; background: white; border-radius: 6px; margin-bottom: 6px; font-size: 0.9em;">
+                    👤 ${m.first_name} ${m.last_name}
+                </div>`
+            ).join('');
+            document.getElementById('detailGroupMembers').innerHTML = membersList;
+        } else {
+            document.getElementById('detailGroupMembers').innerHTML = '<p style="color: #999; text-align: center; margin: 0;">Henüz üye yok</p>';
+        }
+        
+        // Siparişleri göster
+        if (group.orders && group.orders.length > 0) {
+            const ordersList = group.orders.map(order => `
+                <div style="padding: 10px; background: white; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #3498db;">
+                    <div style="font-weight: 600; color: #333; margin-bottom: 4px; font-size: 0.9em;">🍽️ ${order.restaurant}</div>
+                    <div style="font-size: 0.85em; color: #666; margin-bottom: 3px;">Tarih: ${new Date(order.created_at).toLocaleDateString('tr-TR')}</div>
+                    <div style="font-size: 0.85em; color: #27ae60; font-weight: 600;">₺${order.total_amount.toFixed(2)}</div>
+                </div>
+            `).join('');
+            document.getElementById('detailGroupOrders').innerHTML = ordersList;
+        } else {
+            document.getElementById('detailGroupOrders').innerHTML = '<p style="color: #999; text-align: center; margin: 0;">Henüz sipariş yok</p>';
+        }
+        
+        // Hesap dengesi (orders total)
+        const totalBalance = group.orders ? group.orders.reduce((sum, order) => sum + order.total_amount, 0) : 0;
+        document.getElementById('detailGroupBalance').textContent = `₺${totalBalance.toFixed(2)}`;
+        document.getElementById('detailGroupMemberCount').textContent = (group.members || []).length + ' üye';
+    })
+    .catch(error => {
+        console.error('Error loading group details:', error);
+        // Fallback: sadece basit bilgileri göster
+        document.getElementById('detailGroupName').textContent = groupName;
+        document.getElementById('detailGroupCode').textContent = formatQRCode(qrCode || '');
+        document.getElementById('detailGroupDate').textContent = new Date(groupDate).toLocaleDateString('tr-TR');
+    });
     
     // Temiz QR code (sadece 6 rakam)
     const cleanQRCode = qrCode.toString().replace(/\D/g, '').slice(0, 6);
@@ -1978,7 +2029,6 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     const formattedCode = formatQRCode(cleanQRCode);
     
     // QR Server API'si kullanarak garantili siyah-beyaz QR kod oluştur
-    // ÖNEMLI: cleanQRCode (hyphen'sız) göndermek
     const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(cleanQRCode)}&color=000000&bgcolor=FFFFFF`;
     
     document.getElementById('detailGroupQR').innerHTML = `
