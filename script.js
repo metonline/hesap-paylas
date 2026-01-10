@@ -2033,9 +2033,8 @@ function displayGroups(groups) {
     const activeList = document.getElementById('activeGroupsList');
     if (activeGroups.length > 0) {
         activeList.innerHTML = activeGroups.map(group => `
-            <div onclick="showGroupDetails(${group.id}, '${group.name.replace(/'/g, "\\'")}', '${(group.description || '').replace(/'/g, "\\'")}', '${group.created_at}', '${group.qr_code}')" 
-                 style="padding: 12px; background: #e8f8f5; border-left: 4px solid #27ae60; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
-                <div style="font-weight: 600; color: #27ae60;">${group.name}</div>
+            <div style="padding: 12px; background: #e8f8f5; border-left: 4px solid #27ae60; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                <div onclick="showGroupDetails(${group.id}, '${group.name.replace(/'/g, "\\'")}', '${(group.description || '').replace(/'/g, "\\'")}', '${group.created_at}', '${group.qr_code}')" style="font-weight: 600; color: #27ae60; cursor: pointer; user-select: none;">⬇ ${group.name}</div>
                 <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description || 'Açıklama yok'}</div>
                 <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qr_code)}</div>
             </div>
@@ -2048,9 +2047,8 @@ function displayGroups(groups) {
     const closedList = document.getElementById('closedGroupsList');
     if (closedGroups.length > 0) {
         closedList.innerHTML = closedGroups.map(group => `
-            <div onclick="showGroupDetails(${group.id}, '${group.name.replace(/'/g, "\\'")}', '${(group.description || '').replace(/'/g, "\\'")}', '${group.created_at}', '${group.qr_code}')" 
-                 style="padding: 12px; background: #ecf0f1; border-left: 4px solid #95a5a6; border-radius: 8px; cursor: pointer; opacity: 0.8; transition: all 0.3s;">
-                <div style="font-weight: 600; color: #7f8c8d;">${group.name}</div>
+            <div style="padding: 12px; background: #ecf0f1; border-left: 4px solid #95a5a6; border-radius: 8px; cursor: pointer; opacity: 0.8; transition: all 0.3s;">
+                <div onclick="showGroupDetails(${group.id}, '${group.name.replace(/'/g, "\\'")}', '${(group.description || '').replace(/'/g, "\\'")}', '${group.created_at}', '${group.qr_code}')" style="font-weight: 600; color: #7f8c8d; cursor: pointer; user-select: none;">⬇ ${group.name}</div>
                 <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description || 'Açıklama yok'}</div>
                 <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qr_code)}</div>
             </div>
