@@ -857,8 +857,9 @@ def init_db_admin():
             )
             user.set_password('test123')
             db.session.add(user)
+            db.session.flush()  # Flush to get user.id without committing
             db.session.commit()
-            print("✓ Default user created")
+            print(f"✓ Default user created (ID: {user.id})")
         else:
             print("✓ Default user already exists")
             # Reset password
@@ -867,23 +868,29 @@ def init_db_admin():
         
         # Create test group if user has no groups
         if len(user.groups) == 0:
-            # Delete existing test groups first
-            existing_test = Group.query.filter_by(name='Test Grubu').first()
-            if existing_test:
-                db.session.delete(existing_test)
+            try:
+                # Delete existing test groups first
+                existing_test = Group.query.filter_by(name='Test Grubu').first()
+                if existing_test:
+                    db.session.delete(existing_test)
+                    db.session.commit()
+                
+                print(f"DEBUG: Creating group with user.id={user.id}")
+                test_group = Group(
+                    name='Test Grubu',
+                    category='Cafe/Restaurant',
+                    description='Test için oluşturulmuş grup',
+                    is_active=True,
+                    created_by=user.id
+                )
+                test_group.members.append(user)
+                db.session.add(test_group)
                 db.session.commit()
-            
-            test_group = Group(
-                name='Test Grubu',
-                category='Cafe/Restaurant',
-                description='Test için oluşturulmuş grup',
-                is_active=True,
-                created_by=user.id
-            )
-            test_group.members.append(user)
-            db.session.add(test_group)
-            db.session.commit()
-            print("✓ Test group created")
+                print("✓ Test group created")
+            except Exception as group_err:
+                print(f"✗ Error creating group: {str(group_err)}")
+                db.session.rollback()
+                raise
         else:
             print(f"✓ User has {len(user.groups)} group(s)")
         

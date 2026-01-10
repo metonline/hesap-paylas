@@ -33,6 +33,7 @@ with app.app_context():
             )
             user.set_password('test123')
             db.session.add(user)
+            db.session.flush()  # Flush to get user.id without committing
             db.session.commit()
             print("✓ Default user created")
             
@@ -41,7 +42,8 @@ with app.app_context():
                 name='Test Grubu',
                 category='Cafe/Restaurant',
                 description='Test için oluşturulmuş grup',
-                is_active=True
+                is_active=True,
+                created_by=user.id
             )
             test_group.members.append(user)
             db.session.add(test_group)
