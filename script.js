@@ -2799,7 +2799,10 @@ function loadActiveGroups() {
                 `;
                 groupItem.onmouseover = () => groupItem.style.background = '#f0f0f0';
                 groupItem.onmouseout = () => groupItem.style.background = '#f9f9f9';
-                groupItem.onclick = () => selectActiveGroup(group.id, group.name);
+                groupItem.onclick = () => {
+                    console.log('Grup seçildi:', group.id, group.name);
+                    selectActiveGroup(group.id, group.name);
+                };
                 
                 const groupName = group.name || 'İsimsiz Grup';
                 const memberCount = group.members_count || 0;
@@ -2820,6 +2823,8 @@ function loadActiveGroups() {
 }
 
 function selectActiveGroup(groupId, groupName) {
+    console.log('selectActiveGroup çağrıldı:', groupId, groupName);
+    
     // Aktif gruplar panelini kapat
     const panel = document.getElementById('activeGroupPanel');
     if (panel) {
@@ -2837,12 +2842,17 @@ function selectActiveGroup(groupId, groupName) {
 }
 
 function showGroupMembersModal(groupId) {
+    console.log('showGroupMembersModal çağrıldı:', groupId);
+    
     const modal = document.getElementById('groupMembersModal');
     const membersList = document.getElementById('membersList');
     const memberModalTitle = document.getElementById('memberModalTitle');
     
+    console.log('Modal:', modal, 'membersList:', membersList, 'memberModalTitle:', memberModalTitle);
+    
     // Modal'ı aç
     modal.style.display = 'flex';
+    console.log('Modal display set to flex');
     
     // Token al
     const token = localStorage.getItem('hesapPaylas_token');
@@ -2853,13 +2863,22 @@ function showGroupMembersModal(groupId) {
     
     // Grup verilerini API'den getir
     const baseURL = getBaseURL();
+    console.log('API isteği gönderiliyor:', `${baseURL}/api/groups/${groupId}`);
+    
     fetch(`${baseURL}/api/groups/${groupId}`, {
         headers: {
             'Authorization': `Bearer ${token}`
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('API yanıtı alındı:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(group => {
+        console.log('Grup verisi başarıyla yüklendi:', group);
         memberModalTitle.innerHTML = `
             <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
                 <span>${group.name || 'İsimsiz Grup'}</span>
@@ -2979,8 +2998,8 @@ function showGroupMembersModal(groupId) {
         }
     })
     .catch(error => {
-        console.error('Grup detayları yüklenemedi:', error);
-        membersList.innerHTML = '<p style="color: #c0392b; text-align: center; padding: 20px;">Grup detayları yüklenemedi</p>';
+        console.error('Grup detayları yüklenemedi - CATCH:', error);
+        membersList.innerHTML = '<p style="color: #c0392b; text-align: center; padding: 20px;">Grup detayları yüklenemedi: ' + error.message + '</p>';
     });
 }
 
