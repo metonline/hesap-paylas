@@ -857,15 +857,15 @@
 
             <!-- Kategori Seçimi - Butonlar (Başlangıçta gizli) -->
             <div id="categorySection" style="margin-bottom: 15px; display: none;">
-                <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600; text-align: center;">Harcama Kategorisi Seç:</label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                     <button 
                         id="cat-cafe" 
                         onclick="selectCategory('Cafe / Restaurant')" 
                         style="padding: 14px; border: 2px solid #ddd; border-radius: 8px; background: #FFE8B6; cursor: pointer; font-size: 0.75em; transition: all 0.2s; font-weight: 600; text-align: center; min-height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;"
                     >
-🍴
+<div style="font-size: 2em;">🍴</div>
 Cafe
+<br>
 Restaurant
                     </button>
                     <button 
@@ -873,8 +873,9 @@ Restaurant
                         onclick="selectCategory('Genel Yaşam')" 
                         style="padding: 14px; border: 2px solid #66BB6A; background: #C8E6C9; border-radius: 8px; cursor: pointer; font-size: 0.75em; transition: all 0.2s; font-weight: 600; text-align: center; min-height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;"
                     >
-🏠
+<div style="font-size: 2em;">🏠</div>
 Genel
+<br>
 Yaşam
                     </button>
                     <button 
@@ -882,8 +883,9 @@ Yaşam
                         onclick="selectCategory('Seyahat / Konaklama')" 
                         style="padding: 14px; border: 2px solid #ddd; border-radius: 8px; background: #B3E5FC; cursor: pointer; font-size: 0.75em; transition: all 0.2s; font-weight: 600; text-align: center; min-height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;"
                     >
-✈️
+<div style="font-size: 2em;">✈️</div>
 Seyahat
+<br>
 Konaklama
                     </button>
                 </div>
@@ -892,15 +894,15 @@ Konaklama
 
             <!-- Grup Açıklaması (Opsiyonel) -->
             <div id="descriptionSection" style="margin-bottom: 15px; display: none;">
-                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600; text-align: left;">Grup Açıklaması (Opsiyonel):</label>
+                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600; text-align: center;">Kısa Açıklama Yazınız (Opsiyonel):</label>
                 <textarea 
                     id="newGroupDescription" 
-                    placeholder="Örn: Pazartesi akşamı yemeği, Cuma kahvesi vb..." 
+                    placeholder="Örneğin Akşam yemeği, Brunch, Divan veya Develi'de yemek şeklinde belirtebilirsiniz" 
                     style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-family: Arial, sans-serif; font-size: 1em; resize: vertical; min-height: 70px; box-sizing: border-box; transition: border-color 0.2s;"
                     onchange="this.style.borderColor='#ddd'"
                     onfocus="this.style.borderColor='#66BB6A'"
                 ></textarea>
-                <div style="font-size: 0.85em; color: #999; margin-top: 4px;">💡 Grup hakkında kısa bir açıklama yazabilirsiniz</div>
+                <div style="font-size: 0.85em; color: #999; margin-top: 4px; display: none;">💡 Grup hakkında kısa bir açıklama yazabilirsiniz</div>
             </div>
 
             <button id="createGroupBtn" class="btn btn-primary" onclick="createNewGroup()" style="width: 100%; margin-bottom: 10px; display: none;">✅ Grubu Kur</button>
@@ -1009,11 +1011,6 @@ Konaklama
                     <p style="color: #999; text-align: center; padding: 20px;">Yükleniyor...</p>
                 </div>
             </div>
-            
-            <!-- Yeni Grup Oluştur -->
-            <button onclick="showCreateGroupForm()" style="width: 100%; margin-top: 20px; padding: 12px; background: #3498db; color: white; border: none; border-radius: 10px; font-size: 0.95em; font-weight: 600; cursor: pointer;">
-                ➕ Yeni Grup Oluştur
-            </button>
         </div>
     </div>
 

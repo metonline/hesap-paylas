@@ -1302,11 +1302,21 @@ function showPage(pageId) {
         page.style.zIndex = pageId === 'onboardingPage' ? '100' : '1';
         page.classList.add('active');
         
-        // If showing homePage, show the menu
+        // If showing homePage, show the menu and floating groups button
         if (pageId === 'homePage' && homeMenu) {
             homeMenu.style.display = 'block';
             homeMenu.style.visibility = 'visible';
             homeMenu.style.opacity = '1';
+            
+            // Show active groups floating button
+            const activeGroupButton = document.getElementById('activeGroupButton');
+            if (activeGroupButton) {
+                activeGroupButton.style.display = 'block';
+                // Load active groups immediately
+                setTimeout(() => {
+                    loadActiveGroups();
+                }, 100);
+            }
         }
         
         // Show hamburger menu for all pages except onboarding
@@ -2866,7 +2876,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkExistingUser();
     // Kullanıcı giriş yaparsa aktif grupları yükle
     setTimeout(() => {
-        if (localStorage.getItem('token')) {
+        if (localStorage.getItem('hesapPaylas_token')) {
             loadActiveGroups();
         }
     }, 1000);
