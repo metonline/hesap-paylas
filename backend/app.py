@@ -602,6 +602,7 @@ def get_user_groups():
             'qr_code': group.qr_code,
             'created_at': group.created_at.isoformat(),
             'members_count': len(group.members),
+            'members': [{'id': m.id, 'first_name': m.first_name, 'last_name': m.last_name} for m in group.members],
             'status': 'active' if group.is_active else 'closed'  # Use real is_active field
         })
     
