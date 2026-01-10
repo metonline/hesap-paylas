@@ -28,7 +28,7 @@ jobs:
           
           # Remove unnecessary files
           rm -f .gitignore .gitattributes Dockerfile docker-compose.yml
-          rm -rf backend/ .git/
+          rm -rf backend/
           
           # Create .nojekyll
           touch .nojekyll
