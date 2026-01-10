@@ -878,35 +878,6 @@ def init_db_admin():
             user.set_password('test123')
             db.session.commit()
         
-        # Create test group if user has no groups
-        if len(user.groups) == 0:
-            try:
-                # Delete existing Pembe groups first
-                existing_test = Group.query.filter_by(name='Pembe').first()
-                if existing_test:
-                    db.session.delete(existing_test)
-                    db.session.commit()
-                
-                print(f"DEBUG: Creating group with user.id={user.id}")
-                test_group = Group(
-                    name='Pembe',
-                    category='Cafe/Restaurant',
-                    description='Big Chef\'te akşam yemeği',
-                    code=f"{random.randint(0, 999):03d}-{random.randint(0, 999):03d}",
-                    is_active=True,
-                    created_by=user.id
-                )
-                test_group.members.append(user)
-                db.session.add(test_group)
-                db.session.commit()
-                print("✓ Pembe group created")
-            except Exception as group_err:
-                print(f"✗ Error creating group: {str(group_err)}")
-                db.session.rollback()
-                raise
-        else:
-            print(f"✓ User has {len(user.groups)} group(s)")
-        
         return jsonify({
             'status': 'success',
             'message': 'Database initialized successfully',

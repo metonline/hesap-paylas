@@ -38,21 +38,8 @@ with app.app_context():
             db.session.commit()
             print("✓ Default user created")
             
-            # Create test group for the user
-            test_group = Group(
-                name='Pembe',
-                category='Cafe/Restaurant',
-                description='Big Chef\'te akşam yemeği',
-                code=f"{random.randint(0, 999):03d}-{random.randint(0, 999):03d}",
-                is_active=True,
-                created_by=user.id
-            )
-            test_group.members.append(user)
-            db.session.add(test_group)
-            db.session.commit()
-            print("✓ Pembe group created")
         except Exception as e:
-            print(f"✗ Error creating default user/group: {str(e)}")
+            print(f"✗ Error creating default user: {str(e)}")
             db.session.rollback()
     else:
         # Reset password if exists (for deployment stability)
