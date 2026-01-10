@@ -2339,11 +2339,14 @@ function createNewGroup() {
 
 // Grup oluşturma başarılı - success ekranını göster
 function showGroupSuccessScreen(groupName, colorName, colorCode, qrCode) {
-    // Kategori butonlarını ve seçim kısmını gizle
-    const categoryDiv = document.querySelector('div[style*="margin-bottom: 15px"]');
+    // Başlığı "Grup Kur" olarak değiştir
+    document.getElementById('modalTitle').textContent = 'Grup Kur';
     
     // Success section'ı göster
     document.getElementById('groupSuccessSection').style.display = 'block';
+    
+    // Renk paletini göster
+    document.getElementById('successColorSection').style.display = 'block';
     
     // Renk kutusunu ve adını güncelle
     document.getElementById('successColorBox').style.backgroundColor = colorCode;
