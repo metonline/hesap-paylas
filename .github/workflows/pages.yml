@@ -1,41 +1,46 @@
 name: Deploy to GitHub Pages
 
 on:
-  workflow_dispatch:  # Only manual trigger
+  push:
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Checkout main branch
+      - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Copy files to gh-pages
+      - name: Deploy to GitHub Pages
         run: |
           git config user.name "GitHub Action"
           git config user.email "action@github.com"
           
-          # Create gh-pages branch if not exists
-          git checkout --orphan gh-pages 2>/dev/null || git checkout gh-pages
+          # Create a temporary directory for deployment files
+          mkdir -p /tmp/gh-pages-deploy
           
-          # Reset and copy files
-          git rm -rf . 2>/dev/null || true
-          git checkout main -- .
-          git rm -r .github 2>/dev/null || true
+          # Copy frontend files (exclude backend and config files)
+          cp -r *.html /tmp/gh-pages-deploy/ 2>/dev/null || true
+          cp -r *.js /tmp/gh-pages-deploy/ 2>/dev/null || true
+          cp -r *.css /tmp/gh-pages-deploy/ 2>/dev/null || true
+          cp -r *.json /tmp/gh-pages-deploy/ 2>/dev/null || true
+          cp -r manifest.json /tmp/gh-pages-deploy/ 2>/dev/null || true
+          cp -r service-worker.js /tmp/gh-pages-deploy/ 2>/dev/null || true
+          touch /tmp/gh-pages-deploy/.nojekyll
           
-          # Remove unnecessary files
-          rm -f .gitignore .gitattributes Dockerfile docker-compose.yml
-          rm -rf backend/
+          # Switch to gh-pages branch
+          git checkout --orphan gh-pages-temp
+          git rm -rf .
           
-          # Create .nojekyll
-          touch .nojekyll
+          # Copy deployment files
+          cp -r /tmp/gh-pages-deploy/* .
           
-          # Add and commit
+          # Commit and push
           git add .
-          git commit -m "Deploy to GitHub Pages" --allow-empty
-          git push -f origin gh-pages
+          git commit -m "Deploy to GitHub Pages [skip ci]" || true
+          git push -f origin gh-pages-temp:gh-pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
