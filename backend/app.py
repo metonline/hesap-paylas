@@ -664,65 +664,26 @@ def health():
 
 # ==================== Main ====================
 
+# ==================== Static Files Routes ====================
 if __name__ == '__main__':
     with app.app_context():
+        # Drop all tables and recreate them (fresh start)
+        db.drop_all()
         db.create_all()
         
-        # Initialize default user if doesn't exist
-        user = User.query.filter_by(email='metonline@gmail.com').first()
-        if not user:
-            user = User(
-                first_name='Metin',
-                last_name='Güven',
-                email='metonline@gmail.com',
-                phone='05323332222'
-            )
-            user.set_password('test123')
-            db.session.add(user)
-            db.session.commit()
-            print("[INIT] Default user created")
-        else:
-            # Reset password if exists (for deployment stability)
-            user.set_password('test123')
-            db.session.commit()
-            print("[INIT] Default user password reset")
-
-# ==================== Static Files Routes ====================
-# Root index.html - must be BEFORE wildcard route
-@app.route('/')
-def index():
-    try:
-        index_path = BASE_DIR / 'index.html'
-        with open(index_path, 'r', encoding='utf-8') as f:
-            return f.read()
-    except Exception as e:
-        return f'Error loading index.html: {e}', 500
-
-# Serve static files (CSS, JS, etc)
-@app.route('/css/<path:filename>')
-def serve_css(filename):
-    return send_from_directory(str(BASE_DIR), f'css/{filename}')
-
-@app.route('/js/<path:filename>')
-def serve_js(filename):
-    return send_from_directory(str(BASE_DIR), f'js/{filename}')
-
-@app.route('/<path:filename>')
-def serve_static(filename):
-    # Don't serve API routes as static
-    if filename.startswith('api/'):
-        return jsonify({'error': 'Not Found'}), 404
+        # Initialize default user
+        user = User(
+            first_name='Metin',
+            last_name='Güven',
+            email='metonline@gmail.com',
+            phone='05323332222',
+            account_type='owner'  # Mark as account owner
+        )
+        user.set_password('test123')
+        db.session.add(user)
+        db.session.commit()
+        print("[INIT] Fresh database created with default user (account_type='owner')")
     
-    # Serve static files
-    if filename.endswith(('.js', '.css', '.json', '.svg', '.png', '.jpg', '.gif', '.webp', '.woff', '.woff2', '.ttf')):
-        try:
-            return send_from_directory(str(BASE_DIR), filename)
-        except:
-            return send_from_directory(str(BASE_DIR), 'index.html')
-    # Fallback to index.html for SPA
-    return send_from_directory(str(BASE_DIR), 'index.html')
-
-if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     # Always run in production mode - file watcher causes crashes
     app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
