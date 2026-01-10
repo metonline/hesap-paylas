@@ -716,8 +716,27 @@ function handleManualLogin(event) {
             
             app.currentUser = response.user;
             
-            // Floating grup butonunu göster
-            document.getElementById('activeGroupButton').style.display = 'block';
+            // Kullanıcının aktif gruplarını kontrol et
+            const token = response.token;
+            fetch(`${API_URL}/api/groups`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => response.json())
+            .then(groups => {
+                // Eğer kullanıcının aktif grubu varsa balonu göster
+                if (groups && groups.length > 0) {
+                    document.getElementById('activeGroupButton').style.display = 'block';
+                } else {
+                    document.getElementById('activeGroupButton').style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error checking groups:', error);
+                // Hata durumunda balonu gizli tut
+                document.getElementById('activeGroupButton').style.display = 'none';
+            });
             
             // Form alanlarını temizle
             document.getElementById('loginEmail').value = '';
