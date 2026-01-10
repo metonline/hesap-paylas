@@ -881,17 +881,17 @@ def init_db_admin():
         # Create test group if user has no groups
         if len(user.groups) == 0:
             try:
-                # Delete existing test groups first
-                existing_test = Group.query.filter_by(name='Test Grubu').first()
+                # Delete existing Pembe groups first
+                existing_test = Group.query.filter_by(name='Pembe').first()
                 if existing_test:
                     db.session.delete(existing_test)
                     db.session.commit()
                 
                 print(f"DEBUG: Creating group with user.id={user.id}")
                 test_group = Group(
-                    name='Test Grubu',
+                    name='Pembe',
                     category='Cafe/Restaurant',
-                    description='Test için oluşturulmuş grup',
+                    description='Big Chef\'te akşam yemeği',
                     code=f"{random.randint(0, 999):03d}-{random.randint(0, 999):03d}",
                     is_active=True,
                     created_by=user.id
@@ -899,7 +899,7 @@ def init_db_admin():
                 test_group.members.append(user)
                 db.session.add(test_group)
                 db.session.commit()
-                print("✓ Test group created")
+                print("✓ Pembe group created")
             except Exception as group_err:
                 print(f"✗ Error creating group: {str(group_err)}")
                 db.session.rollback()
