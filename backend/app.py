@@ -838,6 +838,68 @@ def health():
 # ==================== Static Files Routes ====================
 
 # Root index.html - must be BEFORE wildcard route
+@app.route('/api/admin/init-db', methods=['POST'])
+def init_db_admin():
+    """Initialize database with default user and test group - Admin endpoint"""
+    try:
+        # Initialize tables
+        db.create_all()
+        print("✓ Database tables created")
+        
+        # Check/Create default user
+        user = User.query.filter_by(email='metonline@gmail.com').first()
+        if not user:
+            user = User(
+                first_name='Metin',
+                last_name='Güven',
+                email='metonline@gmail.com',
+                phone='05323332222'
+            )
+            user.set_password('test123')
+            db.session.add(user)
+            db.session.commit()
+            print("✓ Default user created")
+        else:
+            print("✓ Default user already exists")
+            # Reset password
+            user.set_password('test123')
+            db.session.commit()
+        
+        # Create test group if user has no groups
+        if len(user.groups) == 0:
+            # Delete existing test groups first
+            existing_test = Group.query.filter_by(name='Test Grubu').first()
+            if existing_test:
+                db.session.delete(existing_test)
+                db.session.commit()
+            
+            test_group = Group(
+                name='Test Grubu',
+                category='Cafe/Restaurant',
+                description='Test için oluşturulmuş grup',
+                is_active=True
+            )
+            test_group.members.append(user)
+            db.session.add(test_group)
+            db.session.commit()
+            print("✓ Test group created")
+        else:
+            print(f"✓ User has {len(user.groups)} group(s)")
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Database initialized successfully',
+            'user': user.email,
+            'groups': len(user.groups)
+        }), 200
+    except Exception as e:
+        print(f"✗ Error: {str(e)}")
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
 @app.route('/')
 def index():
     try:
