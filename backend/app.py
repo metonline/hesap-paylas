@@ -39,10 +39,19 @@ CORS(app, resources={
 })
 
 # Config
-database_url = os.getenv('DATABASE_URL', 'sqlite:///hesap_paylas.db')
-# Heroku PostgreSQL fix for SQLAlchemy 2.0
-if database_url.startswith('postgres://'):
-    database_url = database_url.replace('postgres://', 'postgresql://', 1)
+# ABSOLUTE path for database - avoid path conflicts
+if os.getenv('DATABASE_URL'):
+    database_url = os.getenv('DATABASE_URL')
+    # Heroku PostgreSQL fix for SQLAlchemy 2.0
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+else:
+    # Local SQLite - use instance folder
+    instance_path = os.path.join(BASE_DIR, 'backend', 'instance')
+    os.makedirs(instance_path, exist_ok=True)
+    db_path = os.path.join(instance_path, 'hesap_paylas.db')
+    database_url = f'sqlite:///{db_path}'
+
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret')
@@ -103,6 +112,7 @@ class Group(db.Model):
     category = db.Column(db.String(100), nullable=True, default='Genel Yaşam')  # Cafe/Restaurant, Genel Yaşam, Seyahat/Konaklama
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)  # Grup kapalı/açık
     
     # Many-to-many relationship with users
     members = db.relationship('User', secondary='group_members', backref='groups')
@@ -592,10 +602,54 @@ def get_user_groups():
             'qr_code': group.qr_code,
             'created_at': group.created_at.isoformat(),
             'members_count': len(group.members),
-            'status': 'active'  # TODO: Gerçek status kontrolü (kapalı/açık)
+            'status': 'active' if group.is_active else 'closed'  # Use real is_active field
         })
     
     return jsonify(groups_data), 200
+
+@app.route('/api/groups/<int:group_id>/close', methods=['POST'])
+@token_required
+def close_group(group_id):
+    """Close a group - soft delete"""
+    group = Group.query.get_or_404(group_id)
+    user = User.query.get(request.user_id)
+    
+    # Check if user is group creator (first member)
+    if user not in group.members:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    # Mark as inactive (soft delete)
+    group.is_active = False
+    db.session.commit()
+    
+    return jsonify({'message': 'Group closed successfully'}), 200
+
+@app.route('/api/groups/<int:group_id>/delete', methods=['DELETE'])
+@token_required
+def delete_group(group_id):
+    """Delete a group permanently - hard delete"""
+    group = Group.query.get_or_404(group_id)
+    user = User.query.get(request.user_id)
+    data = request.get_json() or {}
+    
+    # Check if user is group creator
+    if user not in group.members:
+        return jsonify({'error': 'Unauthorized'}), 403
+    
+    # Password verification
+    password = data.get('password')
+    if password and not user.check_password(password):
+        return jsonify({'error': 'Invalid password'}), 401
+    
+    # Only delete active groups
+    if not group.is_active:
+        return jsonify({'error': 'Cannot delete closed groups'}), 400
+    
+    # Hard delete
+    db.session.delete(group)
+    db.session.commit()
+    
+    return jsonify({'message': 'Group permanently deleted'}), 200
 
 # ==================== Order Routes ====================
 
@@ -662,9 +716,44 @@ def server_error(e):
 def health():
     return jsonify({'status': 'ok', 'service': 'hesap-paylas-api'}), 200
 
+# ==================== Static Files Routes ====================
+
+# Root index.html - must be BEFORE wildcard route
+@app.route('/')
+def index():
+    try:
+        index_path = BASE_DIR / 'index.html'
+        with open(index_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f'Error loading index.html: {e}', 500
+
+# Serve static files (CSS, JS, etc)
+@app.route('/css/<path:filename>')
+def serve_css(filename):
+    return send_from_directory(str(BASE_DIR), f'css/{filename}')
+
+@app.route('/js/<path:filename>')
+def serve_js(filename):
+    return send_from_directory(str(BASE_DIR), f'js/{filename}')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    # Don't serve API routes as static
+    if filename.startswith('api/'):
+        return jsonify({'error': 'Not Found'}), 404
+    
+    # Serve static files
+    if filename.endswith(('.js', '.css', '.json', '.svg', '.png', '.jpg', '.gif', '.webp', '.woff', '.woff2', '.ttf')):
+        try:
+            return send_from_directory(str(BASE_DIR), filename)
+        except:
+            return send_from_directory(str(BASE_DIR), 'index.html')
+    # Fallback to index.html for SPA
+    return send_from_directory(str(BASE_DIR), 'index.html')
+
 # ==================== Main ====================
 
-# ==================== Static Files Routes ====================
 if __name__ == '__main__':
     with app.app_context():
         # Drop all tables and recreate them (fresh start)
@@ -682,7 +771,169 @@ if __name__ == '__main__':
         user.set_password('test123')
         db.session.add(user)
         db.session.commit()
+        
+        # Create comprehensive test data
+        import random
+        import string
+        from datetime import datetime, timedelta
+        
+        # ===== AKTIF GRUPLAR =====
+        active_groups = []
+        
+        # Grup 1: Restaurant with orders
+        qr1 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        group1 = Group(
+            name='Akşam Yemeği Grubu',
+            description='Arkadaşlar ile akşam yemeği',
+            category='Cafe/Restaurant',
+            qr_code=qr1,
+            created_by=user.id,
+            is_active=True
+        )
+        group1.members.append(user)
+        db.session.add(group1)
+        db.session.flush()
+        active_groups.append(group1)
+        
+        # Add orders to group1
+        order1_1 = Order(
+            group_id=group1.id,
+            creator_id=user.id,
+            restaurant='Olive Garden',
+            total_amount=385.50,
+            created_at=datetime.utcnow() - timedelta(days=5)
+        )
+        order1_2 = Order(
+            group_id=group1.id,
+            creator_id=user.id,
+            restaurant='Cheesecake Factory',
+            total_amount=420.75,
+            created_at=datetime.utcnow() - timedelta(days=2)
+        )
+        db.session.add(order1_1)
+        db.session.add(order1_2)
+        db.session.flush()
+        
+        # Grup 2: Travel/Hotel
+        qr2 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        group2 = Group(
+            name='Yazlık Tatili',
+            description='Ege bölgesinde yazlık tatil',
+            category='Seyahat/Konaklama',
+            qr_code=qr2,
+            created_by=user.id,
+            is_active=True
+        )
+        group2.members.append(user)
+        db.session.add(group2)
+        db.session.flush()
+        active_groups.append(group2)
+        
+        # Add orders to group2
+        order2_1 = Order(
+            group_id=group2.id,
+            creator_id=user.id,
+            restaurant='Otel Markamı',
+            total_amount=5200.00,
+            created_at=datetime.utcnow() - timedelta(days=10)
+        )
+        db.session.add(order2_1)
+        db.session.flush()
+        
+        # Grup 3: General Life (active)
+        qr3 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        group3 = Group(
+            name='Genel Masraflar',
+            description='Ortak ev masrafları',
+            category='Genel Yaşam',
+            qr_code=qr3,
+            created_by=user.id,
+            is_active=True
+        )
+        group3.members.append(user)
+        db.session.add(group3)
+        db.session.flush()
+        active_groups.append(group3)
+        
+        # Add orders to group3
+        order3_1 = Order(
+            group_id=group3.id,
+            creator_id=user.id,
+            restaurant='Market Alışveriş',
+            total_amount=680.50,
+            created_at=datetime.utcnow() - timedelta(days=1)
+        )
+        db.session.add(order3_1)
+        db.session.flush()
+        
+        # ===== KAAPALI (İNCE) GRUPLAR =====
+        # Grup 4: Closed group
+        qr4 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        group4 = Group(
+            name='Geçen Yaz Tatili',
+            description='Geçen yaz yapılan tatil masrafları (kapalı)',
+            category='Seyahat/Konaklama',
+            qr_code=qr4,
+            created_by=user.id,
+            is_active=False
+        )
+        group4.members.append(user)
+        db.session.add(group4)
+        db.session.flush()
+        
+        # Add orders to group4
+        order4_1 = Order(
+            group_id=group4.id,
+            creator_id=user.id,
+            restaurant='Aydos Otel',
+            total_amount=3500.00,
+            created_at=datetime.utcnow() - timedelta(days=180)
+        )
+        order4_2 = Order(
+            group_id=group4.id,
+            creator_id=user.id,
+            restaurant='Plaj Restoranı',
+            total_amount=950.00,
+            created_at=datetime.utcnow() - timedelta(days=175)
+        )
+        db.session.add(order4_1)
+        db.session.add(order4_2)
+        db.session.flush()
+        
+        # Grup 5: Another closed group
+        qr5 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        group5 = Group(
+            name='Yıl Başı Kutlaması',
+            description='Yıl başı partisi giderleri (kapalı)',
+            category='Genel Yaşam',
+            qr_code=qr5,
+            created_by=user.id,
+            is_active=False
+        )
+        group5.members.append(user)
+        db.session.add(group5)
+        db.session.flush()
+        
+        # Add orders to group5
+        order5_1 = Order(
+            group_id=group5.id,
+            creator_id=user.id,
+            restaurant='Club VIP',
+            total_amount=2400.00,
+            created_at=datetime.utcnow() - timedelta(days=30)
+        )
+        db.session.add(order5_1)
+        db.session.flush()
+        
+        # Commit all
+        db.session.commit()
+        
         print("[INIT] Fresh database created with default user (account_type='owner')")
+        print(f"[INIT] Created {len(active_groups)} ACTIVE groups and 2 CLOSED groups")
+        for g in active_groups:
+            print(f"       ✓ Active: '{g.name}' (QR: {g.qr_code}, Orders: {len(g.orders)})")
+        print(f"       ✓ Closed: 'Geçen Yaz Tatili' (QR: {qr4}, Orders: 2)")
+        print(f"       ✓ Closed: 'Yıl Başı Kutlaması' (QR: {qr5}, Orders: 1)")
     
     port = int(os.getenv('PORT', 5000))
     # Always run in production mode - file watcher causes crashes
