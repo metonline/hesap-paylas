@@ -2804,7 +2804,6 @@ function loadActiveGroups() {
                 const groupName = group.name || 'İsimsiz Grup';
                 const memberCount = group.members_count || 0;
                 const description = group.description || '';
-                const category = group.category || '';
                 
                 // Format: "Pembe (1 kişi) Big Chef'te akşam yemeği"
                 let displayText = `${groupName} (${memberCount} kişi)`;
@@ -2812,7 +2811,7 @@ function loadActiveGroups() {
                     displayText += ` ${description}`;
                 }
                 
-                groupItem.innerHTML = `<div style="font-weight: 600; color: #333; word-break: break-word;">${displayText}</div>`;
+                groupItem.innerHTML = `<div style="font-weight: 600; color: #333; word-break: break-word; line-height: 1.4;">${displayText}</div>`;
                 listContainer.appendChild(groupItem);
             });
         }
