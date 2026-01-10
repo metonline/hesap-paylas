@@ -909,6 +909,28 @@ function openProfileModal() {
     if (modal) {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+        
+        // Hesap sahibi kontrolü - butonları göster/gizle
+        const user = JSON.parse(localStorage.getItem('hesapPaylas_user') || '{}');
+        const isAccountOwner = user.is_account_owner || true;  // Default true
+        
+        // Hesabı Kapat ve Hesabı Sil butonlarını göster/gizle
+        const closeBtn = modal.querySelector('button[onclick="closeAccountPrompt()"]');
+        const deleteBtn = modal.querySelector('button[onclick="deleteAccountPrompt()"]');
+        
+        if (closeBtn) {
+            closeBtn.style.display = isAccountOwner ? 'block' : 'none';
+            if (!isAccountOwner) {
+                closeBtn.title = 'Sadece hesap sahibi bu işlemi yapabilir';
+            }
+        }
+        
+        if (deleteBtn) {
+            deleteBtn.style.display = isAccountOwner ? 'block' : 'none';
+            if (!isAccountOwner) {
+                deleteBtn.title = 'Sadece hesap sahibi bu işlemi yapabilir';
+            }
+        }
     }
 }
 
@@ -1185,6 +1207,12 @@ function logout() {
 
 // Hesabı Kapatma (Deactivate)
 function closeAccountPrompt() {
+    const user = JSON.parse(localStorage.getItem('hesapPaylas_user') || '{}');
+    if (!user.is_account_owner) {
+        alert('❌ Sadece hesap sahibi bu işlemi yapabilir.\nSiz bu hesaba katılan bir üyesiniz.');
+        return;
+    }
+    
     const confirmed = confirm('Hesabınızı kapatmak istediğinizden emin misiniz?\n\n⚠️ Hesap kapatıldığında:\n- Aktif olmaktan çıkacak\n- Tüm verileriniz korunacak\n- Daha sonra tekrar açabilirsiniz');
     
     if (!confirmed) return;
@@ -1199,8 +1227,12 @@ function closeAccountPrompt() {
     })
     .then(r => r.json())
     .then(data => {
-        alert('✅ Hesabınız başarıyla kapatıldı.\nTüm verileriniz güvende.')
-        logout();
+        if (data.error) {
+            alert('❌ Hata: ' + data.error);
+        } else {
+            alert('✅ Hesabınız başarıyla kapatıldı.\nTüm verileriniz güvende.')
+            logout();
+        }
     })
     .catch(error => {
         alert('❌ Hesap kapatma hatası: ' + error.message);
@@ -1209,6 +1241,12 @@ function closeAccountPrompt() {
 
 // Hesabı Silme (Delete)
 function deleteAccountPrompt() {
+    const user = JSON.parse(localStorage.getItem('hesapPaylas_user') || '{}');
+    if (!user.is_account_owner) {
+        alert('❌ Sadece hesap sahibi bu işlemi yapabilir.\nSiz bu hesaba katılan bir üyesiniz.');
+        return;
+    }
+    
     const confirmed = confirm('⚠️ DİKKAT! Hesabınızı SİLMEK istediğinizden emin misiniz?\n\n🗑️ Hesap silme sırasında:\n- Hesapınız ve tüm verileri kalıcı olarak silinecek\n- Bu işlem GERİ ALINMAZ\n- Kapalı hesaplar silinemez\n\nEmin misiniz?');
     
     if (!confirmed) return;

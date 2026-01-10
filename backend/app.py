@@ -68,6 +68,7 @@ class User(db.Model):
     reset_token_expires = db.Column(db.DateTime, nullable=True)
     is_active = db.Column(db.Boolean, default=True)  # Hesap kapalı/açık
     is_deleted = db.Column(db.Boolean, default=False)  # Hesap silindi mi?
+    account_type = db.Column(db.String(20), default='owner')  # 'owner' (hesap açan) or 'member' (invite edilen)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -88,7 +89,8 @@ class User(db.Model):
             'email': self.email,
             'phone': self.phone,
             'bonusPoints': self.bonus_points,
-            'createdAt': self.created_at.isoformat()
+            'createdAt': self.created_at.isoformat(),
+            'is_account_owner': self.account_type == 'owner'  # Frontend tarafı için
         }
 
 class Group(db.Model):
@@ -397,8 +399,14 @@ def update_profile():
 @app.route('/api/user/close-account', methods=['POST'])
 @token_required
 def close_account():
-    """Close user account (deactivate) - keeps all data"""
+    """Close user account (deactivate) - keeps all data - only for account owners"""
     user = User.query.get(request.user_id)
+    
+    # Sadece hesap sahibi hesabı kapatabilir
+    if user.account_type != 'owner':
+        return jsonify({
+            'error': 'Only account owner can close this account. You are a member.'
+        }), 403
     
     if not user.is_active:
         return jsonify({'error': 'Account is already closed'}), 400
@@ -414,9 +422,15 @@ def close_account():
 @app.route('/api/user/delete-account', methods=['DELETE'])
 @token_required
 def delete_account():
-    """Permanently delete user account - only for active accounts"""
+    """Permanently delete user account - only for active accounts and owners"""
     user = User.query.get(request.user_id)
     data = request.get_json() or {}
+    
+    # Sadece hesap sahibi hesabı silebilir
+    if user.account_type != 'owner':
+        return jsonify({
+            'error': 'Only account owner can delete this account. You are a member.'
+        }), 403
     
     # Kapalı hesaplar silinemez
     if not user.is_active:
