@@ -811,12 +811,12 @@
             <span class="close" onclick="closeCreateGroupModal()">&times;</span>
             
             <div style="text-align: center; margin-bottom: 20px;">
-                <h2 style="margin: 0 0 10px 0; color: #333;">Yeni Grup Oluştur</h2>
+                <h2 style="margin: 0 0 10px 0; color: #333;" id="modalTitle">Grup Adınız</h2>
             </div>
 
-            <!-- Rastgele Renk Adı (Başlangıçta gizli) -->
-            <div id="groupNameSection" style="margin-bottom: 15px; text-align: center; display: none;">
-                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600;">Grup Adı:</label>
+            <!-- Rastgele Renk Adı -->
+            <div id="groupNameSection" style="margin-bottom: 15px; text-align: center;">
+                <label style="display: none; margin-bottom: 8px; color: #333; font-weight: 600;">Grup Adı:</label>
                 <div style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
                     <div id="groupColorBox" style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #ddd; background-color: #FF0000;"></div>
                     <div style="text-align: left;">
@@ -827,8 +827,8 @@
                 <input type="hidden" id="newGroupName" value="">
             </div>
 
-            <!-- Kategori Seçimi - Butonlar -->
-            <div style="margin-bottom: 15px;">
+            <!-- Kategori Seçimi - Butonlar (Başlangıçta gizli) -->
+            <div id="categorySection" style="margin-bottom: 15px; display: none;">
                 <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">Harcama Kategorisi Seç:</label>
                 <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
                     <button 
@@ -859,7 +859,7 @@ Konaklama
                 <input type="hidden" id="newGroupCategory" value="Genel Yaşam">
             </div>
 
-            <button class="btn btn-primary" onclick="createNewGroup()" style="width: 100%; margin-bottom: 10px;">✅ Grubu Kur</button>
+            <button id="createGroupBtn" class="btn btn-primary" onclick="createNewGroup()" style="width: 100%; margin-bottom: 10px; display: none;">✅ Grubu Kur</button>
             
             <div id="createGroupMessage" style="text-align: center; margin-top: 15px; min-height: 20px; color: #27ae60; font-weight: 600;"></div>
             

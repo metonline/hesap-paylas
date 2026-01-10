@@ -2224,7 +2224,7 @@ function openCreateGroupModal() {
     const randomColor = getRandomColor();
     selectedColor = randomColor;  // Global variable'a sakla
     
-    // Renk kutusunu güncelle (hidden kalsın)
+    // Renk kutusunu güncelle
     document.getElementById('groupColorBox').style.backgroundColor = randomColor.code;
     document.getElementById('groupColorName').textContent = randomColor.name;
     document.getElementById('groupColorCode').textContent = randomColor.code;
@@ -2232,18 +2232,24 @@ function openCreateGroupModal() {
     // Hidden input'u güncelle
     document.getElementById('newGroupName').value = randomColor.name;
     
-    // Grup Adı kısmını başlangıçta gizle
-    document.getElementById('groupNameSection').style.display = 'none';
+    // Başlığı ayarla
+    document.getElementById('modalTitle').textContent = 'Grup Adınız';
+    
+    // Grup Adı bölümünü göster
+    document.getElementById('groupNameSection').style.display = 'block';
     
     // Success section'ı gizle
     document.getElementById('groupSuccessSection').style.display = 'none';
+    
+    // Kategori bölümünü göster
+    document.getElementById('categorySection').style.display = 'block';
     
     // Kategoriyi sıfırla (Genel Yaşam seçili)
     document.getElementById('newGroupCategory').value = 'Genel Yaşam';
     selectCategory('Genel Yaşam');
     
     // Grubu Kur butonunu göster
-    document.querySelector('button[onclick="createNewGroup()"]').style.display = 'block';
+    document.getElementById('createGroupBtn').style.display = 'block';
     
     document.getElementById('createGroupMessage').textContent = '';
     
@@ -2261,11 +2267,11 @@ function closeCreateGroupModal() {
     // Success section'ı gizle
     document.getElementById('groupSuccessSection').style.display = 'none';
     
-    // Kategori butonlarını tekrar göster
-    document.querySelectorAll('button[id^="cat-"]').forEach(btn => btn.style.display = 'block');
+    // Kategori bölümünü gizle
+    document.getElementById('categorySection').style.display = 'none';
     
-    // Grubu Kur butonunu tekrar göster
-    document.querySelector('button[onclick="createNewGroup()"]').style.display = 'block';
+    // Grubu Kur butonunu gizle
+    document.getElementById('createGroupBtn').style.display = 'none';
     
     document.getElementById('createGroupMessage').textContent = '';
 }
@@ -2315,12 +2321,10 @@ function createNewGroup() {
             messageDiv.textContent = '';
             
             // Kategori bölümünü gizle
-            const categoryDiv = document.querySelector('label:contains("Harcama Kategorisi Seç")');
-            const categoryButtons = document.querySelectorAll('button[id^="cat-"]');
-            categoryButtons.forEach(btn => btn.style.display = 'none');
+            document.getElementById('categorySection').style.display = 'none';
             
             // Grubu Kur butonunu gizle
-            document.querySelector('button[onclick="createNewGroup()"]').style.display = 'none';
+            document.getElementById('createGroupBtn').style.display = 'none';
         } else {
             messageDiv.textContent = `❌ ${data.message || 'Grup oluşturulamadı'}`;
             messageDiv.style.color = '#e74c3c';
