@@ -16,7 +16,7 @@ services:
       - key: FLASK_ENV
         value: production
 
-  - type: pserv
+  - type: postgres
     name: hesap-paylas-db
     ipWhitelist: []
     plan: free
