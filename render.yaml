@@ -6,10 +6,18 @@ services:
     startCommand: python wsgi.py
     envVars:
       - key: DATABASE_URL
-        value: sqlite:///hesap_paylas.db
+        fromDatabase:
+          name: hesap-paylas-db
+          property: connectionString
       - key: JWT_SECRET
         value: jwt-secret-key-change-in-production
       - key: SECRET_KEY
         value: secret-key-change-in-production
       - key: FLASK_ENV
         value: production
+
+  - type: pserv
+    name: hesap-paylas-db
+    ipWhitelist: []
+    plan: free
+    postgresMajorVersion: 15
