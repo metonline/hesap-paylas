@@ -2176,17 +2176,28 @@ const COLOR_LIST = [
     { name: 'Gri', code: '#808080' }
 ];
 
+// Seçili rengi sakla
+let selectedColor = null;
+
 function getRandomColor() {
     return COLOR_LIST[Math.floor(Math.random() * COLOR_LIST.length)];
 }
 
 function selectCategory(category) {
-    // Kategori butonlarının stilini güncelle
+    // Kategori butonlarının stilini sıfırla
     const buttons = ['cat-cafe', 'cat-life', 'cat-travel'];
     buttons.forEach(btn => {
         const element = document.getElementById(btn);
-        element.style.border = '2px solid #ddd';
-        element.style.background = 'white';
+        if (btn === 'cat-cafe') {
+            element.style.border = '2px solid #ddd';
+            element.style.background = '#FFE8B6';
+        } else if (btn === 'cat-life') {
+            element.style.border = '2px solid #66BB6A';
+            element.style.background = '#C8E6C9';
+        } else if (btn === 'cat-travel') {
+            element.style.border = '2px solid #ddd';
+            element.style.background = '#B3E5FC';
+        }
     });
     
     // Seçili kategori butonunu vurgula
@@ -2201,8 +2212,7 @@ function selectCategory(category) {
     
     if (selectedBtn) {
         const element = document.getElementById(selectedBtn);
-        element.style.border = '2px solid #0066ff';
-        element.style.background = '#e6f0ff';
+        element.style.border = '3px solid #333';
     }
     
     // Hidden input'u güncelle
@@ -2212,8 +2222,9 @@ function selectCategory(category) {
 function openCreateGroupModal() {
     // Rastgele renk seç
     const randomColor = getRandomColor();
+    selectedColor = randomColor;  // Global variable'a sakla
     
-    // Renk kutusunu güncelle
+    // Renk kutusunu güncelle (hidden kalsın)
     document.getElementById('groupColorBox').style.backgroundColor = randomColor.code;
     document.getElementById('groupColorName').textContent = randomColor.name;
     document.getElementById('groupColorCode').textContent = randomColor.code;
@@ -2221,9 +2232,18 @@ function openCreateGroupModal() {
     // Hidden input'u güncelle
     document.getElementById('newGroupName').value = randomColor.name;
     
+    // Grup Adı kısmını başlangıçta gizle
+    document.getElementById('groupNameSection').style.display = 'none';
+    
+    // Success section'ı gizle
+    document.getElementById('groupSuccessSection').style.display = 'none';
+    
     // Kategoriyi sıfırla (Genel Yaşam seçili)
     document.getElementById('newGroupCategory').value = 'Genel Yaşam';
     selectCategory('Genel Yaşam');
+    
+    // Grubu Kur butonunu göster
+    document.querySelector('button[onclick="createNewGroup()"]').style.display = 'block';
     
     document.getElementById('createGroupMessage').textContent = '';
     
@@ -2235,7 +2255,18 @@ function openCreateGroupModal() {
 }
 
 function closeCreateGroupModal() {
+    // Modal'ı gizle
     document.getElementById('createGroupModal').style.display = 'none';
+    
+    // Success section'ı gizle
+    document.getElementById('groupSuccessSection').style.display = 'none';
+    
+    // Kategori butonlarını tekrar göster
+    document.querySelectorAll('button[id^="cat-"]').forEach(btn => btn.style.display = 'block');
+    
+    // Grubu Kur butonunu tekrar göster
+    document.querySelector('button[onclick="createNewGroup()"]').style.display = 'block';
+    
     document.getElementById('createGroupMessage').textContent = '';
 }
 
@@ -2272,21 +2303,24 @@ function createNewGroup() {
     .then(data => {
         if (data.success) {
             const newGroup = data.group;
-            messageDiv.textContent = '✅ Grup başarıyla oluşturuldu!';
-            messageDiv.style.color = '#27ae60';
             
-            // 2 saniye sonra QR kodu göster ve modal'ı kapat
-            setTimeout(() => {
-                showGroupDetails(
-                    newGroup.id,
-                    newGroup.name,
-                    newGroup.description || '',
-                    new Date(newGroup.created_at).toLocaleDateString('tr-TR'),
-                    newGroup.qr_code
-                );
-                closeCreateGroupModal();
-                loadUserGroups(); // Grupları yenile
-            }, 1500);
+            // Success ekranını göster
+            showGroupSuccessScreen(
+                newGroup.name,
+                selectedColor.name,  // Seçili renk adı
+                selectedColor.code,  // Seçili renk kodu
+                newGroup.qr_code  // QR kod (6 haneli)
+            );
+            
+            messageDiv.textContent = '';
+            
+            // Kategori bölümünü gizle
+            const categoryDiv = document.querySelector('label:contains("Harcama Kategorisi Seç")');
+            const categoryButtons = document.querySelectorAll('button[id^="cat-"]');
+            categoryButtons.forEach(btn => btn.style.display = 'none');
+            
+            // Grubu Kur butonunu gizle
+            document.querySelector('button[onclick="createNewGroup()"]').style.display = 'none';
         } else {
             messageDiv.textContent = `❌ ${data.message || 'Grup oluşturulamadı'}`;
             messageDiv.style.color = '#e74c3c';
@@ -2297,6 +2331,40 @@ function createNewGroup() {
         messageDiv.textContent = '❌ Bir hata oluştu. Tekrar deneyin.';
         messageDiv.style.color = '#e74c3c';
     });
+}
+
+// Grup oluşturma başarılı - success ekranını göster
+function showGroupSuccessScreen(groupName, colorName, colorCode, qrCode) {
+    // Kategori butonlarını ve seçim kısmını gizle
+    const categoryDiv = document.querySelector('div[style*="margin-bottom: 15px"]');
+    
+    // Success section'ı göster
+    document.getElementById('groupSuccessSection').style.display = 'block';
+    
+    // Renk kutusunu ve adını güncelle
+    document.getElementById('successColorBox').style.backgroundColor = colorCode;
+    document.getElementById('successColorName').textContent = colorName;
+    
+    // QR kodu göster (QR Server API kullanarak)
+    const qrCodeContainer = document.getElementById('successQRCode');
+    qrCodeContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrCode}&color=000000" alt="QR Code" style="border: 2px solid #000;">`;
+    
+    // Grup kodunu xxx-xxx formatında göster
+    const groupCodeFormatted = qrCode.substring(0, 3) + '-' + qrCode.substring(3);
+    document.getElementById('successGroupCode').textContent = groupCodeFormatted;
+    
+    // WhatsApp share button'ında grup kodunu sakla
+    document.getElementById('whatsappShareBtn').setAttribute('data-group-code', groupCodeFormatted);
+}
+
+// WhatsApp'ta paylaş
+function shareGroupOnWhatsapp() {
+    const groupCode = document.getElementById('whatsappShareBtn').getAttribute('data-group-code');
+    const message = `Grup Kodu: ${groupCode}`;
+    const encodedMessage = encodeURIComponent(message);
+    
+    // WhatsApp Web veya mobil app'ı aç
+    window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
 }
 
 // Yardımcı Fonksiyonlar
