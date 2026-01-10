@@ -40,6 +40,9 @@ with app.app_context():
         db.session.commit()
         print("✓ Default user password reset")
 
+# WSGI app must be available for Gunicorn
+# This is the main entry point for production servers like Gunicorn
+
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
     print(f"Starting Flask server on port {port}")
