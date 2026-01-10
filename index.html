@@ -326,14 +326,14 @@
                 <p>tükettiğin kadar öde !</p>
             </div>
             
-            <div class="options-grid" style="margin-top: 20px; display: none;">
-                <div class="option-card" onclick="showPage('groupsPage')" style="background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%);">
-                    <div class="option-icon">➕</div>
+            <div class="options-grid" style="margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 15px;">
+                <div class="option-card" onclick="navigateToMenu('groups')" style="background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%);">
+                    <div class="option-icon">👥</div>
                     <h2>Gruplarım</h2>
                 </div>
                 
                 <div class="option-card" onclick="openJoinGroupModal()" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
-                    <div class="option-icon">🔗</div>
+                    <div class="option-icon">➕</div>
                     <h2>Gruba Katıl</h2>
                 </div>
             </div>
