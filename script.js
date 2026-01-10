@@ -2162,6 +2162,20 @@ function showCreateGroupForm() {
     modal.style.justifyContent = 'center';
 }
 
+function openCreateGroupModal() {
+    // Clear form
+    document.getElementById('newGroupName').value = '';
+    document.getElementById('newGroupDesc').value = '';
+    document.getElementById('newGroupCategory').value = 'Genel Yaşam';
+    document.getElementById('createGroupMessage').textContent = '';
+    
+    // Show modal
+    const modal = document.getElementById('createGroupModal');
+    modal.style.display = 'flex';
+    modal.style.alignItems = 'center';
+    modal.style.justifyContent = 'center';
+}
+
 function closeCreateGroupModal() {
     document.getElementById('createGroupModal').style.display = 'none';
     document.getElementById('createGroupMessage').textContent = '';
