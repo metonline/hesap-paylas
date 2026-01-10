@@ -618,6 +618,7 @@ def get_group(group_id):
         'name': group.name,
         'description': group.description,
         'category': group.category,
+        'code': group.code,
         'qr_code': group.qr_code,
         'created_at': group.created_at.isoformat(),
         'members': [u.to_dict() for u in group.members],
@@ -632,19 +633,24 @@ def get_group(group_id):
 @app.route('/api/groups/join', methods=['POST'])
 @token_required
 def join_group():
-    """Join group using QR code"""
+    """Join group using QR code or group code"""
     try:
         data = request.get_json()
         if not data:
             return jsonify({'error': 'Invalid request data'}), 400
         
         qr_code = data.get('qr_code')
+        group_code = data.get('code')
         
-        if not qr_code:
-            return jsonify({'error': 'QR code is required'}), 400
+        group = None
         
-        # QR kodu ile grup bul
-        group = Group.query.filter_by(qr_code=qr_code).first()
+        # Try to find by group code first (6-digit format: XXX-XXX)
+        if group_code:
+            group = Group.query.filter_by(code=group_code).first()
+        
+        # Fallback to QR code if not found
+        if not group and qr_code:
+            group = Group.query.filter_by(qr_code=qr_code).first()
         
         if not group:
             return jsonify({'error': 'Group not found'}), 404

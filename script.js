@@ -2817,37 +2817,128 @@ function showGroupMembersModal(groupId) {
     // Modal'ı aç
     modal.style.display = 'flex';
     
-    // Sample veriler
-    const sampleGroups = {
-        'turuncu': { name: 'Turuncu', members: ['Ahmet Yilmaz', 'Fatma Kaya', 'Zeynep Demir', 'Hasan Özdemir'] },
-        'mavi': { name: 'Mavi', members: ['Ali Çelik', 'Seda Aydın', 'Murat Korkut', 'Canan Aksoy'] }
-    };
+    // Token al
+    const token = localStorage.getItem('hesapPaylas_token');
+    if (!token) {
+        membersList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Lütfen giriş yapınız</p>';
+        return;
+    }
     
-    const groupInfo = sampleGroups[groupId];
-    if (groupInfo) {
-        memberModalTitle.textContent = `${groupInfo.name} - Üyeler`;
+    // Grup verilerini API'den getir
+    const baseURL = getBaseURL();
+    fetch(`${baseURL}/api/groups/${groupId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    })
+    .then(response => response.json())
+    .then(group => {
+        memberModalTitle.innerHTML = `
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <span>${group.name || 'İsimsiz Grup'}</span>
+            </div>
+        `;
         membersList.innerHTML = '';
         
-        groupInfo.members.forEach((member, index) => {
-            const memberItem = document.createElement('div');
-            memberItem.style.cssText = `
-                padding: 12px;
+        // Grup Kodu ve Paylaş Butonu
+        const shareSection = document.createElement('div');
+        shareSection.style.cssText = `
+            background: #f0f8ff;
+            border: 2px solid #FF8800;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            text-align: center;
+        `;
+        
+        const participationLink = `${window.location.origin}?code=${group.code}`;
+        
+        shareSection.innerHTML = `
+            <div style="margin-bottom: 10px;">
+                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px; font-weight: 600;">🔑 Grup Kodu:</div>
+                <div style="font-size: 1.3em; font-weight: 700; color: #FF8800; letter-spacing: 2px; font-family: monospace;">${group.code || '---'}</div>
+            </div>
+            <button onclick="copyToClipboard('${participationLink}'); showNotification('Katılım linki kopyalandı!')" style="
+                width: 100%;
+                padding: 10px;
+                background: #FF8800;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                margin-bottom: 8px;
+            " onmouseover="this.style.background='#E67E00'" onmouseout="this.style.background='#FF8800'">
+                📤 Katılım Linki Paylaş
+            </button>
+            <div style="font-size: 0.75em; color: #999; padding: 8px; background: white; border-radius: 4px; word-break: break-all; font-family: monospace;">
+                ${participationLink}
+            </div>
+        `;
+        membersList.appendChild(shareSection);
+        
+        // Grup Açıklaması
+        if (group.description) {
+            const descSection = document.createElement('div');
+            descSection.style.cssText = `
                 background: #f9f9f9;
                 border-radius: 8px;
+                padding: 12px;
+                margin-bottom: 15px;
                 border-left: 4px solid #FF8800;
-                display: flex;
-                align-items: center;
-                gap: 10px;
             `;
-            memberItem.innerHTML = `
-                <span style="font-size: 1.3em; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: #FF8800; color: white; border-radius: 50%; font-weight: 600; font-size: 0.9em;">${index + 1}</span>
-                <div>
-                    <div style="font-weight: 600; color: #333;">${member}</div>
-                </div>
+            descSection.innerHTML = `
+                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px; font-weight: 600;">Açıklama:</div>
+                <div style="color: #333; font-size: 0.95em;">${group.description}</div>
             `;
-            membersList.appendChild(memberItem);
-        });
-    }
+            membersList.appendChild(descSection);
+        }
+        
+        // Üyeler Listesi
+        if (group.members && group.members.length > 0) {
+            const membersTitle = document.createElement('div');
+            membersTitle.style.cssText = `
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 10px;
+                margin-top: 10px;
+                font-size: 0.95em;
+            `;
+            membersTitle.textContent = `👥 Üyeler (${group.members.length})`;
+            membersList.appendChild(membersTitle);
+            
+            group.members.forEach((member, index) => {
+                const memberItem = document.createElement('div');
+                memberItem.style.cssText = `
+                    padding: 12px;
+                    background: #f9f9f9;
+                    border-radius: 8px;
+                    border-left: 4px solid #FF8800;
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                `;
+                memberItem.innerHTML = `
+                    <span style="font-size: 1em; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: #FF8800; color: white; border-radius: 50%; font-weight: 600; font-size: 0.85em;">${index + 1}</span>
+                    <div>
+                        <div style="font-weight: 600; color: #333;">${member.first_name} ${member.last_name}</div>
+                        <div style="font-size: 0.8em; color: #999;">${member.email}</div>
+                    </div>
+                `;
+                membersList.appendChild(memberItem);
+            });
+        } else {
+            const noMembers = document.createElement('p');
+            noMembers.style.cssText = 'color: #999; text-align: center; padding: 10px;';
+            noMembers.textContent = 'Henüz üye bulunmamaktadır';
+            membersList.appendChild(noMembers);
+        }
+    })
+    .catch(error => {
+        console.error('Grup detayları yüklenemedi:', error);
+        membersList.innerHTML = '<p style="color: #c0392b; text-align: center; padding: 20px;">Grup detayları yüklenemedi</p>';
+    });
 }
 
 function closeGroupMembersModal() {
@@ -2862,6 +2953,56 @@ document.addEventListener('click', (e) => {
         closeGroupMembersModal();
     }
 });
+
+// Helper Functions
+function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+            console.log('Link kopyalandı');
+        }).catch(err => {
+            console.error('Kopyalama başarısız:', err);
+            // Fallback
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
+        });
+    } else {
+        // Fallback for older browsers
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+    }
+}
+
+function showNotification(message) {
+    // Bildirim göster
+    const notification = document.createElement('div');
+    notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #27ae60;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 6px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        z-index: 10002;
+        animation: slideIn 0.3s ease;
+    `;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+    }, 2000);
+}
 
 // Yardımcı Fonksiyonlar
 // Sayfa Yüklendiğinde
