@@ -909,28 +909,6 @@ function openProfileModal() {
     if (modal) {
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
-        
-        // Hesap sahibi kontrolü - butonları göster/gizle
-        const user = JSON.parse(localStorage.getItem('hesapPaylas_user') || '{}');
-        const isAccountOwner = user.is_account_owner || true;  // Default true
-        
-        // Hesabı Kapat ve Hesabı Sil butonlarını göster/gizle
-        const closeBtn = modal.querySelector('button[onclick="closeAccountPrompt()"]');
-        const deleteBtn = modal.querySelector('button[onclick="deleteAccountPrompt()"]');
-        
-        if (closeBtn) {
-            closeBtn.style.display = isAccountOwner ? 'block' : 'none';
-            if (!isAccountOwner) {
-                closeBtn.title = 'Sadece hesap sahibi bu işlemi yapabilir';
-            }
-        }
-        
-        if (deleteBtn) {
-            deleteBtn.style.display = isAccountOwner ? 'block' : 'none';
-            if (!isAccountOwner) {
-                deleteBtn.title = 'Sadece hesap sahibi bu işlemi yapabilir';
-            }
-        }
     }
 }
 
