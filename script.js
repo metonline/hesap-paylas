@@ -2915,7 +2915,7 @@ function showGroupMembersModal(groupId) {
                 <div style="font-size: 0.85em; color: #666; margin-bottom: 5px; font-weight: 600;">🔑 Grup Kodu:</div>
                 <div style="font-size: 1.3em; font-weight: 700; color: #FF8800; letter-spacing: 2px; font-family: monospace;">${group.code || '---'}</div>
             </div>
-            <button onclick="shareToWhatsApp('${participationLink}', '${group.name || 'Grup'}')" style="
+            <button id="shareWhatsAppBtn" style="
                 width: 100%;
                 padding: 10px;
                 background: #25D366;
@@ -2930,7 +2930,7 @@ function showGroupMembersModal(groupId) {
                 💬 WhatsApp'ta Paylaş
             </button>
             <div style="margin-bottom: 10px;">
-                <button onclick="copyToClipboard('${participationLink}'); showNotification('Katılım linki kopyalandı!')" style="
+                <button id="copyLinkBtn" style="
                     width: 100%;
                     padding: 8px;
                     background: #FF8800;
@@ -2950,6 +2950,18 @@ function showGroupMembersModal(groupId) {
             </div>
         `;
         membersList.appendChild(shareSection);
+        
+        // WhatsApp butonu event handler
+        document.getElementById('shareWhatsAppBtn').onclick = () => {
+            console.log('WhatsApp paylaş tıklandı. Link:', participationLink);
+            shareToWhatsApp(participationLink, group.name);
+        };
+        
+        // Copy butonu event handler
+        document.getElementById('copyLinkBtn').onclick = () => {
+            copyToClipboard(participationLink);
+            showNotification('Katılım linki kopyalandı!');
+        };
         
         // Grup Açıklaması
         if (group.description) {
