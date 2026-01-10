@@ -2762,18 +2762,6 @@ function loadActiveGroups() {
             groups.forEach(group => {
                 const groupItem = document.createElement('div');
                 
-                // Kategori emojisi seç
-                let categoryEmoji = '📍';
-                let categoryName = group.category || 'Genel Yaşam';
-                
-                if (categoryName === 'Cafe/Restaurant') {
-                    categoryEmoji = '🍴';
-                } else if (categoryName === 'Seyahat/Konaklama') {
-                    categoryEmoji = '✈️';
-                } else {
-                    categoryEmoji = '📍';
-                }
-                
                 groupItem.style.cssText = `
                     padding: 12px;
                     background: #f9f9f9;
@@ -2787,11 +2775,16 @@ function loadActiveGroups() {
                 groupItem.onclick = () => selectActiveGroup(group.id, group.name);
                 
                 const groupName = group.name || 'İsimsiz Grup';
-                groupItem.innerHTML = `
-                    <div style="font-weight: 600; color: #333; margin-bottom: 4px;">${groupName}</div>
-                    <div style="font-size: 0.85em; color: #666; margin-bottom: 8px;">${categoryEmoji} ${categoryName}</div>
-                    <div style="font-size: 0.8em; color: #999;">👥 ${group.members_count || 0} kişi</div>
-                `;
+                const memberCount = group.members_count || 0;
+                const description = group.description || '';
+                
+                let html = `<div style="font-weight: 600; color: #333; margin-bottom: 4px;">${groupName} (${memberCount} kişi)</div>`;
+                
+                if (description) {
+                    html += `<div style="font-size: 0.85em; color: #666; margin-top: 4px;">${description}</div>`;
+                }
+                
+                groupItem.innerHTML = html;
                 listContainer.appendChild(groupItem);
             });
         }
