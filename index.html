@@ -674,7 +674,7 @@
                     <div style="display: flex; flex-direction: column; gap: 0;">
                         <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
                             <span style="color: #666; font-size: 0.9em; font-weight: 500;">📌 Grup Adı</span>
-                            <span id="detailGroupName" style="color: #333; font-weight: 700; font-size: 0.95em;">-</span>
+                            <span id="detailGroupName" style="color: #999; font-weight: 600; font-size: 0.9em;">Gri</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
                             <span style="color: #666; font-size: 0.9em; font-weight: 500;">🔑 Grup Kodu</span>
@@ -684,46 +684,44 @@
                             <span style="color: #666; font-size: 0.9em; font-weight: 500;">🏷️ Kategori</span>
                             <span id="detailGroupCategory" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
                         </div>
-                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
-                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">👥 Üye Sayısı</span>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0; cursor: pointer;" onclick="toggleGroupMembersDetails()">
+                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">👥 Grup Üyeleri</span>
                             <span id="detailGroupMemberCount" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
-                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">💰 Hesap Dengesi</span>
+                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">💰 Ödeme Dengesi</span>
                             <span id="detailGroupBalance" style="color: #27ae60; font-weight: 700; font-size: 0.95em;">₺0.00</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; padding: 10px 0;">
-                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">📅 Oluşturma</span>
+                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">📅 Grup Oluşturma Tarihi</span>
                             <span id="detailGroupDate" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- QR Kod Bölümü -->
-                <div id="detailGroupQR" style="margin-bottom: 20px;"></div>
-
-                <!-- Grup Üyeleri -->
+                <!-- Hesap Özeti/Siparişler -->
                 <div style="margin-bottom: 20px;">
-                    <h3 style="color: #333; margin: 0 0 10px 0; font-size: 0.95em; font-weight: 600;">👥 Grup Üyeleri</h3>
-                    <div id="detailGroupMembers" style="background: #f9f9f9; border-radius: 10px; padding: 12px; border: 1px solid #e0e0e0; max-height: 150px; overflow-y: auto;">
-                        <p style="color: #999; text-align: center; margin: 0;">-</p>
-                    </div>
-                </div>
-
-                <!-- Adisyon/Siparişler -->
-                <div style="margin-bottom: 20px;">
-                    <h3 style="color: #333; margin: 0 0 10px 0; font-size: 0.95em; font-weight: 600;">🛒 Adisyon (Ürün/Hizmet Detayları)</h3>
-                    <div id="detailGroupOrders" style="background: #f9f9f9; border-radius: 10px; padding: 12px; border: 1px solid #e0e0e0; max-height: 200px; overflow-y: auto;">
-                        <p style="color: #999; text-align: center; margin: 0;">-</p>
+                    <h3 onclick="toggleOrderDetails()" style="color: #333; margin: 0 0 10px 0; font-size: 0.95em; font-weight: 600; cursor: pointer; user-select: none;">📋 Hesap Özeti ▼</h3>
+                    <div id="detailGroupOrders" style="background: #f9f9f9; border-radius: 10px; padding: 12px; border: 1px solid #e0e0e0; max-height: 200px; overflow-y: auto; display: none;">
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
                     <button onclick="editGroup()" style="padding: 12px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
                         ✏️ Düzenle
                     </button>
                     <button onclick="deleteGroup()" style="padding: 12px; background: #e74c3c; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
                         🗑️ Sil
+                    </button>
+                </div>
+
+                <!-- Hesap Yönetim Düğmeleri -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px solid #e0e0e0; padding-top: 15px;">
+                    <button onclick="closeGroupAccount()" style="padding: 12px; background: #f39c12; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
+                        🔒 Hesap Kapat
+                    </button>
+                    <button onclick="deleteGroupAccount()" style="padding: 12px; background: #c0392b; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
+                        🗑️ Hesap Sil
                     </button>
                 </div>
             </div>

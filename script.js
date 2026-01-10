@@ -2072,25 +2072,17 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     })
     .then(r => r.json())
     .then(group => {
-        // Grup bilgilerini doldur
-        document.getElementById('detailGroupName').textContent = group.name || '-';
+        // Grup adı "Gri" olarak göster
+        document.getElementById('detailGroupName').textContent = 'Gri';
         document.getElementById('detailGroupCode').textContent = formatQRCode(group.qr_code || '');
         document.getElementById('detailGroupCategory').textContent = group.category || 'Genel Yaşam';
         document.getElementById('detailGroupDate').textContent = new Date(group.created_at).toLocaleDateString('tr-TR');
         
-        // Üyeleri göster
-        if (group.members && group.members.length > 0) {
-            const membersList = group.members.map(m => 
-                `<div style="padding: 6px; background: white; border-radius: 6px; margin-bottom: 6px; font-size: 0.9em;">
-                    👤 ${m.first_name} ${m.last_name}
-                </div>`
-            ).join('');
-            document.getElementById('detailGroupMembers').innerHTML = membersList;
-        } else {
-            document.getElementById('detailGroupMembers').innerHTML = '<p style="color: #999; text-align: center; margin: 0;">Henüz üye yok</p>';
-        }
+        // Üye sayısını parantez içinde göster - onclick ile detay açılacak
+        const memberCount = (group.members || []).length;
+        document.getElementById('detailGroupMemberCount').textContent = `(${memberCount} üye)`;
         
-        // Siparişleri göster
+        // Siparişleri/Hesap Özeti göster
         if (group.orders && group.orders.length > 0) {
             const ordersList = group.orders.map(order => `
                 <div style="padding: 10px; background: white; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #3498db;">
@@ -2101,44 +2093,115 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
             `).join('');
             document.getElementById('detailGroupOrders').innerHTML = ordersList;
         } else {
-            document.getElementById('detailGroupOrders').innerHTML = '<p style="color: #999; text-align: center; margin: 0;">Henüz sipariş yok</p>';
+            document.getElementById('detailGroupOrders').innerHTML = '';
         }
         
-        // Hesap dengesi (orders total)
+        // Ödeme dengesi (orders total)
         const totalBalance = group.orders ? group.orders.reduce((sum, order) => sum + order.total_amount, 0) : 0;
         document.getElementById('detailGroupBalance').textContent = `₺${totalBalance.toFixed(2)}`;
-        document.getElementById('detailGroupMemberCount').textContent = (group.members || []).length + ' üye';
+        
+        // Üyeleri global'e sakla (detay açılması için)
+        window.currentGroupMembers = group.members || [];
     })
     .catch(error => {
         console.error('Error loading group details:', error);
         // Fallback: sadece basit bilgileri göster
-        document.getElementById('detailGroupName').textContent = groupName;
+        document.getElementById('detailGroupName').textContent = 'Gri';
         document.getElementById('detailGroupCode').textContent = formatQRCode(qrCode || '');
         document.getElementById('detailGroupDate').textContent = new Date(groupDate).toLocaleDateString('tr-TR');
+        document.getElementById('detailGroupMemberCount').textContent = '(0 üye)';
     });
-    
-    // Temiz QR code (sadece 6 rakam)
-    const cleanQRCode = qrCode.toString().replace(/\D/g, '').slice(0, 6);
-    
-    // QR Kod'u göster (xxx-xxx formatında)
-    const formattedCode = formatQRCode(cleanQRCode);
-    
-    // QR Server API'si kullanarak garantili siyah-beyaz QR kod oluştur
-    const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(cleanQRCode)}&color=000000&bgcolor=FFFFFF`;
-    
-    document.getElementById('detailGroupQR').innerHTML = `
-        <div style="text-align: center; padding: 15px; background: #f5f5f5; border-radius: 10px;">
-            <img src="${qrImageUrl}" 
-                 alt="QR Code" 
-                 style="width: 200px; height: 200px; margin-bottom: 15px; border: 2px solid #ddd; border-radius: 8px;" 
-                 onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 200 200%22><rect fill=%22white%22 width=%22200%22 height=%22200%22/><text x=%22100%22 y=%22100%22 font-size=%2220%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22>QR</text></svg>'"
-            />
-            <div style="font-weight: 600; font-size: 1.2em; letter-spacing: 2px; color: #333;">${formattedCode}</div>
-        </div>
-    `;
     
     window.currentGroupId = groupId;
     detailsModal.style.display = 'flex';
+}
+
+// Hesap Özeti detaylarını aç/kapat
+function toggleOrderDetails() {
+    const detailsBox = document.getElementById('detailGroupOrders');
+    const h3 = document.querySelector('#groupDetailsModal h3');
+    
+    if (detailsBox.style.display === 'none') {
+        detailsBox.style.display = 'block';
+        if (h3) h3.textContent = '📋 Hesap Özeti ▲';
+    } else {
+        detailsBox.style.display = 'none';
+        if (h3) h3.textContent = '📋 Hesap Özeti ▼';
+    }
+}
+
+// Grup üyeleri detaylarını toggle et
+function toggleGroupMembersDetails() {
+    const members = window.currentGroupMembers || [];
+    if (members.length === 0) {
+        alert('Henüz üye yok');
+        return;
+    }
+    
+    const membersList = members.map(m => `👤 ${m.first_name} ${m.last_name}`).join('\n');
+    alert(`Grup Üyeleri:\n\n${membersList}`);
+}
+
+// Grup hesabını kapat
+function closeGroupAccount() {
+    const groupId = window.currentGroupId;
+    if (!groupId) return;
+    
+    const confirmed = confirm('Grup hesabını kapatmak istediğinizden emin misiniz?\nGrup kapatıldığında tüm veriler korunacak.');
+    if (!confirmed) return;
+    
+    const token = localStorage.getItem('hesapPaylas_token');
+    fetch(`${API_BASE_URL}/groups/${groupId}/close`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(r => r.json())
+    .then(data => {
+        alert('✅ Grup başarıyla kapatıldı');
+        closeGroupDetailsModal();
+        loadUserGroups();
+    })
+    .catch(error => {
+        alert('❌ Hata: ' + error.message);
+    });
+}
+
+// Grup hesabını sil
+function deleteGroupAccount() {
+    const groupId = window.currentGroupId;
+    if (!groupId) return;
+    
+    const confirmed = confirm('⚠️ DİKKAT! Grup hesabını SİLMEK istediğinizden emin misiniz?\nBu işlem GERİ ALINMAZ!\n\nGrup ve tüm verileriniz kalıcı olarak silinecektir.');
+    if (!confirmed) return;
+    
+    const password = prompt('Şifrenizi girin (onay için):');
+    if (!password) return;
+    
+    const token = localStorage.getItem('hesapPaylas_token');
+    fetch(`${API_BASE_URL}/groups/${groupId}/delete`, {
+        method: 'DELETE',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ password })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.error) {
+            alert('❌ Hata: ' + data.error);
+        } else {
+            alert('🗑️ Grup kalıcı olarak silinmiştir');
+            closeGroupDetailsModal();
+            loadUserGroups();
+        }
+    })
+    .catch(error => {
+        alert('❌ Hata: ' + error.message);
+    });
 }
 
 // QR Kod'u xxx-xxx formatında göster
