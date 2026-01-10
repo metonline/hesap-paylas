@@ -495,8 +495,10 @@ def get_user_groups():
             'id': group.id,
             'name': group.name,
             'description': group.description,
+            'category': group.category,
             'qr_code': group.qr_code,
             'created_at': group.created_at.isoformat(),
+            'members_count': len(group.users),
             'status': 'active'  # TODO: Gerçek status kontrolü (kapalı/açık)
         })
     

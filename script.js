@@ -2424,7 +2424,8 @@ function loadActiveGroups() {
                 
                 groupItem.innerHTML = `
                     <div style="font-weight: 600; color: #333; margin-bottom: 4px;">${group.name}</div>
-                    <div style="font-size: 0.85em; color: #666;">${categoryEmoji} ${categoryName}</div>
+                    <div style="font-size: 0.85em; color: #666; margin-bottom: 8px;">${categoryEmoji} ${categoryName}</div>
+                    <div style="font-size: 0.8em; color: #999;">👥 ${group.members_count || 0} kişi</div>
                 `;
                 listContainer.appendChild(groupItem);
             });
