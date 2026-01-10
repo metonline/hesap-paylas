@@ -1,7 +1,7 @@
 /**
  * Hesap Paylaş - Main Application Script
- * Version: 2.0.0
- * Last Updated: 2026-01-09
+ * Version: 2.0.3
+ * Last Updated: 2026-01-11
  */
 
 // Service Worker DISABLED - Caching issues
