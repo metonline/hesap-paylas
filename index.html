@@ -34,6 +34,29 @@
             -webkit-user-select: text;
             user-select: text;
         }
+        
+        /* Balon efekti animasyonu */
+        @keyframes balloonFloat {
+            0% {
+                transform: translateY(0px) translateX(0px);
+            }
+            25% {
+                transform: translateY(-15px) translateX(5px);
+            }
+            50% {
+                transform: translateY(-25px) translateX(-8px);
+            }
+            75% {
+                transform: translateY(-15px) translateX(3px);
+            }
+            100% {
+                transform: translateY(0px) translateX(0px);
+            }
+        }
+        
+        #activeGroupToggle {
+            animation: balloonFloat 4s ease-in-out infinite !important;
+        }
     </style>
 </head>
 <body>
@@ -911,7 +934,7 @@ Konaklama
 
     <!-- Yüzen Aktif Grup Buton -->
     <div id="activeGroupButton" style="position: fixed; bottom: 30px; right: 30px; z-index: 999; cursor: pointer;">
-        <button id="activeGroupToggle" onclick="toggleActiveGroupPanel()" style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); border: none; color: white; font-size: 2em; box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+        <button id="activeGroupToggle" onclick="toggleActiveGroupPanel()" style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #FF8800 0%, #E67E22 100%); border: none; color: white; font-size: 2em; box-shadow: 0 4px 15px rgba(255, 136, 0, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
             👥
         </button>
         <div id="activeGroupPanel" style="display: none; position: absolute; bottom: 90px; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 280px; max-height: 400px; overflow-y: auto; padding: 15px;">
