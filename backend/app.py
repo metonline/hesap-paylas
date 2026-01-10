@@ -108,6 +108,7 @@ class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
+    code = db.Column(db.String(10), unique=True, nullable=False)  # 6 digit code: XXX-XXX
     qr_code = db.Column(db.String(255), nullable=True)
     category = db.Column(db.String(100), nullable=True, default='Genel Yaşam')  # Cafe/Restaurant, Genel Yaşam, Seyahat/Konaklama
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
@@ -551,13 +552,17 @@ def create_group():
             'İnci', 'Altın', 'Gümüş', 'Bakır', 'Bronz', 'Lacivert', 'Haki', 'Zeytin'
         ]
         
-        # Generate unique 6-digit QR code
-        qr_code = ''.join(random.choices(string.digits, k=6))
+        # Generate unique 6-digit code (format: XXX-XXX)
+        def generate_group_code():
+            code = f"{random.randint(0, 999):03d}-{random.randint(0, 999):03d}"
+            return code
         
-        # Ensure QR code is unique
+        group_code = generate_group_code()
+        
+        # Ensure code is unique
         attempts = 0
-        while Group.query.filter_by(qr_code=qr_code).first() and attempts < 100:
-            qr_code = ''.join(random.choices(string.digits, k=6))
+        while Group.query.filter_by(code=group_code).first() and attempts < 100:
+            group_code = generate_group_code()
             attempts += 1
         
         # Generate random color name if no name provided
@@ -568,7 +573,8 @@ def create_group():
         group = Group(
             name=group_name,
             description=data.get('description'),
-            qr_code=qr_code,
+            code=group_code,
+            qr_code=None,
             category=data.get('category', 'Genel Yaşam'),
             created_by=request.user_id
         )
@@ -582,7 +588,7 @@ def create_group():
             group.members.append(user)
         
         db.session.commit()
-        print(f"[GROUP] Created: {group.name} (ID: {group.id}, QR: {qr_code})")
+        print(f"[GROUP] Created: {group.name} (ID: {group.id}, Code: {group_code})")
         
         return jsonify({
             'success': True,
@@ -592,7 +598,7 @@ def create_group():
                 'name': group.name,
                 'description': group.description,
                 'category': group.category,
-                'qr_code': group.qr_code,
+                'code': group.code,
                 'created_at': group.created_at.isoformat()
             }
         }), 201
@@ -880,6 +886,7 @@ def init_db_admin():
                     name='Test Grubu',
                     category='Cafe/Restaurant',
                     description='Test için oluşturulmuş grup',
+                    code=f"{random.randint(0, 999):03d}-{random.randint(0, 999):03d}",
                     is_active=True,
                     created_by=user.id
                 )

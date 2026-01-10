@@ -3,6 +3,7 @@ WSGI entry point for Flask
 """
 import os
 import sys
+import random
 from pathlib import Path
 
 # Add project root to path
@@ -42,6 +43,7 @@ with app.app_context():
                 name='Test Grubu',
                 category='Cafe/Restaurant',
                 description='Test için oluşturulmuş grup',
+                code=f"{random.randint(0, 999):03d}-{random.randint(0, 999):03d}",
                 is_active=True,
                 created_by=user.id
             )
