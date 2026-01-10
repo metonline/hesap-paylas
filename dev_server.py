@@ -39,7 +39,7 @@ def run_flask():
         sys.executable, '-m', 'flask',
         '--app', 'backend.app',
         'run',
-        '--host', '127.0.0.1',
+        '--host', '0.0.0.0',
         '--port', '5000'
     ], stdout=None, stderr=None)
     flask_process.wait()

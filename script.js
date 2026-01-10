@@ -76,17 +76,14 @@ function handleDeepLink() {
 
 // Detect environment and set API base URL
 const API_BASE_URL = (() => {
-    // Always use localhost for now (testing)
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-        return 'http://localhost:5000/api';
-    } else if (window.location.hostname === 'metonline.github.io') {
-        // For GitHub Pages, try local API first for testing, then fall back to Render
-        return 'http://localhost:5000/api';  // TEMP: Local backend for testing
-    } else {
-        // For other environments
-        const protocol = window.location.protocol === 'https:' ? 'https' : 'http';
-        return `${protocol}://localhost:5000/api`;
-    }
+    // API is on same server/port
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    
+    // Build API URL with same host/port as frontend
+    const baseUrl = port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}`;
+    return `${baseUrl}/api`;
 })();
 
 console.log('API Base URL:', API_BASE_URL);
@@ -718,7 +715,7 @@ function handleManualLogin(event) {
             
             // Kullanıcının aktif gruplarını kontrol et
             const token = response.token;
-            fetch(`${API_URL}/api/groups`, {
+            fetch(`${API_BASE_URL}/user/groups`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }
@@ -1239,7 +1236,47 @@ function showPage(pageId) {
             homeMenu.style.opacity = '1';
         }
         
+        // Show hamburger menu for all pages except onboarding
+        if (pageId !== 'onboardingPage') {
+            ensurePageHasMenuButton(page);
+        }
+        
         window.scrollTo(0, 0);
+    }
+}
+
+// Ensure every page has the hamburger menu button
+function ensurePageHasMenuButton(page) {
+    if (!page) return;
+    
+    // If already has menu button, return
+    if (page.querySelector('.menu-toggle-btn')) return;
+    
+    // Check if page already has a header with these buttons
+    const header = page.querySelector('.header, .standard-header');
+    if (header && header.querySelector('.menu-toggle-btn')) return;
+    
+    // Find or create position for button
+    let container = page.querySelector('.header, .standard-header');
+    
+    if (container) {
+        // Add menu button to existing header
+        if (!container.querySelector('.menu-toggle-btn')) {
+            const menuBtn = document.createElement('button');
+            menuBtn.className = 'menu-toggle-btn';
+            menuBtn.id = 'menuToggleBtn-' + Math.random();
+            menuBtn.onclick = toggleSideMenu;
+            menuBtn.title = 'Menu';
+            menuBtn.innerHTML = `
+                <span style="width: 20px; height: 2px; background: #333; transition: all 0.3s;"></span>
+                <span style="width: 20px; height: 2px; background: #333; transition: all 0.3s;"></span>
+                <span style="width: 20px; height: 2px; background: #333; transition: all 0.3s;"></span>
+            `;
+            menuBtn.style.cssText = 'position: absolute !important; top: 15px !important; left: 15px !important; background: white; border: none; border-radius: 8px; width: 40px; height: 40px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0;';
+            
+            container.style.position = 'relative';
+            container.insertBefore(menuBtn, container.firstChild);
+        }
     }
 }
 
@@ -2410,7 +2447,7 @@ function loadActiveGroups() {
     const token = localStorage.getItem('token');
     if (!token) return;
     
-    fetch(`${API_URL}/api/groups`, {
+    fetch(`${API_BASE_URL}/groups`, {
         headers: {
             'Authorization': `Bearer ${token}`
         }

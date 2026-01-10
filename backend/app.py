@@ -9,7 +9,8 @@ import random
 import string
 from datetime import datetime, timedelta
 from functools import wraps
-from flask import Flask, jsonify, request
+from pathlib import Path
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -20,16 +21,20 @@ from google.oauth2 import id_token
 # Load env
 load_dotenv()
 
-# Initialize
-app = Flask(__name__)
+# Get parent directory (main project root)
+BASE_DIR = Path(__file__).parent.parent
+
+# Initialize - don't use static_folder, we'll handle it manually
+app = Flask(__name__, static_folder=None)
 
 # CORS configuration for GitHub Pages and local development
 CORS(app, resources={
     r"/api/*": {
-        "origins": "*",
+        "origins": ["*"],
         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": False
+        "supports_credentials": False,
+        "max_age": 3600
     }
 })
 
@@ -593,6 +598,43 @@ if __name__ == '__main__':
             user.set_password('test123')
             db.session.commit()
             print("[INIT] Default user password reset")
+
+# ==================== Static Files Routes ====================
+# Root index.html - must be BEFORE wildcard route
+@app.route('/')
+def index():
+    try:
+        index_path = BASE_DIR / 'index.html'
+        with open(index_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except Exception as e:
+        return f'Error loading index.html: {e}', 500
+
+# Serve static files (CSS, JS, etc)
+@app.route('/css/<path:filename>')
+def serve_css(filename):
+    return send_from_directory(str(BASE_DIR), f'css/{filename}')
+
+@app.route('/js/<path:filename>')
+def serve_js(filename):
+    return send_from_directory(str(BASE_DIR), f'js/{filename}')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    # Don't serve API routes as static
+    if filename.startswith('api/'):
+        return jsonify({'error': 'Not Found'}), 404
     
+    # Serve static files
+    if filename.endswith(('.js', '.css', '.json', '.svg', '.png', '.jpg', '.gif', '.webp', '.woff', '.woff2', '.ttf')):
+        try:
+            return send_from_directory(str(BASE_DIR), filename)
+        except:
+            return send_from_directory(str(BASE_DIR), 'index.html')
+    # Fallback to index.html for SPA
+    return send_from_directory(str(BASE_DIR), 'index.html')
+
+if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=os.getenv('FLASK_ENV') == 'development')
+    # Always run in production mode - file watcher causes crashes
+    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)

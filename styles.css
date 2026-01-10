@@ -1091,7 +1091,7 @@ body {
 
 /* Geri Butonu */
 .back-button {
-    display: inline-block;
+    display: none !important;
     padding: 8px 16px;
     background: var(--light-color);
     border-radius: 8px;
