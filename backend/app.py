@@ -110,7 +110,7 @@ class Group(db.Model):
     description = db.Column(db.Text, nullable=True)
     qr_code = db.Column(db.String(255), nullable=True)
     category = db.Column(db.String(100), nullable=True, default='Genel Yaşam')  # Cafe/Restaurant, Genel Yaşam, Seyahat/Konaklama
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)  # Grup kapalı/açık
     
