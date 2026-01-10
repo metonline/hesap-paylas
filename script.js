@@ -2800,7 +2800,12 @@ function loadActiveGroups() {
 }
 
 function selectActiveGroup(groupId, groupName) {
-    // Aktif grup seçildi - üyeleri modal'da göster
+    // Aktif gruplar panelini kapat
+    const panel = document.getElementById('activeGroupPanel');
+    if (panel) {
+        panel.style.display = 'none';
+    }
+    // Grup detaylarını göster
     showGroupMembersModal(groupId);
 }
 
