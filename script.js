@@ -716,6 +716,9 @@ function handleManualLogin(event) {
             
             app.currentUser = response.user;
             
+            // Floating grup butonunu göster
+            document.getElementById('activeGroupButton').style.display = 'block';
+            
             // Form alanlarını temizle
             document.getElementById('loginEmail').value = '';
             document.getElementById('loginPassword').value = '';
@@ -1135,6 +1138,12 @@ function logout() {
     const profileBtn = document.getElementById('homeProfileBtn');
     if (profileBtn) {
         profileBtn.style.display = 'none';
+    }
+    
+    // Floating grup butonunu gizle
+    const activeGroupButton = document.getElementById('activeGroupButton');
+    if (activeGroupButton) {
+        activeGroupButton.style.display = 'none';
     }
     
     const homePage = document.getElementById('homePage');
