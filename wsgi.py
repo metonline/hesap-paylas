@@ -14,7 +14,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import and create database
-from backend.app import app, db, User
+from backend.app import app, db, User, Group
 
 # Create tables on startup
 with app.app_context():
@@ -34,11 +34,36 @@ with app.app_context():
         db.session.add(user)
         db.session.commit()
         print("✓ Default user created")
+        
+        # Create test group for the user
+        test_group = Group(
+            name='Test Grubu',
+            category='Cafe/Restaurant',
+            description='Test için oluşturulmuş grup',
+            is_active=True
+        )
+        test_group.members.append(user)
+        db.session.add(test_group)
+        db.session.commit()
+        print("✓ Test group created")
     else:
         # Reset password if exists (for deployment stability)
         user.set_password('test123')
         db.session.commit()
         print("✓ Default user password reset")
+        
+        # Create test group if user has no groups
+        if len(user.groups) == 0:
+            test_group = Group(
+                name='Test Grubu',
+                category='Cafe/Restaurant',
+                description='Test için oluşturulmuş grup',
+                is_active=True
+            )
+            test_group.members.append(user)
+            db.session.add(test_group)
+            db.session.commit()
+            print("✓ Test group created for existing user")
 
 # WSGI app must be available for Gunicorn
 # This is the main entry point for production servers like Gunicorn
