@@ -842,9 +842,13 @@ def health():
 def index():
     try:
         index_path = BASE_DIR / 'index.html'
+        print(f'[DEBUG] Trying to load index.html from: {index_path}')
+        print(f'[DEBUG] BASE_DIR: {BASE_DIR}')
+        print(f'[DEBUG] Index exists: {index_path.exists()}')
         with open(index_path, 'r', encoding='utf-8') as f:
             return f.read()
     except Exception as e:
+        print(f'[ERROR] Failed to load index.html: {e}')
         return f'Error loading index.html: {e}', 500
 
 # Serve static files (CSS, JS, etc)
