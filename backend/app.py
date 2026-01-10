@@ -162,31 +162,37 @@ class MemberBill(db.Model):
 @app.route('/api/auth/signup', methods=['POST'])
 def signup():
     """User signup"""
-    data = request.get_json()
-    
-    if not data or not all(k in data for k in ['email', 'password', 'firstName', 'lastName']):
-        return jsonify({'error': 'Missing required fields'}), 400
-    
-    if User.query.filter_by(email=data['email']).first():
-        return jsonify({'error': 'Email already exists'}), 409
-    
-    user = User(
-        first_name=data['firstName'],
-        last_name=data['lastName'],
-        email=data['email'],
-        phone=data.get('phone')
-    )
-    user.set_password(data['password'])
-    
-    db.session.add(user)
-    db.session.commit()
-    
-    token = generate_token(user.id)
-    return jsonify({
-        'message': 'User created successfully',
-        'user': user.to_dict(),
-        'token': token
-    }), 201
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ['email', 'password', 'firstName', 'lastName']):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({'error': 'Email already exists'}), 409
+        
+        user = User(
+            first_name=data['firstName'],
+            last_name=data['lastName'],
+            email=data['email'],
+            phone=data.get('phone')
+        )
+        user.set_password(data['password'])
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        token = generate_token(user.id)
+        print(f"[SIGNUP] User created: {data['email']}")
+        return jsonify({
+            'message': 'User created successfully',
+            'user': user.to_dict(),
+            'token': token
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Signup failed: {str(e)}")
+        return jsonify({'error': 'Signup failed. Please try again.'}), 500
 
 @app.route('/api/auth/login', methods=['POST', 'OPTIONS'])
 def login():
@@ -280,75 +286,85 @@ def google_signup():
 @app.route('/api/auth/request-password-reset', methods=['POST'])
 def request_password_reset():
     """Request password reset - send reset code to email"""
-    data = request.get_json()
-    
-    if not data or 'email' not in data:
-        return jsonify({'error': 'Email is required'}), 400
-    
-    user = User.query.filter_by(email=data['email']).first()
-    
-    if not user:
-        # Don't reveal if email exists
-        return jsonify({'message': 'If email exists, reset instructions have been sent'}), 200
-    
-    # Generate reset token (simple approach: use JWT)
-    reset_payload = {
-        'user_id': user.id,
-        'purpose': 'password_reset',
-        'exp': datetime.utcnow() + timedelta(hours=1)  # 1 hour expiration
-    }
-    reset_token = jwt.encode(reset_payload, app.config['JWT_SECRET'], algorithm='HS256')
-    
-    # Store reset token in database
-    user.reset_token = reset_token
-    user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
-    db.session.commit()
-    
-    # In a real app, send email here with reset link/code
-    # For now, return the token in response (frontend will store it)
-    return jsonify({
-        'message': 'Password reset token generated',
-        'resetToken': reset_token,
-        'expiresIn': 3600  # 1 hour in seconds
-    }), 200
+    try:
+        data = request.get_json()
+        
+        if not data or 'email' not in data:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        user = User.query.filter_by(email=data['email']).first()
+        
+        if not user:
+            # Don't reveal if email exists
+            return jsonify({'message': 'If email exists, reset instructions have been sent'}), 200
+        
+        # Generate reset token (simple approach: use JWT)
+        reset_payload = {
+            'user_id': user.id,
+            'purpose': 'password_reset',
+            'exp': datetime.utcnow() + timedelta(hours=1)  # 1 hour expiration
+        }
+        reset_token = jwt.encode(reset_payload, app.config['JWT_SECRET'], algorithm='HS256')
+        
+        # Store reset token in database
+        user.reset_token = reset_token
+        user.reset_token_expires = datetime.utcnow() + timedelta(hours=1)
+        db.session.commit()
+        
+        # In a real app, send email here with reset link/code
+        # For now, return the token in response (frontend will store it)
+        print(f"[PASSWORD] Reset token generated for {data['email']}")
+        return jsonify({
+            'message': 'Password reset token generated',
+            'resetToken': reset_token,
+            'expiresIn': 3600  # 1 hour in seconds
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Password reset request failed: {str(e)}")
+        return jsonify({'error': 'Password reset request failed. Please try again.'}), 500
 
 @app.route('/api/auth/reset-password', methods=['POST'])
 def reset_password():
     """Reset password using reset token"""
-    data = request.get_json()
-    
-    if not data or not all(k in data for k in ['resetToken', 'newPassword']):
-        return jsonify({'error': 'Reset token and new password are required'}), 400
-    
     try:
-        # Verify reset token
-        payload = jwt.decode(data['resetToken'], app.config['JWT_SECRET'], algorithms=['HS256'])
+        data = request.get_json()
         
-        if payload.get('purpose') != 'password_reset':
-            return jsonify({'error': 'Invalid reset token'}), 401
+        if not data or not all(k in data for k in ['resetToken', 'newPassword']):
+            return jsonify({'error': 'Reset token and new password are required'}), 400
         
-        user = User.query.get(payload['user_id'])
-        
-        if not user or user.reset_token != data['resetToken']:
-            return jsonify({'error': 'Invalid or expired reset token'}), 401
-        
-        if user.reset_token_expires < datetime.utcnow():
+        try:
+            # Verify reset token
+            payload = jwt.decode(data['resetToken'], app.config['JWT_SECRET'], algorithms=['HS256'])
+            
+            if payload.get('purpose') != 'password_reset':
+                return jsonify({'error': 'Invalid reset token'}), 401
+            
+            user = User.query.get(payload['user_id'])
+            
+            if not user or user.reset_token != data['resetToken']:
+                return jsonify({'error': 'Invalid or expired reset token'}), 401
+            
+            if user.reset_token_expires < datetime.utcnow():
+                return jsonify({'error': 'Reset token has expired'}), 401
+            
+            # Update password
+            user.set_password(data['newPassword'])
+            user.reset_token = None
+            user.reset_token_expires = None
+            db.session.commit()
+            
+            print(f"[PASSWORD] Password reset successful")
+            return jsonify({'message': 'Password reset successful'}), 200
+            
+        except jwt.ExpiredSignatureError:
             return jsonify({'error': 'Reset token has expired'}), 401
-        
-        # Update password
-        user.set_password(data['newPassword'])
-        user.reset_token = None
-        user.reset_token_expires = None
-        db.session.commit()
-        
-        return jsonify({'message': 'Password reset successful'}), 200
-        
-    except jwt.ExpiredSignatureError:
-        return jsonify({'error': 'Reset token has expired'}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({'error': 'Invalid reset token'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid reset token'}), 401
     except Exception as e:
-        return jsonify({'error': f'Password reset failed: {str(e)}'}), 500
+        db.session.rollback()
+        print(f"[ERROR] Password reset failed: {str(e)}")
+        return jsonify({'error': 'Password reset failed. Please try again.'}), 500
 
 # ==================== Helper Functions ====================
 
@@ -393,94 +409,128 @@ def get_profile():
 @token_required
 def update_profile():
     """Update user profile"""
-    user = User.query.get(request.user_id)
-    data = request.get_json()
-    
-    if 'firstName' in data:
-        user.first_name = data['firstName']
-    if 'lastName' in data:
-        user.last_name = data['lastName']
-    if 'phone' in data:
-        user.phone = data['phone']
-    
-    db.session.commit()
-    return jsonify({'message': 'Profile updated', 'user': user.to_dict()}), 200
+    try:
+        user = User.query.get(request.user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        data = request.get_json() or {}
+        
+        if 'firstName' in data:
+            user.first_name = data['firstName']
+        if 'lastName' in data:
+            user.last_name = data['lastName']
+        if 'phone' in data:
+            user.phone = data['phone']
+        
+        db.session.commit()
+        print(f"[PROFILE] Updated for user {user.id}")
+        return jsonify({'message': 'Profile updated', 'user': user.to_dict()}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Profile update failed: {str(e)}")
+        return jsonify({'error': 'Profile update failed. Please try again.'}), 500
 
 @app.route('/api/user/close-account', methods=['POST'])
 @token_required
 def close_account():
     """Close user account (deactivate) - keeps all data - only for account owners"""
-    user = User.query.get(request.user_id)
-    
-    # Sadece hesap sahibi hesabı kapatabilir
-    if user.account_type != 'owner':
+    try:
+        user = User.query.get(request.user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Sadece hesap sahibi hesabı kapatabilir
+        if user.account_type != 'owner':
+            return jsonify({
+                'error': 'Only account owner can close this account. You are a member.'
+            }), 403
+        
+        if not user.is_active:
+            return jsonify({'error': 'Account is already closed'}), 400
+        
+        user.is_active = False
+        db.session.commit()
+        
+        print(f"[ACCOUNT] Closed for user {user.id}")
         return jsonify({
-            'error': 'Only account owner can close this account. You are a member.'
-        }), 403
-    
-    if not user.is_active:
-        return jsonify({'error': 'Account is already closed'}), 400
-    
-    user.is_active = False
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Account closed successfully. Your data is preserved.',
-        'is_active': user.is_active
-    }), 200
+            'message': 'Account closed successfully. Your data is preserved.',
+            'is_active': user.is_active
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Account close failed: {str(e)}")
+        return jsonify({'error': 'Account close failed. Please try again.'}), 500
 
 @app.route('/api/user/delete-account', methods=['DELETE'])
 @token_required
 def delete_account():
     """Permanently delete user account - only for active accounts and owners"""
-    user = User.query.get(request.user_id)
-    data = request.get_json() or {}
-    
-    # Sadece hesap sahibi hesabı silebilir
-    if user.account_type != 'owner':
+    try:
+        user = User.query.get(request.user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        data = request.get_json() or {}
+        
+        # Sadece hesap sahibi hesabı silebilir
+        if user.account_type != 'owner':
+            return jsonify({
+                'error': 'Only account owner can delete this account. You are a member.'
+            }), 403
+        
+        # Kapalı hesaplar silinemez
+        if not user.is_active:
+            return jsonify({
+                'error': 'Cannot delete closed accounts. Open the account first or contact support.'
+            }), 400
+        
+        # İsteğe bağlı şifre doğrulama
+        password = data.get('password')
+        if password and not user.check_password(password):
+            return jsonify({'error': 'Invalid password'}), 401
+        
+        # Hesabı mark as deleted yap (hard delete yerine soft delete)
+        user.is_deleted = True
+        user.is_active = False
+        db.session.commit()
+        
+        print(f"[ACCOUNT] Deleted for user {user.id}")
         return jsonify({
-            'error': 'Only account owner can delete this account. You are a member.'
-        }), 403
-    
-    # Kapalı hesaplar silinemez
-    if not user.is_active:
-        return jsonify({
-            'error': 'Cannot delete closed accounts. Open the account first or contact support.'
-        }), 400
-    
-    # İsteğe bağlı şifre doğrulama
-    password = data.get('password')
-    if password and not user.check_password(password):
-        return jsonify({'error': 'Invalid password'}), 401
-    
-    # Hesabı mark as deleted yap (hard delete yerine soft delete)
-    user.is_deleted = True
-    user.is_active = False
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Account permanently deleted. All data has been removed.'
-    }), 200
+            'message': 'Account permanently deleted. All data has been removed.'
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Account delete failed: {str(e)}")
+        return jsonify({'error': 'Account delete failed. Please try again.'}), 500
 
 @app.route('/api/user/reopen-account', methods=['POST'])
 @token_required
 def reopen_account():
     """Reopen a closed account"""
-    user = User.query.get(request.user_id)
-    
-    if user.is_deleted:
-        return jsonify({'error': 'Cannot reopen deleted accounts'}), 400
-    
-    if user.is_active:
-        return jsonify({'error': 'Account is already active'}), 400
-    
-    user.is_active = True
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Account reopened successfully',
-        'is_active': user.is_active
-    }), 200
+    try:
+        user = User.query.get(request.user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        if user.is_deleted:
+            return jsonify({'error': 'Cannot reopen deleted accounts'}), 400
+        
+        if user.is_active:
+            return jsonify({'error': 'Account is already active'}), 400
+        
+        user.is_active = True
+        db.session.commit()
+        
+        print(f"[ACCOUNT] Reopened for user {user.id}")
+        return jsonify({
+            'message': 'Account reopened successfully',
+            'is_active': user.is_active
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Account reopen failed: {str(e)}")
+        return jsonify({'error': 'Account reopen failed. Please try again.'}), 500
 
 # ==================== Group Routes ====================
 
@@ -488,43 +538,57 @@ def reopen_account():
 @token_required
 def create_group():
     """Create new group with random 6-digit QR code"""
-    data = request.get_json()
-    
-    # Generate unique 6-digit QR code
-    qr_code = ''.join(random.choices(string.digits, k=6))
-    
-    # Ensure QR code is unique
-    while Group.query.filter_by(qr_code=qr_code).first():
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'Invalid request data'}), 400
+        
+        # Generate unique 6-digit QR code
         qr_code = ''.join(random.choices(string.digits, k=6))
-    
-    group = Group(
-        name=data.get('name', 'New Group'),
-        description=data.get('description'),
-        qr_code=qr_code,
-        category=data.get('category', 'Genel Yaşam'),
-        created_by=request.user_id
-    )
-    
-    db.session.add(group)
-    db.session.commit()
-    
-    # Add creator to group members
-    user = User.query.get(request.user_id)
-    group.members.append(user)
-    db.session.commit()
-    
-    return jsonify({
-        'success': True,
-        'message': 'Group created successfully',
-        'group': {
-            'id': group.id,
-            'name': group.name,
-            'description': group.description,
-            'category': group.category,
-            'qr_code': group.qr_code,
-            'created_at': group.created_at.isoformat()
-        }
-    }), 201
+        
+        # Ensure QR code is unique
+        attempts = 0
+        while Group.query.filter_by(qr_code=qr_code).first() and attempts < 100:
+            qr_code = ''.join(random.choices(string.digits, k=6))
+            attempts += 1
+        
+        group = Group(
+            name=data.get('name', 'New Group'),
+            description=data.get('description'),
+            qr_code=qr_code,
+            category=data.get('category', 'Genel Yaşam'),
+            created_by=request.user_id
+        )
+        
+        db.session.add(group)
+        db.session.flush()
+        
+        # Add creator to group members
+        user = User.query.get(request.user_id)
+        if user:
+            group.members.append(user)
+        
+        db.session.commit()
+        print(f"[GROUP] Created: {group.name} (ID: {group.id}, QR: {qr_code})")
+        
+        return jsonify({
+            'success': True,
+            'message': 'Group created successfully',
+            'group': {
+                'id': group.id,
+                'name': group.name,
+                'description': group.description,
+                'category': group.category,
+                'qr_code': group.qr_code,
+                'created_at': group.created_at.isoformat()
+            }
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Group creation failed: {str(e)}")
+        return jsonify({'error': f'Failed to create group: {str(e)}'}), 500
 
 @app.route('/api/groups/<int:group_id>', methods=['GET'])
 @token_required
@@ -551,37 +615,48 @@ def get_group(group_id):
 @token_required
 def join_group():
     """Join group using QR code"""
-    data = request.get_json()
-    qr_code = data.get('qr_code')
-    
-    if not qr_code:
-        return jsonify({'error': 'QR code is required'}), 400
-    
-    # QR kodu ile grup bul
-    group = Group.query.filter_by(qr_code=qr_code).first()
-    
-    if not group:
-        return jsonify({'error': 'Group not found'}), 404
-    
-    # Kullanıcıyı grup üyelerine ekle (zaten üyeyse kontrol et)
-    user = User.query.get(request.user_id)
-    
-    if user in group.members:
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid request data'}), 400
+        
+        qr_code = data.get('qr_code')
+        
+        if not qr_code:
+            return jsonify({'error': 'QR code is required'}), 400
+        
+        # QR kodu ile grup bul
+        group = Group.query.filter_by(qr_code=qr_code).first()
+        
+        if not group:
+            return jsonify({'error': 'Group not found'}), 404
+        
+        # Kullanıcıyı grup üyelerine ekle (zaten üyeyse kontrol et)
+        user = User.query.get(request.user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        if user in group.members:
+            return jsonify({
+                'message': 'Already a member of this group',
+                'id': group.id,
+                'name': group.name
+            }), 200
+        
+        group.members.append(user)
+        db.session.commit()
+        
+        print(f"[GROUP] User {user.id} joined group {group.id}")
         return jsonify({
-            'message': 'Already a member of this group',
+            'message': 'Successfully joined group',
             'id': group.id,
-            'name': group.name
-        }), 200
-    
-    group.members.append(user)
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Successfully joined group',
-        'id': group.id,
-        'name': group.name,
-        'description': group.description
-    }), 201
+            'name': group.name,
+            'description': group.description
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Group join failed: {str(e)}")
+        return jsonify({'error': 'Failed to join group. Please try again.'}), 500
 
 @app.route('/api/user/groups', methods=['GET'])
 @token_required
@@ -612,45 +687,68 @@ def get_user_groups():
 @token_required
 def close_group(group_id):
     """Close a group - soft delete"""
-    group = Group.query.get_or_404(group_id)
-    user = User.query.get(request.user_id)
-    
-    # Check if user is group creator (first member)
-    if user not in group.members:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    # Mark as inactive (soft delete)
-    group.is_active = False
-    db.session.commit()
-    
-    return jsonify({'message': 'Group closed successfully'}), 200
+    try:
+        group = Group.query.get(group_id)
+        if not group:
+            return jsonify({'error': 'Group not found'}), 404
+        
+        user = User.query.get(request.user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Check if user is group creator (first member)
+        if user not in group.members:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        # Mark as inactive (soft delete)
+        group.is_active = False
+        db.session.commit()
+        
+        print(f"[GROUP] Closed group {group_id} by user {user.id}")
+        return jsonify({'message': 'Group closed successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Group close failed: {str(e)}")
+        return jsonify({'error': 'Failed to close group. Please try again.'}), 500
 
 @app.route('/api/groups/<int:group_id>/delete', methods=['DELETE'])
 @token_required
 def delete_group(group_id):
     """Delete a group permanently - hard delete"""
-    group = Group.query.get_or_404(group_id)
-    user = User.query.get(request.user_id)
-    data = request.get_json() or {}
-    
-    # Check if user is group creator
-    if user not in group.members:
-        return jsonify({'error': 'Unauthorized'}), 403
-    
-    # Password verification
-    password = data.get('password')
-    if password and not user.check_password(password):
-        return jsonify({'error': 'Invalid password'}), 401
-    
-    # Only delete active groups
-    if not group.is_active:
-        return jsonify({'error': 'Cannot delete closed groups'}), 400
-    
-    # Hard delete
-    db.session.delete(group)
-    db.session.commit()
-    
-    return jsonify({'message': 'Group permanently deleted'}), 200
+    try:
+        group = Group.query.get(group_id)
+        if not group:
+            return jsonify({'error': 'Group not found'}), 404
+        
+        user = User.query.get(request.user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        data = request.get_json() or {}
+        
+        # Check if user is group creator
+        if user not in group.members:
+            return jsonify({'error': 'Unauthorized'}), 403
+        
+        # Password verification
+        password = data.get('password')
+        if password and not user.check_password(password):
+            return jsonify({'error': 'Invalid password'}), 401
+        
+        # Only delete active groups
+        if not group.is_active:
+            return jsonify({'error': 'Cannot delete closed groups'}), 400
+        
+        # Hard delete
+        db.session.delete(group)
+        db.session.commit()
+        
+        print(f"[GROUP] Deleted group {group_id} by user {user.id}")
+        return jsonify({'message': 'Group permanently deleted'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Group delete failed: {str(e)}")
+        return jsonify({'error': 'Failed to delete group. Please try again.'}), 500
 
 # ==================== Order Routes ====================
 
@@ -658,33 +756,41 @@ def delete_group(group_id):
 @token_required
 def create_order():
     """Create new order"""
-    data = request.get_json()
-    
-    order = Order(
-        group_id=data.get('groupId'),
-        creator_id=request.user_id,
-        restaurant=data.get('restaurant'),
-        total_amount=data.get('totalAmount', 0),
-        tax=data.get('tax', 0),
-        delivery=data.get('delivery', 0)
-    )
-    
-    # Add items
-    for item in data.get('items', []):
-        order_item = OrderItem(
-            name=item.get('name'),
-            price=item.get('price'),
-            quantity=item.get('quantity', 1)
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'error': 'Invalid request data'}), 400
+        
+        order = Order(
+            group_id=data.get('groupId'),
+            creator_id=request.user_id,
+            restaurant=data.get('restaurant'),
+            total_amount=data.get('totalAmount', 0),
+            tax=data.get('tax', 0),
+            delivery=data.get('delivery', 0)
         )
-        order.items.append(order_item)
-    
-    db.session.add(order)
-    db.session.commit()
-    
-    return jsonify({
-        'message': 'Order created',
-        'orderId': order.id
-    }), 201
+        
+        # Add items
+        for item in data.get('items', []):
+            order_item = OrderItem(
+                name=item.get('name'),
+                price=item.get('price'),
+                quantity=item.get('quantity', 1)
+            )
+            order.items.append(order_item)
+        
+        db.session.add(order)
+        db.session.commit()
+        
+        print(f"[ORDER] Created order {order.id}")
+        return jsonify({
+            'message': 'Order created',
+            'orderId': order.id
+        }), 201
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Order creation failed: {str(e)}")
+        return jsonify({'error': 'Failed to create order. Please try again.'}), 500
 
 @app.route('/api/orders/<int:order_id>', methods=['GET'])
 @token_required
@@ -761,19 +867,31 @@ if __name__ == '__main__':
         db.drop_all()
         db.create_all()
         
-        # Initialize default user
-        user = User(
+        # Initialize default user 1
+        user1 = User(
             first_name='Metin',
             last_name='Güven',
             email='metonline@gmail.com',
             phone='05323332222',
             account_type='owner'  # Mark as account owner
         )
-        user.set_password('test123')
-        db.session.add(user)
+        user1.set_password('test123')
+        db.session.add(user1)
         db.session.commit()
         
-        print("[INIT] Fresh database created with default user (account_type='owner')")
+        # Initialize default user 2
+        user2 = User(
+            first_name='Metin',
+            last_name='Güven',
+            email='metin_guven@hotmail.com',
+            phone='05323332222',
+            account_type='owner'  # Mark as account owner
+        )
+        user2.set_password('12345')
+        db.session.add(user2)
+        db.session.commit()
+        
+        print("[INIT] Fresh database created with default users (account_type='owner')")
     
     port = int(os.getenv('PORT', 5000))
     # Always run in production mode - file watcher causes crashes
