@@ -1981,7 +1981,9 @@ function loadUserGroups() {
     })
     .then(response => response.json())
     .then(data => {
+        console.log('API Response:', data);
         if (data && Array.isArray(data)) {
+            console.log('Groups members:', data[0]?.members);
             displayGroups(data);
         } else {
             showTestGroups();
