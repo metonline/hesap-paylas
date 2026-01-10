@@ -25,6 +25,35 @@
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    
+    <!-- DEBUG PANEL - TEMPORARY -->
+    <style>
+        #debugPanel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #f0f0f0;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 11px;
+            font-family: monospace;
+            max-width: 250px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 99999;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        #debugPanel div {
+            margin: 3px 0;
+            padding: 3px;
+            background: white;
+            border-radius: 3px;
+        }
+        #debugPanel .status-ok { color: green; font-weight: bold; }
+        #debugPanel .status-error { color: red; font-weight: bold; }
+        #debugPanel .status-info { color: blue; }
+    </style>
     <style>
         * {
             -webkit-user-select: none;
@@ -624,37 +653,9 @@
             </div>
         </div>
 
-        <!-- Gruplarım Sayfası - Modal -->
-        <div id="groupsPage" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: none; align-items: center; justify-content: center; overflow-y: auto;">
-            <div style="position: relative; background: white; border-radius: 20px; max-width: 500px; width: 90%; margin: 20px auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px;">
-                <button onclick="closeGroupsModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
-                
-                <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.5em; text-align: center;">👥 Gruplarım</h2>
-                
-                <!-- Aktif Gruplar -->
-                <div style="margin-bottom: 25px;">
-                    <h3 style="color: #27ae60; margin: 0 0 15px 0; font-size: 1.1em;">🟢 Aktif Gruplar</h3>
-                    <div id="activeGroupsList" style="display: flex; flex-direction: column; gap: 10px;">
-                        <p style="color: #999; text-align: center; padding: 20px;">Yükleniyor...</p>
-                    </div>
-                </div>
-                
-                <!-- Kapanmış Gruplar -->
-                <div>
-                    <h3 style="color: #95a5a6; margin: 0 0 15px 0; font-size: 1.1em;">⚪ Kapanmış Gruplar</h3>
-                    <div id="closedGroupsList" style="display: flex; flex-direction: column; gap: 10px;">
-                        <p style="color: #999; text-align: center; padding: 20px;">Yükleniyor...</p>
-                    </div>
-                </div>
-                
-                <!-- Yeni Grup Oluştur -->
-                <button onclick="showCreateGroupForm()" style="width: 100%; margin-top: 20px; padding: 12px; background: #3498db; color: white; border: none; border-radius: 10px; font-size: 0.95em; font-weight: 600; cursor: pointer;">
-                    ➕ Yeni Grup Oluştur
-                </button>
-            </div>
         </div>
 
-        <!-- Grup Detayı - Modal -->
+        <!-- Sidebar Menu -->
         <div id="groupDetailsModal" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; align-items: center; justify-content: center; overflow-y: auto;">
             <div style="position: relative; background: white; border-radius: 20px; max-width: 500px; width: 90%; margin: 20px auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px; max-height: 90vh; overflow-y: auto;">
                 <button onclick="closeGroupDetailsModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
@@ -698,15 +699,6 @@
                     </div>
                 </div>
                 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                    <button onclick="editGroup()" style="padding: 12px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
-                        ✏️ Düzenle
-                    </button>
-                    <button onclick="deleteGroup()" style="padding: 12px; background: #e74c3c; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
-                        🗑️ Sil
-                    </button>
-                </div>
-
                 <!-- Hesap Yönetim Düğmeleri -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px solid #e0e0e0; padding-top: 15px;">
                     <button onclick="closeGroupAccount()" style="padding: 12px; background: #f39c12; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
@@ -898,6 +890,19 @@ Konaklama
                 <input type="hidden" id="newGroupCategory" value="Genel Yaşam">
             </div>
 
+            <!-- Grup Açıklaması (Opsiyonel) -->
+            <div id="descriptionSection" style="margin-bottom: 15px; display: none;">
+                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600; text-align: left;">Grup Açıklaması (Opsiyonel):</label>
+                <textarea 
+                    id="newGroupDescription" 
+                    placeholder="Örn: Pazartesi akşamı yemeği, Cuma kahvesi vb..." 
+                    style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-family: Arial, sans-serif; font-size: 1em; resize: vertical; min-height: 70px; box-sizing: border-box; transition: border-color 0.2s;"
+                    onchange="this.style.borderColor='#ddd'"
+                    onfocus="this.style.borderColor='#66BB6A'"
+                ></textarea>
+                <div style="font-size: 0.85em; color: #999; margin-top: 4px;">💡 Grup hakkında kısa bir açıklama yazabilirsiniz</div>
+            </div>
+
             <button id="createGroupBtn" class="btn btn-primary" onclick="createNewGroup()" style="width: 100%; margin-bottom: 10px; display: none;">✅ Grubu Kur</button>
             
             <div id="createGroupMessage" style="text-align: center; margin-top: 15px; min-height: 20px; color: #27ae60; font-weight: 600;"></div>
@@ -953,7 +958,7 @@ Konaklama
         </button>
         <div id="activeGroupPanel" style="display: none; position: absolute; bottom: 90px; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 280px; max-height: 400px; overflow-y: auto; padding: 15px;">
             <h3 style="margin: 0 0 15px 0; color: #333; font-size: 1.1em; text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">Aktif Gruplarım</h3>
-            <div id="activeGroupsList" style="display: flex; flex-direction: column; gap: 10px;">
+            <div id="activeGroupsFloatingList" style="display: flex; flex-direction: column; gap: 10px;">
                 <!-- Sample Grup 1 -->
                 <div style="padding: 12px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #FF8800; cursor: pointer; transition: all 0.2s ease;" onclick="showGroupMembersModal('turuncu')" onmouseover="this.style.background='#f0f0f0'" onmouseout="this.style.background='#f9f9f9'">
                     <div style="font-weight: 600; color: #333; margin-bottom: 4px;">Turuncu</div>
@@ -982,8 +987,39 @@ Konaklama
         </div>
     </div>
 
+    <!-- Gruplarım Sayfası - Modal (MOVED OUTSIDE CONTAINER) -->
+    <div id="groupsPage" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: none; align-items: center; justify-content: center; overflow-y: auto;">
+        <div style="position: relative; background: white; border-radius: 20px; max-width: 500px; width: 90%; margin: 20px auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px;">
+            <button onclick="closeGroupsModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
+            
+            <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.5em; text-align: center;">👥 Gruplarım</h2>
+            
+            <!-- Aktif Gruplar -->
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: #27ae60; margin: 0 0 15px 0; font-size: 1.1em;">🟢 Aktif Gruplar</h3>
+                <div id="activeGroupsList" style="display: flex; flex-direction: column; gap: 10px;">
+                    <p style="color: #999; text-align: center; padding: 20px;">Yükleniyor...</p>
+                </div>
+            </div>
+            
+            <!-- Kapanmış Gruplar -->
+            <div>
+                <h3 style="color: #95a5a6; margin: 0 0 15px 0; font-size: 1.1em;">⚪ Kapanmış Gruplar</h3>
+                <div id="closedGroupsList" style="display: flex; flex-direction: column; gap: 10px;">
+                    <p style="color: #999; text-align: center; padding: 20px;">Yükleniyor...</p>
+                </div>
+            </div>
+            
+            <!-- Yeni Grup Oluştur -->
+            <button onclick="showCreateGroupForm()" style="width: 100%; margin-top: 20px; padding: 12px; background: #3498db; color: white; border: none; border-radius: 10px; font-size: 0.95em; font-weight: 600; cursor: pointer;">
+                ➕ Yeni Grup Oluştur
+            </button>
+        </div>
+    </div>
+
     <!-- QR Code Libraries -->
     <script src="https://unpkg.com/html5-qrcode@2.1.48/dist/html5-qrcode.min.js"></script>
+    
     <script src="script.js?v=2.0.2"></script>
 </body>
 </html>

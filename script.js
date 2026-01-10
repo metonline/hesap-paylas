@@ -1941,16 +1941,49 @@ function resetAll() {
 // ==================== GROUPS PAGE ====================
 
 function showGroupsPage() {
+    console.log('[MODAL] showGroupsPage called');
+    
     const groupsModal = document.getElementById('groupsPage');
+    console.log('[MODAL] groupsPage element found:', !!groupsModal);
+    console.log('[MODAL] groupsPage element:', groupsModal);
+    
+    if (!groupsModal) {
+        console.error('[MODAL] ERROR: groupsPage element not found in DOM!');
+        alert('ERROR: Modal element not found in DOM');
+        return;
+    }
+    
     const token = localStorage.getItem('hesapPaylas_token');
+    console.log('[MODAL] Token found:', !!token);
+    
+    // DEBUG
+    const debugModal = document.getElementById('debugModal');
+    if (debugModal) debugModal.innerHTML = '<span class="status-ok">Modal: CLICKED</span>';
     
     if (!token) {
+        console.log('[MODAL] No token found');
         alert('Lütfen önce giriş yapınız!');
         return;
     }
     
-    // Modal'ı göster
-    groupsModal.style.display = 'flex';
+    // Modal'ı göster - force visible
+    console.log('[MODAL] Before: display=' + groupsModal.style.display + ', visibility=' + groupsModal.style.visibility + ', opacity=' + groupsModal.style.opacity);
+    
+    groupsModal.style.setProperty('display', 'flex', 'important');
+    groupsModal.style.setProperty('visibility', 'visible', 'important');
+    groupsModal.style.setProperty('opacity', '1', 'important');
+    groupsModal.style.setProperty('z-index', '99999', 'important');
+    groupsModal.style.setProperty('position', 'fixed', 'important');
+    groupsModal.style.setProperty('top', '0', 'important');
+    groupsModal.style.setProperty('left', '0', 'important');
+    groupsModal.style.setProperty('width', '100%', 'important');
+    groupsModal.style.setProperty('height', '100%', 'important');
+    
+    console.log('[MODAL] After: display=' + groupsModal.style.display + ', visibility=' + groupsModal.style.visibility + ', opacity=' + groupsModal.style.opacity);
+    console.log('[MODAL] Computed style display:', window.getComputedStyle(groupsModal).display);
+    console.log('[MODAL] Computed style visibility:', window.getComputedStyle(groupsModal).visibility);
+    
+    console.log('[MODAL] Modal opened, now loading groups...');
     
     // Grupları yükle
     loadUserGroups();
@@ -1965,11 +1998,19 @@ function loadUserGroups() {
     const token = localStorage.getItem('hesapPaylas_token');
     const baseURL = getBaseURL();
     
+    // Reset loading messages
+    const activeList = document.getElementById('activeGroupsList');
+    const closedList = document.getElementById('closedGroupsList');
+    if (activeList) activeList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Yükleniyor...</p>';
+    if (closedList) closedList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Yükleniyor...</p>';
+    
     if (!token) {
-        console.log('Token yok, test verisi gösterilecek');
-        showTestGroups();
+        console.log('[GROUPS] No token found, showing test groups');
+        setTimeout(() => showTestGroups(), 100);
         return;
     }
+    
+    console.log('[GROUPS] Fetching groups from:', baseURL + '/api/user/groups');
     
     // Backend'den gerçek grupları yükle
     fetch(`${baseURL}/api/user/groups`, {
@@ -1979,18 +2020,30 @@ function loadUserGroups() {
             'Authorization': `Bearer ${token}`
         }
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('[GROUPS] Response status:', response.status);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
-        console.log('API Response:', data);
-        if (data && Array.isArray(data)) {
-            console.log('Groups members:', data[0]?.members);
+        console.log('[GROUPS] API Response:', data);
+        if (data && Array.isArray(data) && data.length > 0) {
+            console.log('[GROUPS] Found', data.length, 'groups');
+            console.log('[GROUPS] First group members:', data[0]?.members);
             displayGroups(data);
+        } else if (data && Array.isArray(data)) {
+            console.log('[GROUPS] No groups found, showing empty state');
+            displayGroups([]);
         } else {
-            showTestGroups();
+            console.error('[GROUPS] Invalid response format:', data);
+            if (activeList) activeList.innerHTML = '<p style="color: #e74c3c; text-align: center; padding: 20px;">Hata: Geçersiz veri formatı</p>';
         }
     })
     .catch(error => {
-        console.error('Gruplar yüklenirken hata:', error);
+        console.error('[GROUPS] Error loading groups:', error);
+        console.log('[GROUPS] Falling back to test groups');
         showTestGroups();
     });
 }
@@ -2006,23 +2059,53 @@ function showTestGroups() {
 }
 
 function displayGroups(groups) {
+    console.log('[DISPLAY] displayGroups called with:', groups);
+    console.log('[DISPLAY] Number of groups:', groups ? groups.length : 'null');
+    
     const activeGroups = groups.filter(g => g.status === 'active');
     const closedGroups = groups.filter(g => g.status === 'closed');
     
+    console.log('[DISPLAY] Filtered - Active:', activeGroups.length, 'Closed:', closedGroups.length);
+    
     // Aktif grupları göster
     const activeList = document.getElementById('activeGroupsList');
+    console.log('[DISPLAY] activeList element found:', !!activeList);
+    console.log('[DISPLAY] activeList element:', activeList);
+    
+    if (!activeList) {
+        console.error('[DISPLAY] ERROR: activeGroupsList element not found in DOM!');
+        return;
+    }
+    
     if (activeGroups.length > 0) {
-        activeList.innerHTML = activeGroups.map(group => {
-            const memberNames = (group.members || []).map(m => m.first_name).join(', ');
-            return `
+        console.log('[DISPLAY] Rendering', activeGroups.length, 'active groups...');
+        try {
+            const html = activeGroups.map((group, index) => {
+                console.log('[DISPLAY] Rendering group', index + 1, ':', group.name, 'Status:', group.status);
+                const memberNames = (group.members || []).map(m => m.first_name).join(', ');
+                const groupName = group.name || 'İsimsiz Grup';
+                const groupDesc = group.description || 'Açıklama yok';
+                const safeGroupName = groupName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                const safeGroupDesc = groupDesc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                
+                return `
             <div style="padding: 12px; background: #e8f8f5; border-left: 4px solid #27ae60; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
-                <div onclick="showGroupDetails(${group.id}, '${group.name.replace(/'/g, "\\'")}', '${(group.description || '').replace(/'/g, "\\'")}', '${group.created_at}', '${group.qr_code}')" style="font-weight: 600; color: #27ae60; cursor: pointer; user-select: none;">⬇ ${group.name}</div>
-                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description || 'Açıklama yok'}</div>
+                <div onclick="showGroupDetails(${group.id}, '${safeGroupName}', '${safeGroupDesc}', '${group.created_at}', '${group.qr_code}')" style="font-weight: 600; color: #27ae60; cursor: pointer; user-select: none;">⬇ ${groupName}</div>
+                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${groupDesc}</div>
                 <div style="font-size: 0.8em; color: #555; margin-top: 4px;">👥 ${memberNames || 'Üye yok'}</div>
                 <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qr_code)}</div>
             </div>
-        `}).join('');
+        `;
+            }).join('');
+            console.log('[DISPLAY] HTML generated, length:', html.length);
+            activeList.innerHTML = html;
+            console.log('[DISPLAY] HTML set successfully');
+        } catch (err) {
+            console.error('[DISPLAY] Error rendering groups:', err);
+            activeList.innerHTML = '<p style="color: #e74c3c; text-align: center; padding: 20px;">Hata: ' + err.message + '</p>';
+        }
     } else {
+        console.log('[DISPLAY] No active groups - showing empty message');
         activeList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Henüz aktif grup yok</p>';
     }
     
@@ -2474,6 +2557,9 @@ function selectCategory(category) {
     
     // Hidden input'u güncelle
     document.getElementById('newGroupCategory').value = category;
+    
+    // Show description section
+    document.getElementById('descriptionSection').style.display = 'block';
 }
 
 function openCreateGroupModal() {
@@ -2519,6 +2605,12 @@ function closeCreateGroupModal() {
     // Kategori bölümünü gizle
     document.getElementById('categorySection').style.display = 'none';
     
+    // Description bölümünü gizle
+    document.getElementById('descriptionSection').style.display = 'none';
+    
+    // Description alanını temizle
+    document.getElementById('newGroupDescription').value = '';
+    
     // Grubu Kur butonunu gizle
     document.getElementById('createGroupBtn').style.display = 'none';
     
@@ -2526,7 +2618,6 @@ function closeCreateGroupModal() {
 }
 
 function createNewGroup() {
-    const groupName = document.getElementById('newGroupName').value.trim();
     const groupCategory = document.getElementById('newGroupCategory').value;
     const messageDiv = document.getElementById('createGroupMessage');
     
@@ -2536,6 +2627,10 @@ function createNewGroup() {
         messageDiv.style.color = '#e74c3c';
         return;
     }
+    
+    // Rastgele seçilen renk adını grup adı olarak kullan
+    const groupName = selectedColor ? selectedColor.name : '';
+    const groupDescription = document.getElementById('newGroupDescription').value.trim();
     
     const baseURL = getBaseURL();
     const token = localStorage.getItem('hesapPaylas_token');
@@ -2551,6 +2646,7 @@ function createNewGroup() {
         },
         body: JSON.stringify({
             name: groupName,
+            description: groupDescription || null,
             category: groupCategory
         })
     })
@@ -2561,7 +2657,7 @@ function createNewGroup() {
             
             // Success ekranını göster
             showGroupSuccessScreen(
-                newGroup.name,
+                selectedColor.name,  // Seçili renk adı (grup adı)
                 selectedColor.name,  // Seçili renk adı
                 selectedColor.code,  // Seçili renk kodu
                 newGroup.qr_code  // QR kod (6 haneli)
@@ -2636,17 +2732,18 @@ function toggleActiveGroupPanel() {
 }
 
 function loadActiveGroups() {
-    const token = localStorage.getItem('token');
+    const token = localStorage.getItem('hesapPaylas_token');
     if (!token) return;
     
-    fetch(`${API_BASE_URL}/groups`, {
+    const baseURL = getBaseURL();
+    fetch(`${baseURL}/api/user/groups`, {
         headers: {
             'Authorization': `Bearer ${token}`
         }
     })
     .then(response => response.json())
     .then(groups => {
-        const listContainer = document.getElementById('activeGroupsList');
+        const listContainer = document.getElementById('activeGroupsFloatingList');
         listContainer.innerHTML = '';
         
         if (groups.length === 0) {
@@ -2679,8 +2776,9 @@ function loadActiveGroups() {
                 groupItem.onmouseout = () => groupItem.style.background = '#f9f9f9';
                 groupItem.onclick = () => selectActiveGroup(group.id, group.name);
                 
+                const groupName = group.name || 'İsimsiz Grup';
                 groupItem.innerHTML = `
-                    <div style="font-weight: 600; color: #333; margin-bottom: 4px;">${group.name}</div>
+                    <div style="font-weight: 600; color: #333; margin-bottom: 4px;">${groupName}</div>
                     <div style="font-size: 0.85em; color: #666; margin-bottom: 8px;">${categoryEmoji} ${categoryName}</div>
                     <div style="font-size: 0.8em; color: #999;">👥 ${group.members_count || 0} kişi</div>
                 `;
@@ -2753,6 +2851,17 @@ document.addEventListener('click', (e) => {
 // Yardımcı Fonksiyonlar
 // Sayfa Yüklendiğinde
 document.addEventListener('DOMContentLoaded', function() {
+    // DEBUG: Show token status
+    const token = localStorage.getItem('hesapPaylas_token');
+    const debugToken = document.getElementById('debugToken');
+    if (debugToken) {
+        if (token) {
+            debugToken.innerHTML = '<span class="status-ok">Token: FOUND (' + token.substring(0, 10) + '...)</span>';
+        } else {
+            debugToken.innerHTML = '<span class="status-error">Token: NOT FOUND - Login required</span>';
+        }
+    }
+    
     loadFromLocalStorage();
     checkExistingUser();
     // Kullanıcı giriş yaparsa aktif grupları yükle

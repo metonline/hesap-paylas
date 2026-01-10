@@ -537,12 +537,19 @@ def reopen_account():
 @app.route('/api/groups', methods=['POST'])
 @token_required
 def create_group():
-    """Create new group with random 6-digit QR code"""
+    """Create new group with random color name and 6-digit QR code"""
     try:
         data = request.get_json()
         
         if not data:
             return jsonify({'error': 'Invalid request data'}), 400
+        
+        # Color names for auto-generated group names
+        colors_tr = [
+            'Kırmızı', 'Yeşil', 'Mavi', 'Sarı', 'Mor', 'Turuncu', 'Pembe', 'Kahverengi',
+            'Siyah', 'Beyaz', 'Gri', 'Camgöbeği', 'Krem', 'Leylak', 'Turkuaz', 'Füme',
+            'İnci', 'Altın', 'Gümüş', 'Bakır', 'Bronz', 'Lacivert', 'Haki', 'Zeytin'
+        ]
         
         # Generate unique 6-digit QR code
         qr_code = ''.join(random.choices(string.digits, k=6))
@@ -553,8 +560,13 @@ def create_group():
             qr_code = ''.join(random.choices(string.digits, k=6))
             attempts += 1
         
+        # Generate random color name if no name provided
+        group_name = data.get('name')
+        if not group_name:
+            group_name = random.choice(colors_tr)
+        
         group = Group(
-            name=data.get('name', 'New Group'),
+            name=group_name,
             description=data.get('description'),
             qr_code=qr_code,
             category=data.get('category', 'Genel Yaşam'),
@@ -678,7 +690,7 @@ def get_user_groups():
             'created_at': group.created_at.isoformat(),
             'members_count': len(group.members),
             'members': [{'id': m.id, 'first_name': m.first_name, 'last_name': m.last_name} for m in group.members],
-            'status': 'active' if group.is_active else 'closed'  # Use real is_active field
+            'status': 'active' if group.is_active else 'closed'
         })
     
     return jsonify(groups_data), 200
@@ -863,35 +875,37 @@ def serve_static(filename):
 
 if __name__ == '__main__':
     with app.app_context():
-        # Drop all tables and recreate them (fresh start)
-        db.drop_all()
+        # Create tables if they don't exist (preserve existing data)
         db.create_all()
         
-        # Initialize default user 1
-        user1 = User(
-            first_name='Metin',
-            last_name='Güven',
-            email='metonline@gmail.com',
-            phone='05323332222',
-            account_type='owner'  # Mark as account owner
-        )
-        user1.set_password('test123')
-        db.session.add(user1)
-        db.session.commit()
-        
-        # Initialize default user 2
-        user2 = User(
-            first_name='Metin',
-            last_name='Güven',
-            email='metin_guven@hotmail.com',
-            phone='05323332222',
-            account_type='owner'  # Mark as account owner
-        )
-        user2.set_password('12345')
-        db.session.add(user2)
-        db.session.commit()
-        
-        print("[INIT] Fresh database created with default users (account_type='owner')")
+        # Only create default users if none exist
+        if User.query.count() == 0:
+            # Initialize default user 1
+            user1 = User(
+                first_name='Metin',
+                last_name='Güven',
+                email='metonline@gmail.com',
+                phone='05323332222',
+                account_type='owner'
+            )
+            user1.set_password('test123')
+            db.session.add(user1)
+            
+            # Initialize default user 2
+            user2 = User(
+                first_name='Metin',
+                last_name='Güven',
+                email='metin_guven@hotmail.com',
+                phone='05323332222',
+                account_type='owner'
+            )
+            user2.set_password('12345')
+            db.session.add(user2)
+            
+            db.session.commit()
+            print("[INIT] Database initialized with default users")
+        else:
+            print(f"[INIT] Database ready - {User.query.count()} users, {Group.query.count()} groups")
     
     port = int(os.getenv('PORT', 5000))
     # Always run in production mode - file watcher causes crashes
