@@ -52,24 +52,51 @@ function handleDeepLink() {
         console.log('Deep link detected with code:', groupCode);
         
         // Eğer user login'se direkt gruba katıl
-        const user = localStorage.getItem('hesapPaylas_user');
-        if (user) {
-            // User varsa, gruba katılma akışını başlat
-            app.currentMode = 'join_group';
-            app.groupCode = groupCode;
-            
-            setTimeout(() => {
-                document.getElementById('infoTitle').innerText = 'Bilgilerinizi Girin';
-                document.getElementById('groupIdGroup').style.display = 'none';
-                document.getElementById('infoFirstName').value = '';
-                document.getElementById('infoLastName').value = '';
-                showPage('infoPage');
-            }, 500);
+        const token = localStorage.getItem('hesapPaylas_token');
+        if (token) {
+            // User varsa, gruba direkt katıl
+            console.log('User logged in, joining group with code:', groupCode);
+            joinGroupWithCode(groupCode);
         } else {
             // Login değilse, group code'u sessionStorage'e kaydet ve login sayfasına yönlendir
             sessionStorage.setItem('pendingGroupCode', groupCode);
         }
     }
+}
+
+// Grup kodunu kullanarak gruba katıl
+function joinGroupWithCode(groupCode) {
+    const token = localStorage.getItem('hesapPaylas_token');
+    if (!token) {
+        showNotification('Lütfen önce giriş yapınız');
+        return;
+    }
+    
+    const baseURL = getBaseURL();
+    fetch(`${baseURL}/api/groups/join`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ code: groupCode })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (response.ok || data.message) {
+            showNotification(`✅ "${data.name}" grubuna başarıyla katıldınız!`);
+            setTimeout(() => {
+                loadActiveGroups();
+                showPage('homePage');
+            }, 1500);
+        } else {
+            showNotification(data.error || 'Gruba katılım başarısız');
+        }
+    })
+    .catch(error => {
+        console.error('Grup katılım hatası:', error);
+        showNotification('Gruba katılım başarısız');
+    });
 }
 
 // ===== API CONFIGURATION =====
@@ -2851,10 +2878,10 @@ function showGroupMembersModal(groupId) {
                 <div style="font-size: 0.85em; color: #666; margin-bottom: 5px; font-weight: 600;">🔑 Grup Kodu:</div>
                 <div style="font-size: 1.3em; font-weight: 700; color: #FF8800; letter-spacing: 2px; font-family: monospace;">${group.code || '---'}</div>
             </div>
-            <button onclick="copyToClipboard('${participationLink}'); showNotification('Katılım linki kopyalandı!')" style="
+            <button onclick="shareToWhatsApp('${participationLink}', '${group.name || 'Grup'}')" style="
                 width: 100%;
                 padding: 10px;
-                background: #FF8800;
+                background: #25D366;
                 color: white;
                 border: none;
                 border-radius: 6px;
@@ -2862,9 +2889,25 @@ function showGroupMembersModal(groupId) {
                 cursor: pointer;
                 transition: all 0.2s ease;
                 margin-bottom: 8px;
-            " onmouseover="this.style.background='#E67E00'" onmouseout="this.style.background='#FF8800'">
-                📤 Katılım Linki Paylaş
+            " onmouseover="this.style.background='#20BA5A'" onmouseout="this.style.background='#25D366'">
+                💬 WhatsApp'ta Paylaş
             </button>
+            <div style="margin-bottom: 10px;">
+                <button onclick="copyToClipboard('${participationLink}'); showNotification('Katılım linki kopyalandı!')" style="
+                    width: 100%;
+                    padding: 8px;
+                    background: #FF8800;
+                    color: white;
+                    border: none;
+                    border-radius: 6px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    font-size: 0.9em;
+                " onmouseover="this.style.background='#E67E00'" onmouseout="this.style.background='#FF8800'">
+                    📋 Linki Kopyala
+                </button>
+            </div>
             <div style="font-size: 0.75em; color: #999; padding: 8px; background: white; border-radius: 4px; word-break: break-all; font-family: monospace;">
                 ${participationLink}
             </div>
@@ -2948,6 +2991,17 @@ document.addEventListener('click', (e) => {
 });
 
 // Helper Functions
+function shareToWhatsApp(link, groupName) {
+    const message = `"${groupName}" grubuna katılmak için linke tıkla:\n${link}`;
+    const encodedMessage = encodeURIComponent(message);
+    
+    // Web ve mobile uyumlu WhatsApp URL
+    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    
+    // Yeni pencerede aç
+    window.open(whatsappUrl, '_blank');
+}
+
 function copyToClipboard(text) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => {
