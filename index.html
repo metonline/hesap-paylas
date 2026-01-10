@@ -327,13 +327,13 @@
             </div>
             
             <div class="options-grid" style="margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 15px;">
-                <div class="option-card" onclick="navigateToMenu('groups')" style="background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%);">
-                    <div class="option-icon">👥</div>
-                    <h2>Gruplarım</h2>
+                <div class="option-card" onclick="openCreateGroupModal()" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                    <div class="option-icon">➕</div>
+                    <h2>Grup Kur</h2>
                 </div>
                 
-                <div class="option-card" onclick="openJoinGroupModal()" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
-                    <div class="option-icon">➕</div>
+                <div class="option-card" onclick="openJoinGroupModal()" style="background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%);">
+                    <div class="option-icon">🔗</div>
                     <h2>Gruba Katıl</h2>
                 </div>
             </div>
@@ -827,6 +827,18 @@
                 placeholder="Grup açıklaması (isteğe bağlı)" 
                 style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; min-height: 80px; margin-bottom: 15px; resize: vertical;"
             ></textarea>
+
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600;">Grup Kategorisi Seç:</label>
+                <select 
+                    id="newGroupCategory" 
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; background-color: white;"
+                >
+                    <option value="Cafe / Restaurant">🍽️ Cafe / Restaurant</option>
+                    <option value="Genel Yaşam" selected>🌍 Genel Yaşam</option>
+                    <option value="Seyahat / Konaklama">✈️ Seyahat / Konaklama</option>
+                </select>
+            </div>
 
             <button class="btn btn-primary" onclick="createNewGroup()" style="width: 100%; margin-bottom: 10px;">✅ Grubu Oluştur</button>
             

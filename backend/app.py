@@ -91,6 +91,7 @@ class Group(db.Model):
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
     qr_code = db.Column(db.String(255), nullable=True)
+    category = db.Column(db.String(100), nullable=True, default='Genel Yaşam')  # Cafe/Restaurant, Genel Yaşam, Seyahat/Konaklama
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
@@ -405,6 +406,7 @@ def create_group():
         name=data.get('name', 'New Group'),
         description=data.get('description'),
         qr_code=qr_code,
+        category=data.get('category', 'Genel Yaşam'),
         created_by=request.user_id
     )
     
@@ -423,6 +425,7 @@ def create_group():
             'id': group.id,
             'name': group.name,
             'description': group.description,
+            'category': group.category,
             'qr_code': group.qr_code,
             'created_at': group.created_at.isoformat()
         }

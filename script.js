@@ -2170,6 +2170,7 @@ function closeCreateGroupModal() {
 function createNewGroup() {
     const groupName = document.getElementById('newGroupName').value.trim();
     const groupDesc = document.getElementById('newGroupDesc').value.trim();
+    const groupCategory = document.getElementById('newGroupCategory').value;
     const messageDiv = document.getElementById('createGroupMessage');
     
     // Validasyon
@@ -2199,7 +2200,8 @@ function createNewGroup() {
         },
         body: JSON.stringify({
             name: groupName,
-            description: groupDesc || ''
+            description: groupDesc || '',
+            category: groupCategory
         })
     })
     .then(response => response.json())
