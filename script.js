@@ -2435,10 +2435,63 @@ function loadActiveGroups() {
 }
 
 function selectActiveGroup(groupId, groupName) {
-    // Aktif grup seçildi - buraya grup detay göstermek için kod eklenebilir
-    console.log('Seçilen grup:', groupName, groupId);
-    // TODO: Grup detayını açmak veya gerekli işlemi yapmak
+    // Aktif grup seçildi - üyeleri modal'da göster
+    showGroupMembersModal(groupId);
 }
+
+function showGroupMembersModal(groupId) {
+    const modal = document.getElementById('groupMembersModal');
+    const membersList = document.getElementById('membersList');
+    const memberModalTitle = document.getElementById('memberModalTitle');
+    
+    // Modal'ı aç
+    modal.style.display = 'flex';
+    
+    // Sample veriler
+    const sampleGroups = {
+        'turuncu': { name: 'Turuncu', members: ['Ahmet Yilmaz', 'Fatma Kaya', 'Zeynep Demir', 'Hasan Özdemir'] },
+        'mavi': { name: 'Mavi', members: ['Ali Çelik', 'Seda Aydın', 'Murat Korkut', 'Canan Aksoy'] }
+    };
+    
+    const groupInfo = sampleGroups[groupId];
+    if (groupInfo) {
+        memberModalTitle.textContent = `${groupInfo.name} - Üyeler`;
+        membersList.innerHTML = '';
+        
+        groupInfo.members.forEach((member, index) => {
+            const memberItem = document.createElement('div');
+            memberItem.style.cssText = `
+                padding: 12px;
+                background: #f9f9f9;
+                border-radius: 8px;
+                border-left: 4px solid #FF8800;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            `;
+            memberItem.innerHTML = `
+                <span style="font-size: 1.3em; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: #FF8800; color: white; border-radius: 50%; font-weight: 600; font-size: 0.9em;">${index + 1}</span>
+                <div>
+                    <div style="font-weight: 600; color: #333;">${member}</div>
+                </div>
+            `;
+            membersList.appendChild(memberItem);
+        });
+    }
+}
+
+function closeGroupMembersModal() {
+    const modal = document.getElementById('groupMembersModal');
+    modal.style.display = 'none';
+}
+
+// Modal dışına tıklandığında kapat
+document.addEventListener('click', (e) => {
+    const modal = document.getElementById('groupMembersModal');
+    if (e.target === modal) {
+        closeGroupMembersModal();
+    }
+});
 
 // Yardımcı Fonksiyonlar
 // Sayfa Yüklendiğinde
