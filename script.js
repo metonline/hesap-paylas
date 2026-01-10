@@ -2825,6 +2825,13 @@ function selectActiveGroup(groupId, groupName) {
     if (panel) {
         panel.style.display = 'none';
     }
+    
+    // Gruplarım modal'ını kapat
+    const groupsModal = document.getElementById('groupsPage');
+    if (groupsModal) {
+        groupsModal.style.display = 'none';
+    }
+    
     // Grup detaylarını göster
     showGroupMembersModal(groupId);
 }
