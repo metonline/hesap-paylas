@@ -2804,13 +2804,15 @@ function loadActiveGroups() {
                 const groupName = group.name || 'İsimsiz Grup';
                 const memberCount = group.members_count || 0;
                 const description = group.description || '';
+                const category = group.category || '';
                 
-                let html = `<div style="font-weight: 600; color: #333; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                    <span>${groupName} (${memberCount} kişi)</span>
-                    ${description ? `<span style="font-weight: normal; color: #666; font-size: 0.9em;">${description}</span>` : ''}
-                </div>`;
+                // Format: "Pembe (1 kişi) Big Chef'te akşam yemeği"
+                let displayText = `${groupName} (${memberCount} kişi)`;
+                if (description) {
+                    displayText += ` ${description}`;
+                }
                 
-                groupItem.innerHTML = html;
+                groupItem.innerHTML = `<div style="font-weight: 600; color: #333; word-break: break-word;">${displayText}</div>`;
                 listContainer.appendChild(groupItem);
             });
         }
