@@ -2710,7 +2710,7 @@ function createNewGroup() {
                 selectedColor.name,  // Seçili renk adı (grup adı)
                 selectedColor.name,  // Seçili renk adı
                 selectedColor.code,  // Seçili renk kodu
-                newGroup.qr_code  // QR kod (6 haneli)
+                newGroup.code  // Grup kodu (XXX-XXX formatında QR için)
             );
             
             messageDiv.textContent = '';
@@ -2749,15 +2749,15 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, qrCode) {
     document.getElementById('successColorCode').textContent = colorCode;
     
     // QR kodu göster (QR Server API kullanarak)
+    // qrCode format: "867-765" (already formatted)
     const qrCodeContainer = document.getElementById('successQRCode');
     qrCodeContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrCode}&color=000000" alt="QR Code" style="border: 2px solid #000;">`;
     
-    // Grup kodunu xxx-xxx formatında göster
-    const groupCodeFormatted = qrCode.substring(0, 3) + '-' + qrCode.substring(3);
-    document.getElementById('successGroupCode').textContent = groupCodeFormatted;
+    // Grup kodunu göster (already in XXX-XXX format)
+    document.getElementById('successGroupCode').textContent = qrCode;
     
     // WhatsApp share button'ında grup kodunu sakla
-    document.getElementById('whatsappShareBtn').setAttribute('data-group-code', groupCodeFormatted);
+    document.getElementById('whatsappShareBtn').setAttribute('data-group-code', qrCode);
 }
 
 // WhatsApp'ta paylaş
