@@ -38,36 +38,6 @@ CORS(app, resources={
     }
 })
 
-# ==================== CRITICAL: Global Cache Control ====================
-@app.after_request
-def set_cache_headers(response):
-    """
-    Global cache control for all responses.
-    Prevents stale content while allowing efficient caching of assets.
-    """
-    path = request.path.lower()
-    
-    # HTML, API, dynamic content: NO CACHE
-    if (path == '/' or 
-        path.endswith('.html') or 
-        path.startswith('/api/')):
-        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-    
-    # JavaScript and CSS: NO CACHE (development - change after launch)
-    elif path.endswith(('.js', '.css')):
-        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-        response.headers['Pragma'] = 'no-cache'
-        response.headers['Expires'] = '0'
-    
-    # Images, fonts: Cache for 30 days
-    elif path.endswith(('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp',
-                        '.woff', '.woff2', '.ttf', '.eot', '.ico')):
-        response.headers['Cache-Control'] = 'public, max-age=2592000'
-    
-    return response
-
 # Config
 # ABSOLUTE path for database - avoid path conflicts
 if os.getenv('DATABASE_URL'):
@@ -399,6 +369,20 @@ def reset_password():
 
 # ==================== Helper Functions ====================
 
+def format_group_code(code):
+    """Format 6-digit code as XXX-XXX (e.g., 123456 -> 123-456)"""
+    if not code:
+        return code
+    code_str = str(code)
+    if len(code_str) == 6:
+        return f"{code_str[:3]}-{code_str[3:]}"
+    return code_str
+
+def generate_group_code():
+    """Generate random 6-digit group code (stored as pure number)"""
+    code = f"{random.randint(0, 999999):06d}"
+    return code
+
 def generate_token(user_id):
     """Generate JWT token"""
     payload = {
@@ -411,20 +395,32 @@ def token_required(f):
     """Decorator for protected routes"""
     @wraps(f)
     def decorated(*args, **kwargs):
-        token = request.headers.get('Authorization', '').replace('Bearer ', '')
-        
-        if not token:
-            return jsonify({'error': 'Missing token'}), 401
-        
         try:
-            payload = jwt.decode(token, app.config['JWT_SECRET'], algorithms=['HS256'])
-            request.user_id = payload['user_id']
-        except jwt.ExpiredSignatureError:
-            return jsonify({'error': 'Token expired'}), 401
-        except jwt.InvalidTokenError:
-            return jsonify({'error': 'Invalid token'}), 401
-        
-        return f(*args, **kwargs)
+            token = request.headers.get('Authorization', '').replace('Bearer ', '')
+            
+            print(f"[AUTH] Token check - Headers: {request.headers.get('Authorization')[:20] if request.headers.get('Authorization') else 'NONE'}")
+            
+            if not token:
+                print(f"[AUTH] Missing token!")
+                return jsonify({'error': 'Missing token'}), 401
+            
+            try:
+                payload = jwt.decode(token, app.config['JWT_SECRET'], algorithms=['HS256'])
+                request.user_id = payload['user_id']
+                print(f"[AUTH] Token valid - User ID: {request.user_id}")
+            except jwt.ExpiredSignatureError:
+                print(f"[AUTH] Token expired")
+                return jsonify({'error': 'Token expired'}), 401
+            except jwt.InvalidTokenError as e:
+                print(f"[AUTH] Invalid token: {str(e)}")
+                return jsonify({'error': 'Invalid token'}), 401
+            
+            return f(*args, **kwargs)
+        except Exception as e:
+            print(f"[AUTH] DECORATOR ERROR: {str(e)}", flush=True)
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': f'Server error: {str(e)}'}), 500
     return decorated
 
 # ==================== User Routes ====================
@@ -569,9 +565,10 @@ def reopen_account():
 @token_required
 def create_group():
     """Create new group with random color name and 6-digit QR code"""
+    print("[GROUP] create_group called", flush=True)
     try:
         data = request.get_json()
-        
+        print(f"[GROUP] Request data: {data}", flush=True)
         if not data:
             return jsonify({'error': 'Invalid request data'}), 400
         
@@ -582,11 +579,7 @@ def create_group():
             'İnci', 'Altın', 'Gümüş', 'Bakır', 'Bronz', 'Lacivert', 'Haki', 'Zeytin'
         ]
         
-        # Generate unique 6-digit code (format: XXX-XXX)
-        def generate_group_code():
-            code = f"{random.randint(0, 999):03d}-{random.randint(0, 999):03d}"
-            return code
-        
+        # Generate unique 6-digit code (store as: 123456, display as: 123-456)
         group_code = generate_group_code()
         
         # Ensure code is unique
@@ -610,13 +603,16 @@ def create_group():
         )
         
         db.session.add(group)
-        db.session.flush()
         
-        # Add creator to group members
+        # Add creator to group members BEFORE commit
         user = User.query.get(request.user_id)
         if user:
             group.members.append(user)
+        else:
+            print(f"[ERROR] User {request.user_id} not found!")
+            return jsonify({'error': 'User not found'}), 500
         
+        # Commit both group and membership at same time
         db.session.commit()
         print(f"[GROUP] Created: {group.name} (ID: {group.id}, Code: {group_code})")
         
@@ -628,14 +624,17 @@ def create_group():
                 'name': group.name,
                 'description': group.description,
                 'category': group.category,
-                'code': group.code,
+                'code': group.code,  # Raw 6-digit code (123456)
+                'code_formatted': format_group_code(group.code),  # Formatted code (123-456)
                 'created_at': group.created_at.isoformat()
             }
         }), 201
         
     except Exception as e:
         db.session.rollback()
-        print(f"[ERROR] Group creation failed: {str(e)}")
+        print(f"[ERROR] Group creation failed: {str(e)}", flush=True)
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': f'Failed to create group: {str(e)}'}), 500
 
 @app.route('/api/groups/<int:group_id>', methods=['GET'])
@@ -649,6 +648,7 @@ def get_group(group_id):
         'description': group.description,
         'category': group.category,
         'code': group.code,
+        'code_formatted': format_group_code(group.code),
         'qr_code': group.qr_code,
         'created_at': group.created_at.isoformat(),
         'members': [u.to_dict() for u in group.members],
@@ -674,9 +674,11 @@ def join_group():
         
         group = None
         
-        # Try to find by group code first (6-digit format: XXX-XXX)
+        # Try to find by group code
         if group_code:
-            group = Group.query.filter_by(code=group_code).first()
+            # Handle both formats: "123456" (raw) and "123-456" (formatted)
+            clean_code = group_code.replace('-', '')
+            group = Group.query.filter_by(code=clean_code).first()
         
         # Fallback to QR code if not found
         if not group and qr_code:
@@ -728,6 +730,8 @@ def get_user_groups():
             'name': group.name,
             'description': group.description,
             'category': group.category,
+            'code': group.code,  # Raw 6-digit code
+            'code_formatted': format_group_code(group.code),  # Formatted code (123-456)
             'qr_code': group.qr_code,
             'created_at': group.created_at.isoformat(),
             'members_count': len(group.members),
@@ -1020,5 +1024,5 @@ if __name__ == '__main__':
             print(f"[INIT] Database ready - {User.query.count()} users, {Group.query.count()} groups")
     
     port = int(os.getenv('PORT', 5000))
-    # Always run in production mode - file watcher causes crashes
-    app.run(host='0.0.0.0', port=port, debug=False, use_reloader=False)
+    # Debug mode ON for development (shows detailed error tracebacks)
+    app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)

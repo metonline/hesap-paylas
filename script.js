@@ -40,10 +40,10 @@ window.addEventListener('load', () => {
 // Deep Link Handler - URL parametrelerini kontrol et
 function handleDeepLink() {
     const params = new URLSearchParams(window.location.search);
-    // Both 'code' (9 digit: xxx-xxx-xxx) and 'groupCode' (6 digit: xxx-xxx) parameters supported
+    // Support both formats: "123-456" (formatted) and "123456" (raw 6-digit)
     let groupCode = params.get('code') || params.get('groupCode');
     
-    if (groupCode && (/^\d{3}-\d{3}-\d{3}$/.test(groupCode) || /^\d{3}-\d{3}$/.test(groupCode))) {
+    if (groupCode && (/^\d{3}-\d{3}$/.test(groupCode) || /^\d{6}$/.test(groupCode) || /^\d{3}-\d{3}-\d{3}$/.test(groupCode))) {
         console.log('Deep link detected with code:', groupCode);
         
         // Eğer user login'se direkt gruba katıl
@@ -2732,7 +2732,8 @@ function createNewGroup() {
                 selectedColor.name,  // Seçili renk adı (grup adı)
                 selectedColor.name,  // Seçili renk adı
                 selectedColor.code,  // Seçili renk kodu
-                newGroup.code  // Grup kodu (XXX-XXX formatında QR için)
+                newGroup.code,  // Grup kodu (raw 6-digit: 123456)
+                newGroup.code_formatted  // Formatted code (123-456)
             );
             
             messageDiv.textContent = '';
@@ -2755,7 +2756,7 @@ function createNewGroup() {
 }
 
 // Grup oluşturma başarılı - success ekranını göster
-function showGroupSuccessScreen(groupName, colorName, colorCode, qrCode) {
+function showGroupSuccessScreen(groupName, colorName, colorCode, rawCode, formattedCode) {
     // Başlığı "Grup Kur" olarak değiştir
     document.getElementById('modalTitle').textContent = 'Grup Kur';
     
@@ -2771,20 +2772,20 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, qrCode) {
     document.getElementById('successColorCode').textContent = colorCode;
     
     // QR kodu göster (QR Server API kullanarak)
-    // qrCode format: "867-765" (already formatted)
+    // rawCode kullan: "123456" (without formatting)
     const qrCodeContainer = document.getElementById('successQRCode');
-    qrCodeContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${qrCode}&color=000000" alt="QR Code" style="border: 2px solid #000;">`;
+    qrCodeContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${rawCode}&color=000000" alt="QR Code" style="border: 2px solid #000;">`;
     
-    // Grup kodunu göster (already in XXX-XXX format)
-    document.getElementById('successGroupCode').textContent = qrCode;
+    // Grup kodunu göster (formatted: "123-456")
+    document.getElementById('successGroupCode').textContent = formattedCode;
     
-    // Katılım linkini oluştur ve göster
-    const baseURL = window.location.origin;
-    const participationLink = `${baseURL}?code=${qrCode}`;
+    // Katılım linkini oluştur ve göster (production URL kullan)
+    const baseURL = 'https://hesap-paylas.onrender.com';
+    const participationLink = `${baseURL}?code=${formattedCode}`;
     document.getElementById('successParticipationLink').textContent = participationLink;
     
-    // WhatsApp share button'ında grup kodunu sakla
-    document.getElementById('whatsappShareBtn').setAttribute('data-group-code', qrCode);
+    // WhatsApp share button'ında formatted grup kodunu sakla
+    document.getElementById('whatsappShareBtn').setAttribute('data-group-code', formattedCode);
     
     // Aktif grupları yenile ve floating button'ı göster
     loadActiveGroups();
@@ -2793,7 +2794,8 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, qrCode) {
 // WhatsApp'ta paylaş
 function shareGroupOnWhatsapp() {
     const groupCode = document.getElementById('whatsappShareBtn').getAttribute('data-group-code');
-    const message = `Grup Kodu: ${groupCode}`;
+    const participationLink = document.getElementById('successParticipationLink').textContent;
+    const message = `Grup Kodu: ${groupCode}\n\nKatılmak için: ${participationLink}`;
     const encodedMessage = encodeURIComponent(message);
     
     // WhatsApp Web veya mobil app'ı aç
