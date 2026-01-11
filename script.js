@@ -2781,6 +2781,7 @@ function toggleActiveGroupPanel() {
 }
 
 function loadActiveGroups() {
+    console.log('✅ loadActiveGroups çağrıldı');
     const token = localStorage.getItem('hesapPaylas_token');
     if (!token) return;
     

@@ -1,5 +1,5 @@
 // Service Worker - PWA desteği
-const CACHE_NAME = 'hesap-paylas-v3-' + Date.now();  // Timestamp for aggressive cache busting
+const CACHE_NAME = 'hesap-paylas-v4-' + Math.random(); // AGGRESSIVE: Random every load
 
 // GitHub Pages pathed deployment'ı handle et
 const isGitHubPages = self.location.hostname === 'metonline.github.io';
