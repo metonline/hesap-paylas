@@ -2,11 +2,15 @@
 <!--
     Hesap Paylaş - Bill Splitting App
     Version: 2.0.0
-    Last Updated: 2026-01-09
+    Last Updated: 2026-01-11
+    IMPORTANT: Service Worker will handle cache busting for script.js via query params
 -->
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <meta name="theme-color" content="#FF6B6B">
     <meta name="mobile-web-app-capable" content="yes">
@@ -1005,6 +1009,6 @@ Konaklama
     <!-- QR Code Libraries -->
     <script src="https://unpkg.com/html5-qrcode@2.1.48/dist/html5-qrcode.min.js"></script>
     
-    <script src="script.js?v=20260111-aggressive-cache-fix"></script>
+    <script src="script.js?v=20260111-final-cache-fix-v5"></script>
 </body>
 </html>

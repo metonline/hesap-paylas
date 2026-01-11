@@ -920,14 +920,38 @@ def serve_static(filename):
     if filename.startswith('api/'):
         return jsonify({'error': 'Not Found'}), 404
     
-    # Serve static files
+    # Serve static files with proper Cache-Control headers
     if filename.endswith(('.js', '.css', '.json', '.svg', '.png', '.jpg', '.gif', '.webp', '.woff', '.woff2', '.ttf')):
         try:
-            return send_from_directory(str(BASE_DIR), filename)
-        except:
-            return send_from_directory(str(BASE_DIR), 'index.html')
-    # Fallback to index.html for SPA
-    return send_from_directory(str(BASE_DIR), 'index.html')
+            response = send_from_directory(str(BASE_DIR), filename)
+            
+            # CRITICAL: Set Cache-Control headers for static files
+            # - index.html: NO CACHE (always fetch fresh)
+            # - script.js: NO CACHE (always fetch fresh)
+            # - CSS/images: Cache for 1 week
+            if filename in ['index.html', 'script.js'] or filename.startswith('script.js?'):
+                response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, public, max-age=0'
+                response.headers['Pragma'] = 'no-cache'
+                response.headers['Expires'] = '0'
+                print(f"[STATIC] {filename} - NO CACHE (always fresh)")
+            else:
+                # CSS, manifest, etc - cache for 1 week
+                response.headers['Cache-Control'] = 'public, max-age=604800'
+                print(f"[STATIC] {filename} - Cache for 1 week")
+            
+            return response
+        except Exception as e:
+            print(f"[STATIC] Error serving {filename}: {e}")
+            response = send_from_directory(str(BASE_DIR), 'index.html')
+            response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, public, max-age=0'
+            return response
+    
+    # Fallback to index.html for SPA (with no-cache header)
+    response = send_from_directory(str(BASE_DIR), 'index.html')
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, public, max-age=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
 
 # ==================== Main ====================
 
