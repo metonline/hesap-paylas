@@ -1,0 +1,16 @@
+BUILD: 2026-01-11 13:50:00
+VERSION: 2.0.7-force-deploy
+TIMESTAMP: 1673428200
+DEPLOYMENT_TARGET: Render.com
+REASON: Force rebuild - Service Worker cache fix
+COMMIT: ef507c5
+
+This file forces Render to rebuild by modifying the build context.
+Service Worker has been completely disabled in favor of HTTP cache headers.
+All static files should be fetched with no-cache directives.
+
+Latest Changes:
+- script.js v2.0.7-force-deploy
+- index.html with query param v=2026011113450-force-deploy
+- wsgi.py with force deploy comment
+- HTTP cache headers: no-cache for HTML/JS, 1-week for CSS/assets
