@@ -2756,6 +2756,11 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, qrCode) {
     // Grup kodunu göster (already in XXX-XXX format)
     document.getElementById('successGroupCode').textContent = qrCode;
     
+    // Katılım linkini oluştur ve göster
+    const baseURL = window.location.origin;
+    const participationLink = `${baseURL}?code=${qrCode}`;
+    document.getElementById('successParticipationLink').textContent = participationLink;
+    
     // WhatsApp share button'ında grup kodunu sakla
     document.getElementById('whatsappShareBtn').setAttribute('data-group-code', qrCode);
 }
@@ -2768,6 +2773,16 @@ function shareGroupOnWhatsapp() {
     
     // WhatsApp Web veya mobil app'ı aç
     window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
+}
+
+// Katılım linkini kopyala
+function copyParticipationLink() {
+    const linkText = document.getElementById('successParticipationLink').textContent;
+    navigator.clipboard.writeText(linkText).then(() => {
+        showNotification('✅ Link kopyalandı!', 'success');
+    }).catch(err => {
+        showNotification('❌ Kopyalanamadı', 'error');
+    });
 }
 
 // Aktif Grupları Yönetme
