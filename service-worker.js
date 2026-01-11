@@ -1,7 +1,7 @@
-// Service Worker - PWA desteği - AGGRESSIVE CACHE BUSTING
-// IMPORTANT: This Service Worker only caches static assets, 
+// Service Worker - PWA desteği - AGGRESSIVE CACHE BUSTING v6
+// CRITICAL: This Service Worker only caches static assets, 
 // HTML and JS are ALWAYS fetched from network
-const CACHE_VERSION = '20260111-v5';
+const CACHE_VERSION = '20260111-v6-aggressive';
 const CACHE_NAME = 'hesap-paylas-' + CACHE_VERSION;
 
 // GitHub Pages pathed deployment'ı handle et
