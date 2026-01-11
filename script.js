@@ -754,6 +754,16 @@ function handleManualLogin(event) {
             .then(groups => {
                 // loadActiveGroups() will show/hide button based on groups
                 loadActiveGroups();
+                
+                // Check if there's a pending group code to join (from deep link)
+                const pendingCode = sessionStorage.getItem('pendingGroupCode');
+                if (pendingCode) {
+                    console.log('Processing pending group code from deep link:', pendingCode);
+                    sessionStorage.removeItem('pendingGroupCode');
+                    setTimeout(() => {
+                        joinGroupWithCode(pendingCode);
+                    }, 500);
+                }
             })
             .catch(error => {
                 console.error('Error checking groups:', error);
