@@ -1,36 +1,24 @@
 /**
  * Hesap Paylaş - Main Application Script
- * Version: 2.0.3
+ * Version: 2.0.6-no-sw
  * Last Updated: 2026-01-11
+ * NOTE: Service Worker disabled - Using HTTP headers for cache control only
  */
 
-// Service Worker DISABLED - Caching issues
-/*
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js').then(registration => {
-            console.log('Service Worker registered:', registration);
-        }).catch(error => {
-            console.log('Service Worker registration failed:', error);
-        });
-        
-        // Deep link'i handle et
-        handleDeepLink();
-    });
-}
-*/
+// SERVICE WORKER COMPLETELY DISABLED
+// Browser will use HTTP Cache-Control headers from backend
+// This is more reliable than Service Worker caching
+console.log('[APP] Service Worker disabled - using HTTP headers for cache control');
 
-// Unregister existing service workers
+// If there's an existing Service Worker, unregister it
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
         registrations.forEach(registration => {
             registration.unregister();
-            console.log('Service Worker unregistered');
+            console.log('[APP] Service Worker unregistered');
         });
-    });
-    
-    window.addEventListener('load', () => {
-        handleDeepLink();
+    }).catch(err => {
+        console.log('[APP] Error unregistering Service Worker:', err);
     });
 }
 
@@ -40,6 +28,12 @@ window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
     deferredPrompt = e;
     // Install button gösterilebilir
+});
+
+// Handle deep links when page loads
+window.addEventListener('load', () => {
+    console.log('[APP] Page loaded - checking for deep links');
+    handleDeepLink();
 });
 
 // Deep Link Handler - URL parametrelerini kontrol et
