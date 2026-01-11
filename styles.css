@@ -1554,6 +1554,29 @@ body {
     }
 }
 
+/* Modal animasyon */
+#groupDetailsModal {
+    animation: fadeIn 0.3s ease-in-out !important;
+}
+
+#groupDetailsModal.modal-open {
+    display: flex !important;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+#groupDetailsModal.modal-close {
+    animation: fadeOut 0.3s ease-in-out;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+    to {
+        opacity: 0;
+    }
+}
+
 .modal-content {
     background-color: white;
     padding: 30px;

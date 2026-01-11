@@ -660,7 +660,7 @@
         </div>
 
         <!-- Sidebar Menu -->
-        <div id="groupDetailsModal" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; align-items: center; justify-content: center; overflow-y: auto;">
+        <div id="groupDetailsModal" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; align-items: center; justify-content: center; overflow-y: auto; visibility: hidden; opacity: 1;">
             <div style="position: relative; background: white; border-radius: 20px; max-width: 500px; width: 90%; margin: 20px auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px; max-height: 90vh; overflow-y: auto;">
                 <button onclick="closeGroupDetailsModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
                 
@@ -989,7 +989,7 @@ Konaklama
     </div>
 
     <!-- Gruplarım Sayfası - Modal (MOVED OUTSIDE CONTAINER) -->
-    <div id="groupsPage" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: none; align-items: center; justify-content: center; overflow-y: auto;">
+    <div id="groupsPage" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998; display: none; align-items: center; justify-content: center; overflow-y: auto;">
         <div style="position: relative; background: white; border-radius: 20px; max-width: 500px; width: 90%; margin: 20px auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px;">
             <button onclick="closeGroupsModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
             
@@ -1016,6 +1016,6 @@ Konaklama
     <!-- QR Code Libraries -->
     <script src="https://unpkg.com/html5-qrcode@2.1.48/dist/html5-qrcode.min.js"></script>
     
-    <script src="script.js"></script>
+    <script src="script.js?ver=1.0.0"></script>
 </body>
 </html>

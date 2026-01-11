@@ -2225,7 +2225,48 @@ function displayGroups(groups) {
 }
 
 function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
+    console.log('[GROUP-DETAILS] showGroupDetails called with groupId:', groupId, 'groupName:', groupName);
     const detailsModal = document.getElementById('groupDetailsModal');
+    const panel = document.getElementById('activeGroupPanel');
+    const groupsPage = document.getElementById('groupsPage');
+    
+    console.log('[GROUP-DETAILS] detailsModal found:', !!detailsModal, 'panel found:', !!panel, 'groupsPage found:', !!groupsPage);
+    
+    // Önce groupsPage modal'ı kapat (Aktif Gruplar listesi)
+    if (groupsPage && groupsPage.style.display !== 'none') {
+        console.log('[GROUP-DETAILS] Closing groupsPage modal...');
+        groupsPage.style.transition = 'opacity 0.2s ease-out';
+        groupsPage.style.opacity = '0';
+        groupsPage.style.pointerEvents = 'none';
+        setTimeout(() => {
+            groupsPage.style.display = 'none';
+            groupsPage.style.visibility = 'hidden';
+            groupsPage.style.zIndex = '9998';
+        }, 200);
+    }
+    
+    // Panel'i fade-out ile gizle (smooth kapatış) 
+    if (panel && panel.style.display !== 'none') {
+        console.log('[GROUP-DETAILS] Closing activeGroupPanel...');
+        panel.style.transition = 'opacity 0.25s ease-out';
+        panel.style.opacity = '0';
+        panel.style.pointerEvents = 'none';
+        // 250ms sonra tamamen gizle
+        setTimeout(() => {
+            panel.style.display = 'none';
+            panel.style.visibility = 'hidden';
+            panel.style.zIndex = '1';
+        }, 250);
+    }
+    
+    // Modal'ı ön plana çık - Z-index yüksek, hemen görünür hale getir
+    detailsModal.style.zIndex = '10000';
+    detailsModal.style.visibility = 'visible';
+    detailsModal.style.opacity = '1';
+    detailsModal.style.display = 'flex';
+    detailsModal.classList.remove('modal-close');
+    detailsModal.classList.add('modal-open');
+    console.log('[GROUP-DETAILS] groupDetailsModal shown with z-index 10000');
     
     // Backend'den detaylı grup bilgisini çek
     const token = localStorage.getItem('hesapPaylas_token');
@@ -2236,9 +2277,10 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     })
     .then(r => r.json())
     .then(group => {
-        // Grup adı "Gri" olarak göster
-        document.getElementById('detailGroupName').textContent = 'Gri';
-        document.getElementById('detailGroupCode').textContent = formatQRCode(group.qr_code || '');
+        // Grup adını doğru göster
+        document.getElementById('detailGroupName').textContent = group.name || groupName || 'İsimsiz Grup';
+        // Grup kodunu göster (code_formatted varsa formatlanmış hali, yoksa raw code)
+        document.getElementById('detailGroupCode').textContent = group.code_formatted || group.code || '---';
         document.getElementById('detailGroupCategory').textContent = group.category || 'Genel Yaşam';
         document.getElementById('detailGroupDate').textContent = new Date(group.created_at).toLocaleDateString('tr-TR');
         
@@ -2266,18 +2308,27 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
         
         // Üyeleri global'e sakla (detay açılması için)
         window.currentGroupMembers = group.members || [];
+        
+        // Modal'ı aç animasyon ile
+        detailsModal.classList.remove('modal-close');
+        detailsModal.classList.add('modal-open');
+        detailsModal.style.display = 'flex';
     })
     .catch(error => {
         console.error('Error loading group details:', error);
         // Fallback: sadece basit bilgileri göster
-        document.getElementById('detailGroupName').textContent = 'Gri';
-        document.getElementById('detailGroupCode').textContent = formatQRCode(qrCode || '');
+        document.getElementById('detailGroupName').textContent = groupName || 'İsimsiz Grup';
+        document.getElementById('detailGroupCode').textContent = '---';
         document.getElementById('detailGroupDate').textContent = new Date(groupDate).toLocaleDateString('tr-TR');
         document.getElementById('detailGroupMemberCount').textContent = '(0 üye)';
+        
+        // Modal'ı aç animasyon ile
+        detailsModal.classList.remove('modal-close');
+        detailsModal.classList.add('modal-open');
+        detailsModal.style.display = 'flex';
     });
     
     window.currentGroupId = groupId;
-    detailsModal.style.display = 'flex';
 }
 
 // Hesap Özeti detaylarını aç/kapat
@@ -2389,8 +2440,50 @@ function handleQRCodeInput(input) {
 
 function closeGroupDetailsModal() {
     const detailsModal = document.getElementById('groupDetailsModal');
-    detailsModal.style.display = 'none';
+    const panel = document.getElementById('activeGroupPanel');
+    const groupsPage = document.getElementById('groupsPage');
+    
+    console.log('[GROUP-DETAILS-CLOSE] Closing group details modal');
+    
+    // Fade-out animasyonu
+    detailsModal.classList.add('modal-close');
+    detailsModal.classList.remove('modal-open');
+    
+    // Animasyon bitince kapat - 300ms (CSS animation duration)
+    setTimeout(() => {
+        detailsModal.style.visibility = 'hidden';
+        detailsModal.style.display = 'none';
+        detailsModal.style.zIndex = '10000';
+        detailsModal.style.opacity = '0';
+        
+        // groupsPage'i geri göster (Aktif Gruplar listesi)
+        if (groupsPage) {
+            console.log('[GROUP-DETAILS-CLOSE] Restoring groupsPage modal');
+            groupsPage.style.display = 'flex';
+            groupsPage.style.visibility = 'visible';
+            groupsPage.style.zIndex = '9998';
+            groupsPage.style.transition = 'opacity 0.2s ease-in';
+            groupsPage.style.opacity = '0';
+            // Force reflow to trigger animation
+            void groupsPage.offsetWidth;
+            groupsPage.style.opacity = '1';
+        }
+        
+        // Panel'i geri göster FADE-IN ile (eğer açık idi)
+        if (panel && panel.style.display === 'none') {
+            console.log('[GROUP-DETAILS-CLOSE] Panel was open, restoring...');
+            panel.style.display = 'flex';
+            panel.style.visibility = 'visible';
+            panel.style.zIndex = '5000';
+            panel.style.transition = 'opacity 0.25s ease-in';
+            panel.style.opacity = '0';
+            // Force reflow to trigger animation
+            void panel.offsetWidth;
+            panel.style.opacity = '1';
+        }
+    }, 300);
 }
+
 
 function editGroup() {
     const newName = prompt('Yeni grup adı girin:');

@@ -1,16 +1,20 @@
 #!/usr/bin/env python
-"""Test login directly against running backend"""
+"""Verbose login test"""
 import http.client
 import json
 
-# Test login
-print("Testing login against localhost:5000...")
+# Direct HTTP request (bypass requests library)
 conn = http.client.HTTPConnection("localhost", 5000)
 payload = json.dumps({"email": "metonline@gmail.com", "password": "test123"})
 headers = {
     "Content-Type": "application/json",
     "Content-Length": str(len(payload))
 }
+
+print(f"Connecting to: localhost:5000")
+print(f"Payload: {payload}")
+print(f"Headers: {headers}")
+print()
 
 try:
     conn.request("POST", "/api/auth/login", payload, headers)
@@ -19,15 +23,14 @@ try:
     
     print(f"Status: {response.status}")
     print(f"Response: {data}")
+    print()
     
     if response.status == 200:
-        print("\n✅ Login successful!")
-        resp_json = json.loads(data)
-        print(f"Token: {resp_json.get('token')}")
+        print("✅ SUCCESS!")
     else:
-        print(f"\n❌ Login failed")
+        print(f"❌ ERROR - Status {response.status}")
         
 except Exception as e:
-    print(f"❌ Error: {e}")
+    print(f"❌ Connection error: {e}")
 finally:
     conn.close()
