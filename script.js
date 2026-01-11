@@ -76,16 +76,38 @@ function joinGroupWithCode(groupCode) {
         },
         body: JSON.stringify({ code: groupCode })
     })
-    .then(response => response.json())
-    .then(data => {
-        if (response.ok || data.message) {
-            showNotification(`✅ "${data.name}" grubuna başarıyla katıldınız!`);
+    .then(response => {
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+            return response.json().then(data => ({
+                ok: response.ok,
+                status: response.status,
+                data: data
+            }));
+        } else {
+            return {
+                ok: response.ok,
+                status: response.status,
+                data: { error: 'Invalid response format' }
+            };
+        }
+    })
+    .then(result => {
+        if (result.ok && result.data) {
+            showNotification(`✅ "${result.data.name}" grubuna başarıyla katıldınız!`);
+            setTimeout(() => {
+                loadActiveGroups();
+                showPage('homePage');
+            }, 1500);
+        } else if (result.data && result.data.message) {
+            // Already member or other success
+            showNotification(`✅ "${result.data.name}" grubundasınız!`);
             setTimeout(() => {
                 loadActiveGroups();
                 showPage('homePage');
             }, 1500);
         } else {
-            showNotification(data.error || 'Gruba katılım başarısız');
+            showNotification(result.data?.error || 'Gruba katılım başarısız');
         }
     })
     .catch(error => {
