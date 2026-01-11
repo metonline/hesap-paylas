@@ -2182,12 +2182,10 @@ function displayGroups(groups) {
                 const memberNames = (group.members || []).map(m => m.first_name).join(', ');
                 const groupName = group.name || 'İsimsiz Grup';
                 const groupDesc = group.description || 'Açıklama yok';
-                const safeGroupName = groupName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                const safeGroupDesc = groupDesc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 
                 return `
-            <div style="padding: 12px; background: #e8f8f5; border-left: 4px solid #27ae60; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
-                <div onclick="showGroupDetails(${group.id}, '${safeGroupName}', '${safeGroupDesc}', '${group.created_at}', '${group.qr_code}')" style="font-weight: 600; color: #27ae60; cursor: pointer; user-select: none;">⬇ ${groupName}</div>
+            <div class="group-card-modal" data-group-id="${group.id}" data-group-name="${groupName.replace(/"/g, '&quot;')}" data-group-desc="${groupDesc.replace(/"/g, '&quot;')}" data-group-date="${group.created_at}" data-group-qr="${group.qr_code}" style="padding: 12px; background: #e8f8f5; border-left: 4px solid #27ae60; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                <div style="font-weight: 600; color: #27ae60; cursor: pointer; user-select: none;">⬇ ${groupName}</div>
                 <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${groupDesc}</div>
                 <div style="font-size: 0.8em; color: #555; margin-top: 4px;">👥 ${memberNames || 'Üye yok'}</div>
                 <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qr_code)}</div>
@@ -2196,6 +2194,20 @@ function displayGroups(groups) {
             }).join('');
             console.log('[DISPLAY-MODAL] HTML generated for modal, length:', html.length);
             activeList.innerHTML = html;
+            
+            // Event listener ekle - tüm grup kartlarına
+            document.querySelectorAll('.group-card-modal').forEach(card => {
+                card.addEventListener('click', function() {
+                    const groupId = this.dataset.groupId;
+                    const groupName = this.dataset.groupName;
+                    const groupDesc = this.dataset.groupDesc;
+                    const groupDate = this.dataset.groupDate;
+                    const groupQr = this.dataset.groupQr;
+                    console.log('[DISPLAY-MODAL] Group card clicked:', groupId, groupName);
+                    showGroupDetails(groupId, groupName, groupDesc, groupDate, groupQr);
+                });
+            });
+            
             console.log('[DISPLAY-MODAL] HTML set to activeGroupsList (modal) successfully');
         } catch (err) {
             console.error('[DISPLAY-MODAL] Error rendering modal groups:', err);
@@ -2209,16 +2221,31 @@ function displayGroups(groups) {
     // Kapanmış grupları göster
     const closedList = document.getElementById('closedGroupsList');
     if (closedGroups.length > 0) {
-        closedList.innerHTML = closedGroups.map(group => {
+        const closedHtml = closedGroups.map(group => {
             const memberNames = (group.members || []).map(m => m.first_name).join(', ');
+            const groupName = group.name || 'İsimsiz Grup';
+            const groupDesc = group.description || 'Açıklama yok';
             return `
-            <div style="padding: 12px; background: #ecf0f1; border-left: 4px solid #95a5a6; border-radius: 8px; cursor: pointer; opacity: 0.8; transition: all 0.3s;">
-                <div onclick="showGroupDetails(${group.id}, '${group.name.replace(/'/g, "\\'")}', '${(group.description || '').replace(/'/g, "\\'")}', '${group.created_at}', '${group.qr_code}')" style="font-weight: 600; color: #7f8c8d; cursor: pointer; user-select: none;">⬇ ${group.name}</div>
-                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${group.description || 'Açıklama yok'}</div>
+            <div class="group-card-modal" data-group-id="${group.id}" data-group-name="${groupName.replace(/"/g, '&quot;')}" data-group-desc="${groupDesc.replace(/"/g, '&quot;')}" data-group-date="${group.created_at}" data-group-qr="${group.qr_code}" style="padding: 12px; background: #ecf0f1; border-left: 4px solid #95a5a6; border-radius: 8px; cursor: pointer; opacity: 0.8; transition: all 0.3s;">
+                <div style="font-weight: 600; color: #7f8c8d; cursor: pointer; user-select: none;">⬇ ${groupName}</div>
+                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${groupDesc}</div>
                 <div style="font-size: 0.8em; color: #555; margin-top: 4px;">👥 ${memberNames || 'Üye yok'}</div>
                 <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qr_code)}</div>
             </div>
         `}).join('');
+        closedList.innerHTML = closedHtml;
+        
+        // Event listener ekle - kapalı gruplar için de
+        closedList.querySelectorAll('.group-card-modal').forEach(card => {
+            card.addEventListener('click', function() {
+                const groupId = this.dataset.groupId;
+                const groupName = this.dataset.groupName;
+                const groupDesc = this.dataset.groupDesc;
+                const groupDate = this.dataset.groupDate;
+                const groupQr = this.dataset.groupQr;
+                showGroupDetails(groupId, groupName, groupDesc, groupDate, groupQr);
+            });
+        });
     } else {
         closedList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Kapalı grup yok</p>';
     }
@@ -2227,56 +2254,44 @@ function displayGroups(groups) {
 function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     console.log('[GROUP-DETAILS] showGroupDetails called with groupId:', groupId, 'groupName:', groupName);
     const detailsModal = document.getElementById('groupDetailsModal');
-    const panel = document.getElementById('activeGroupPanel');
     const groupsPage = document.getElementById('groupsPage');
     
-    console.log('[GROUP-DETAILS] detailsModal found:', !!detailsModal, 'panel found:', !!panel, 'groupsPage found:', !!groupsPage);
+    console.log('[GROUP-DETAILS] detailsModal found:', !!detailsModal, 'groupsPage found:', !!groupsPage);
     
-    // Önce groupsPage modal'ı kapat (Aktif Gruplar listesi)
-    if (groupsPage && groupsPage.style.display !== 'none') {
-        console.log('[GROUP-DETAILS] Closing groupsPage modal...');
-        groupsPage.style.transition = 'opacity 0.2s ease-out';
-        groupsPage.style.opacity = '0';
+    // groupsPage'i tamamen gizle - display none
+    if (groupsPage) {
+        console.log('[GROUP-DETAILS] Hiding groupsPage modal completely');
+        groupsPage.style.display = 'none';
+        groupsPage.style.visibility = 'hidden';
         groupsPage.style.pointerEvents = 'none';
-        setTimeout(() => {
-            groupsPage.style.display = 'none';
-            groupsPage.style.visibility = 'hidden';
-            groupsPage.style.zIndex = '9998';
-        }, 200);
     }
     
-    // Panel'i fade-out ile gizle (smooth kapatış) 
-    if (panel && panel.style.display !== 'none') {
-        console.log('[GROUP-DETAILS] Closing activeGroupPanel...');
-        panel.style.transition = 'opacity 0.25s ease-out';
-        panel.style.opacity = '0';
-        panel.style.pointerEvents = 'none';
-        // 250ms sonra tamamen gizle
-        setTimeout(() => {
-            panel.style.display = 'none';
-            panel.style.visibility = 'hidden';
-            panel.style.zIndex = '1';
-        }, 250);
-    }
-    
-    // Modal'ı ön plana çık - Z-index yüksek, hemen görünür hale getir
-    detailsModal.style.zIndex = '10000';
+    // Modal'ı ön plana çık - hemen ve kalıcı olarak görünür hale getir
+    detailsModal.style.setProperty('z-index', '99999', 'important');
     detailsModal.style.visibility = 'visible';
     detailsModal.style.opacity = '1';
     detailsModal.style.display = 'flex';
+    detailsModal.style.pointerEvents = 'auto';
     detailsModal.classList.remove('modal-close');
     detailsModal.classList.add('modal-open');
-    console.log('[GROUP-DETAILS] groupDetailsModal shown with z-index 10000');
+    console.log('[GROUP-DETAILS] groupDetailsModal shown with z-index 99999');
     
     // Backend'den detaylı grup bilgisini çek
     const token = localStorage.getItem('hesapPaylas_token');
+    console.log('[GROUP-DETAILS] Fetching group details from:', `${API_BASE_URL}/groups/${groupId}`);
+    console.log('[GROUP-DETAILS] Token:', token ? 'present' : 'MISSING');
+    
     fetch(`${API_BASE_URL}/groups/${groupId}`, {
         headers: {
             'Authorization': `Bearer ${token}`
         }
     })
-    .then(r => r.json())
+    .then(r => {
+        console.log('[GROUP-DETAILS] Fetch response status:', r.status);
+        return r.json();
+    })
     .then(group => {
+        console.log('[GROUP-DETAILS] Fetch successful, group data:', group);
         // Grup adını doğru göster
         document.getElementById('detailGroupName').textContent = group.name || groupName || 'İsimsiz Grup';
         // Grup kodunu göster (code_formatted varsa formatlanmış hali, yoksa raw code)
@@ -2315,7 +2330,9 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
         detailsModal.style.display = 'flex';
     })
     .catch(error => {
-        console.error('Error loading group details:', error);
+        console.error('[GROUP-DETAILS] ERROR loading group details:', error);
+        console.error('[GROUP-DETAILS] Error message:', error.message);
+        console.error('[GROUP-DETAILS] Error stack:', error.stack);
         // Fallback: sadece basit bilgileri göster
         document.getElementById('detailGroupName').textContent = groupName || 'İsimsiz Grup';
         document.getElementById('detailGroupCode').textContent = '---';
@@ -2440,7 +2457,6 @@ function handleQRCodeInput(input) {
 
 function closeGroupDetailsModal() {
     const detailsModal = document.getElementById('groupDetailsModal');
-    const panel = document.getElementById('activeGroupPanel');
     const groupsPage = document.getElementById('groupsPage');
     
     console.log('[GROUP-DETAILS-CLOSE] Closing group details modal');
@@ -2453,33 +2469,16 @@ function closeGroupDetailsModal() {
     setTimeout(() => {
         detailsModal.style.visibility = 'hidden';
         detailsModal.style.display = 'none';
-        detailsModal.style.zIndex = '10000';
         detailsModal.style.opacity = '0';
+        detailsModal.style.pointerEvents = 'none';
         
-        // groupsPage'i geri göster (Aktif Gruplar listesi)
+        // groupsPage'i geri göster - eğer orada idik, geri dön
         if (groupsPage) {
             console.log('[GROUP-DETAILS-CLOSE] Restoring groupsPage modal');
             groupsPage.style.display = 'flex';
             groupsPage.style.visibility = 'visible';
-            groupsPage.style.zIndex = '9998';
-            groupsPage.style.transition = 'opacity 0.2s ease-in';
-            groupsPage.style.opacity = '0';
-            // Force reflow to trigger animation
-            void groupsPage.offsetWidth;
-            groupsPage.style.opacity = '1';
-        }
-        
-        // Panel'i geri göster FADE-IN ile (eğer açık idi)
-        if (panel && panel.style.display === 'none') {
-            console.log('[GROUP-DETAILS-CLOSE] Panel was open, restoring...');
-            panel.style.display = 'flex';
-            panel.style.visibility = 'visible';
-            panel.style.zIndex = '5000';
-            panel.style.transition = 'opacity 0.25s ease-in';
-            panel.style.opacity = '0';
-            // Force reflow to trigger animation
-            void panel.offsetWidth;
-            panel.style.opacity = '1';
+            groupsPage.style.pointerEvents = 'auto';
+            groupsPage.style.setProperty('z-index', '99999', 'important');
         }
     }, 300);
 }
