@@ -2763,6 +2763,9 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, qrCode) {
     
     // WhatsApp share button'ında grup kodunu sakla
     document.getElementById('whatsappShareBtn').setAttribute('data-group-code', qrCode);
+    
+    // Aktif grupları yenile ve floating button'ı göster
+    loadActiveGroups();
 }
 
 // WhatsApp'ta paylaş
