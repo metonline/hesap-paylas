@@ -742,6 +742,9 @@ function handleManualLogin(event) {
             
             // Kullanıcının aktif gruplarını kontrol et
             const token = response.token;
+            // IMPORTANT: Start with button hidden - let loadActiveGroups() decide
+            document.getElementById('activeGroupButton').style.display = 'none';
+            
             fetch(`${API_BASE_URL}/user/groups`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -749,20 +752,14 @@ function handleManualLogin(event) {
             })
             .then(response => response.json())
             .then(groups => {
-                // Eğer kullanıcının aktif grubu varsa balonu göster
-                if (groups && groups.length > 0) {
-                    document.getElementById('activeGroupButton').style.display = 'block';
-                } else {
-                    document.getElementById('activeGroupButton').style.display = 'none';
-                }
-                
-                // Aktif grupları panelde göster
+                // loadActiveGroups() will show/hide button based on groups
                 loadActiveGroups();
             })
             .catch(error => {
                 console.error('Error checking groups:', error);
-                // Hata durumunda balonu gizli tut
+                // Hata durumunda balonu gizli tut - loadActiveGroups() da gizler
                 document.getElementById('activeGroupButton').style.display = 'none';
+                loadActiveGroups();
             });
             
             // Form alanlarını temizle
@@ -1332,19 +1329,19 @@ function showPage(pageId) {
         page.style.zIndex = pageId === 'onboardingPage' ? '100' : '1';
         page.classList.add('active');
         
-        // If showing homePage, show the menu and floating groups button
+        // If showing homePage, show the menu and load floating groups button
         if (pageId === 'homePage' && homeMenu) {
             homeMenu.style.display = 'block';
             homeMenu.style.visibility = 'visible';
             homeMenu.style.opacity = '1';
             
-            // Show active groups floating button
+            // IMPORTANT: Don't show button directly - let loadActiveGroups() decide
+            // Load active groups immediately (it will show/hide button based on group count)
             const activeGroupButton = document.getElementById('activeGroupButton');
             if (activeGroupButton) {
-                activeGroupButton.style.display = 'block';
-                // Load active groups immediately
+                activeGroupButton.style.display = 'none'; // Start hidden
                 setTimeout(() => {
-                    loadActiveGroups();
+                    loadActiveGroups(); // This will show button if groups exist
                 }, 100);
             }
         }
