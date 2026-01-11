@@ -2604,6 +2604,12 @@ function openCreateGroupModal() {
     const randomColor = getRandomColor();
     selectedColor = randomColor;  // Global variable'a sakla
     
+    const modal = document.getElementById('createGroupModal');
+    
+    // Modal'ı data-attribute'a da sakla (closure problem'ini önle)
+    modal.setAttribute('data-group-color-name', randomColor.name);
+    modal.setAttribute('data-group-color-code', randomColor.code);
+    
     // Başlığı ayarla
     document.getElementById('modalTitle').textContent = 'Kategori Seç';
     
@@ -2626,7 +2632,6 @@ function openCreateGroupModal() {
     document.getElementById('createGroupMessage').textContent = '';
     
     // Show modal
-    const modal = document.getElementById('createGroupModal');
     modal.style.display = 'flex';
     modal.style.alignItems = 'center';
     modal.style.justifyContent = 'center';
@@ -2657,6 +2662,7 @@ function closeCreateGroupModal() {
 function createNewGroup() {
     const groupCategory = document.getElementById('newGroupCategory').value;
     const messageDiv = document.getElementById('createGroupMessage');
+    const modal = document.getElementById('createGroupModal');
     
     // Validasyon - Kategori seçilmiş mi?
     if (!groupCategory) {
@@ -2665,8 +2671,11 @@ function createNewGroup() {
         return;
     }
     
-    // Rastgele seçilen renk adını grup adı olarak kullan
-    const groupName = selectedColor ? selectedColor.name : '';
+    // Data-attribute'tan renk adını oku (global variable yerine - race condition'ı önle)
+    let groupName = modal.getAttribute('data-group-color-name');
+    if (!groupName) {
+        groupName = selectedColor ? selectedColor.name : 'Grup';  // Fallback
+    }
     const groupDescription = document.getElementById('newGroupDescription').value.trim();
     
     const baseURL = getBaseURL();
@@ -2781,11 +2790,22 @@ function loadActiveGroups() {
     .then(response => response.json())
     .then(groups => {
         const listContainer = document.getElementById('activeGroupsFloatingList');
+        const activeGroupButton = document.getElementById('activeGroupButton');
+        
         listContainer.innerHTML = '';
         
         if (groups.length === 0) {
+            // Grup yok - floating button'ı gizle
+            if (activeGroupButton) {
+                activeGroupButton.style.display = 'none';
+            }
             listContainer.innerHTML = '<p style="color: #999; text-align: center; padding: 20px 0;">Henüz gruba katılmadınız</p>';
         } else {
+            // Grup var - floating button'ı göster
+            if (activeGroupButton) {
+                activeGroupButton.style.display = 'block';
+            }
+            
             groups.forEach(group => {
                 const groupItem = document.createElement('div');
                 
@@ -2819,7 +2839,14 @@ function loadActiveGroups() {
             });
         }
     })
-    .catch(error => console.error('Gruplar yüklenemedi:', error));
+    .catch(error => {
+        console.error('Gruplar yüklenemedi:', error);
+        // Hata durumunda floating button'ı gizle
+        const activeGroupButton = document.getElementById('activeGroupButton');
+        if (activeGroupButton) {
+            activeGroupButton.style.display = 'none';
+        }
+    });
 }
 
 function selectActiveGroup(groupId, groupName) {
