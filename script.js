@@ -755,6 +755,9 @@ function handleManualLogin(event) {
                 } else {
                     document.getElementById('activeGroupButton').style.display = 'none';
                 }
+                
+                // Aktif grupları panelde göster
+                loadActiveGroups();
             })
             .catch(error => {
                 console.error('Error checking groups:', error);
