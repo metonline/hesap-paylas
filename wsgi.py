@@ -47,25 +47,9 @@ with app.app_context():
         db.session.commit()
         print("✓ Default user password reset")
         
-        # Create test group if user has no groups
-        if len(user.groups) == 0:
-            try:
-                test_group = Group(
-                    name='Test Grubu',
-                    category='Cafe/Restaurant',
-                    description='Test için oluşturulmuş grup',
-                    is_active=True,
-                    created_by=user.id
-                )
-                test_group.members.append(user)
-                db.session.add(test_group)
-                db.session.commit()
-                print("✓ Test group created for existing user")
-            except Exception as e:
-                print(f"✗ Error creating test group: {str(e)}")
-                db.session.rollback()
-        else:
-            print(f"✓ User has {len(user.groups)} group(s)")
+        # DON'T automatically create test groups - let users create their own
+        group_count = len(user.groups) if user.groups else 0
+        print(f"ℹ User has {group_count} group(s)")
 
 # WSGI app must be available for Gunicorn
 # This is the main entry point for production servers like Gunicorn
