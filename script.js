@@ -2838,7 +2838,7 @@ function loadActiveGroups() {
                 groupItem.innerHTML = `
                     <div style="font-weight: 700; color: #333; font-size: 1.05em;">${groupName}</div>
                     <div style="font-size: 0.9em; color: #666; display: flex; align-items: center; gap: 6px;">
-                        <span>🍽️</span>
+                        <span>💗</span>
                         <span>${category}</span>
                     </div>
                     <div style="font-size: 0.9em; color: #999; display: flex; align-items: center; gap: 6px;">
