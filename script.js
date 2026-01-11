@@ -2099,29 +2099,28 @@ function showTestGroups() {
 }
 
 function displayGroups(groups) {
-    console.log('[DISPLAY] displayGroups called with:', groups);
-    console.log('[DISPLAY] Number of groups:', groups ? groups.length : 'null');
+    console.log('[DISPLAY-MODAL] displayGroups called - MODAL GROUPS ONLY (not floating panel)');
+    console.log('[DISPLAY-MODAL] Number of groups:', groups ? groups.length : 'null');
     
     const activeGroups = groups.filter(g => g.status === 'active');
     const closedGroups = groups.filter(g => g.status === 'closed');
     
-    console.log('[DISPLAY] Filtered - Active:', activeGroups.length, 'Closed:', closedGroups.length);
+    console.log('[DISPLAY-MODAL] Filtered - Active:', activeGroups.length, 'Closed:', closedGroups.length);
     
-    // Aktif grupları göster
+    // SADECE modal'daki activeGroupsList'e yaz - Floating panel'e ASLA yazma!
     const activeList = document.getElementById('activeGroupsList');
-    console.log('[DISPLAY] activeList element found:', !!activeList);
-    console.log('[DISPLAY] activeList element:', activeList);
+    console.log('[DISPLAY-MODAL] activeList element found:', !!activeList);
     
     if (!activeList) {
-        console.error('[DISPLAY] ERROR: activeGroupsList element not found in DOM!');
+        console.error('[DISPLAY-MODAL] ERROR: activeGroupsList element not found - displayGroups will not update anything');
         return;
     }
     
     if (activeGroups.length > 0) {
-        console.log('[DISPLAY] Rendering', activeGroups.length, 'active groups...');
+        console.log('[DISPLAY-MODAL] Rendering', activeGroups.length, 'active groups in MODAL...');
         try {
             const html = activeGroups.map((group, index) => {
-                console.log('[DISPLAY] Rendering group', index + 1, ':', group.name, 'Status:', group.status);
+                console.log('[DISPLAY-MODAL] Rendering modal group', index + 1, ':', group.name, 'Status:', group.status);
                 const memberNames = (group.members || []).map(m => m.first_name).join(', ');
                 const groupName = group.name || 'İsimsiz Grup';
                 const groupDesc = group.description || 'Açıklama yok';
@@ -2137,15 +2136,15 @@ function displayGroups(groups) {
             </div>
         `;
             }).join('');
-            console.log('[DISPLAY] HTML generated, length:', html.length);
+            console.log('[DISPLAY-MODAL] HTML generated for modal, length:', html.length);
             activeList.innerHTML = html;
-            console.log('[DISPLAY] HTML set successfully');
+            console.log('[DISPLAY-MODAL] HTML set to activeGroupsList (modal) successfully');
         } catch (err) {
-            console.error('[DISPLAY] Error rendering groups:', err);
+            console.error('[DISPLAY-MODAL] Error rendering modal groups:', err);
             activeList.innerHTML = '<p style="color: #e74c3c; text-align: center; padding: 20px;">Hata: ' + err.message + '</p>';
         }
     } else {
-        console.log('[DISPLAY] No active groups - showing empty message');
+        console.log('[DISPLAY-MODAL] No active groups - showing empty message in MODAL');
         activeList.innerHTML = '<p style="color: #999; text-align: center; padding: 20px;">Henüz aktif grup yok</p>';
     }
     
