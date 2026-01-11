@@ -38,6 +38,36 @@ CORS(app, resources={
     }
 })
 
+# ==================== CRITICAL: Global Cache Control ====================
+@app.after_request
+def set_cache_headers(response):
+    """
+    Global cache control for all responses.
+    Prevents stale content while allowing efficient caching of assets.
+    """
+    path = request.path.lower()
+    
+    # HTML, API, dynamic content: NO CACHE
+    if (path == '/' or 
+        path.endswith('.html') or 
+        path.startswith('/api/')):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    
+    # JavaScript and CSS: NO CACHE (development - change after launch)
+    elif path.endswith(('.js', '.css')):
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    
+    # Images, fonts: Cache for 30 days
+    elif path.endswith(('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp',
+                        '.woff', '.woff2', '.ttf', '.eot', '.ico')):
+        response.headers['Cache-Control'] = 'public, max-age=2592000'
+    
+    return response
+
 # Config
 # ABSOLUTE path for database - avoid path conflicts
 if os.getenv('DATABASE_URL'):
