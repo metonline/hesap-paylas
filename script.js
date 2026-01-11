@@ -2826,13 +2826,10 @@ function loadActiveGroups() {
                 
                 const groupName = group.name || 'İsimsiz Grup';
                 const memberCount = group.members_count || 0;
-                const description = group.description || '';
+                const category = group.category || 'Genel Yaşam';
                 
-                // Format: "Pembe (1 kişi) Big Chef'te akşam yemeği"
-                let displayText = `${groupName} (${memberCount} kişi)`;
-                if (description) {
-                    displayText += ` ${description}`;
-                }
+                // Format: "Pembe (1 kişi) Cafe / Restaurant"
+                let displayText = `${groupName} (${memberCount} kişi) ${category}`;
                 
                 groupItem.innerHTML = `<div style="font-weight: 600; color: #333; word-break: break-word; line-height: 1.4;">${displayText}</div>`;
                 listContainer.appendChild(groupItem);
