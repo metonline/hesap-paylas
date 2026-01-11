@@ -2915,7 +2915,7 @@ function showGroupMembersModal(groupId) {
                 <div style="font-size: 0.85em; color: #666; margin-bottom: 5px; font-weight: 600;">🔑 Grup Kodu:</div>
                 <div style="font-size: 1.3em; font-weight: 700; color: #FF8800; letter-spacing: 2px; font-family: monospace;">${group.code || '---'}</div>
             </div>
-            <button id="shareWhatsAppBtn" style="
+            <button id="shareWhatsAppBtn" data-link="${participationLink}" data-name="${group.name || 'Grup'}" style="
                 width: 100%;
                 padding: 10px;
                 background: #25D366;
@@ -2930,7 +2930,7 @@ function showGroupMembersModal(groupId) {
                 💬 WhatsApp'ta Paylaş
             </button>
             <div style="margin-bottom: 10px;">
-                <button id="copyLinkBtn" style="
+                <button id="copyLinkBtn" data-link="${participationLink}" style="
                     width: 100%;
                     padding: 8px;
                     background: #FF8800;
@@ -2952,14 +2952,17 @@ function showGroupMembersModal(groupId) {
         membersList.appendChild(shareSection);
         
         // WhatsApp butonu event handler
-        document.getElementById('shareWhatsAppBtn').onclick = () => {
-            console.log('WhatsApp paylaş tıklandı. Link:', participationLink);
-            shareToWhatsApp(participationLink, group.name);
+        document.getElementById('shareWhatsAppBtn').onclick = (e) => {
+            const link = e.target.getAttribute('data-link');
+            const name = e.target.getAttribute('data-name');
+            console.log('WhatsApp paylaş tıklandı. Link:', link, 'Name:', name);
+            shareToWhatsApp(link, name);
         };
         
         // Copy butonu event handler
-        document.getElementById('copyLinkBtn').onclick = () => {
-            copyToClipboard(participationLink);
+        document.getElementById('copyLinkBtn').onclick = (e) => {
+            const link = e.target.getAttribute('data-link');
+            copyToClipboard(link);
             showNotification('Katılım linki kopyalandı!');
         };
         
@@ -3041,12 +3044,25 @@ document.addEventListener('click', (e) => {
 
 // Helper Functions
 function shareToWhatsApp(link, groupName) {
-    const message = `"${groupName}" grubuna katılmak için linke tıkla:\n${link}`;
+    // Link parametresinin doğru gelip gelmediğini kontrol et
+    if (!link) {
+        console.error('ERROR: Link undefined!');
+        showNotification('Hata: Katılım linki bulunamadı');
+        return;
+    }
+    
+    // Mesajda MUTLAKA linki ekle
+    const message = `📱 ${groupName} grubuna katıl\n\nLinki tıkla: ${link}`;
     const encodedMessage = encodeURIComponent(message);
     
-    // Web ve mobile uyumlu WhatsApp URL
-    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    console.log('shareToWhatsApp çağrıldı');
+    console.log('Link parametresi:', link);
+    console.log('Group ismi:', groupName);
+    console.log('Oluşturulacak mesaj:', message);
+    console.log('Encoded mesaj:', encodedMessage);
     
+    const whatsappUrl = `https://wa.me/?text=${encodedMessage}`;
+    console.log('WhatsApp URL:', whatsappUrl);
     // Yeni pencerede aç
     window.open(whatsappUrl, '_blank');
 }
