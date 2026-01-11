@@ -1,0 +1,94 @@
+{
+  "rest_001": {
+    "name": "Tarihi Kebapçı",
+    "phone": "0216-123-4567",
+    "website": "https://example.com/tarihi-kebapci",
+    "categories": {
+      "Kebaplar": [
+        {"name": "Adana Kebap", "price": 45.00, "emoji": "🌶️", "image": "https://example.com/images/adana-kebap.jpg"},
+        {"name": "Urfa Kebap", "price": 50.00, "emoji": "🔥", "image": "https://example.com/images/urfa-kebap.jpg"},
+        {"name": "İskender Kebap", "price": 55.00, "emoji": "🍖", "image": "https://example.com/images/iskender-kebap.jpg"},
+        {"name": "Şiş Kebap", "price": 60.00, "emoji": "🍢", "image": "https://example.com/images/sis-kebap.jpg"}
+      ],
+      "Mezeler": [
+        {"name": "Hummus", "price": 15.00, "emoji": "🥜", "image": "https://example.com/images/hummus.jpg"},
+        {"name": "Baba Ganoush", "price": 15.00, "emoji": "🍆", "image": "https://example.com/images/baba-ganoush.jpg"},
+        {"name": "Tzatziki", "price": 12.00, "emoji": "🥒", "image": "https://example.com/images/tzatziki.jpg"},
+        {"name": "Yaprak Sarma", "price": 18.00, "emoji": "🥬", "image": "https://example.com/images/yaprak-sarma.jpg"}
+      ],
+      "Salata": [
+        {"name": "Çoban Salatası", "price": 20.00, "emoji": "🥗", "image": "https://example.com/images/coban-salatasi.jpg"},
+        {"name": "Yeşil Salata", "price": 15.00, "emoji": "🥬", "image": "https://example.com/images/yesil-salata.jpg"},
+        {"name": "Coban Salatası", "price": 18.00, "emoji": "🥒", "image": "https://example.com/images/coban-salata.jpg"}
+      ],
+      "İçecekler": [
+        {"name": "Ayran", "price": 8.00, "emoji": "🥛", "image": "https://example.com/images/ayran.jpg"},
+        {"name": "Çay", "price": 5.00, "emoji": "🍵", "image": "https://example.com/images/cay.jpg"},
+        {"name": "Kola", "price": 10.00, "emoji": "🥤", "image": "https://example.com/images/kola.jpg"},
+        {"name": "Portakal Suyu", "price": 12.00, "emoji": "🍊", "image": "https://example.com/images/portakal-suyu.jpg"}
+      ]
+    }
+  },
+  "rest_002": {
+    "name": "Şef Mutfağı - Modern Türk Evi",
+    "phone": "0212-555-6789",
+    "website": "https://example.com/sef-mutfagi",
+    "categories": {
+      "Başlangıçlar": [
+        {"name": "Falafel", "price": 25.00, "emoji": "🔵", "image": "https://example.com/images/falafel.jpg"},
+        {"name": "Calamari Kızartması", "price": 35.00, "emoji": "🦑", "image": "https://example.com/images/calamari.jpg"},
+        {"name": "Halloumi Peynir", "price": 30.00, "emoji": "🧀", "image": "https://example.com/images/halloumi.jpg"}
+      ],
+      "Ana Yemekler": [
+        {"name": "Balık Pilaü", "price": 75.00, "emoji": "🐟", "image": "https://example.com/images/balik-pilau.jpg"},
+        {"name": "Tavuk Şiş", "price": 55.00, "emoji": "🍗", "image": "https://example.com/images/tavuk-sis.jpg"},
+        {"name": "Biftek", "price": 85.00, "emoji": "🥩", "image": "https://example.com/images/biftek.jpg"},
+        {"name": "Levrek Griyeli", "price": 90.00, "emoji": "🐠", "image": "https://example.com/images/levrek-griyeli.jpg"}
+      ],
+      "Tatlılar": [
+        {"name": "Baklava", "price": 20.00, "emoji": "🍯", "image": "https://example.com/images/baklava.jpg"},
+        {"name": "Künefe", "price": 25.00, "emoji": "🧡", "image": "https://example.com/images/kunefe.jpg"},
+        {"name": "Sütlaç", "price": 15.00, "emoji": "🥣", "image": "https://example.com/images/sutlac.jpg"},
+        {"name": "Cheesecake", "price": 22.00, "emoji": "🍰", "image": "https://example.com/images/cheesecake.jpg"}
+      ],
+      "İçecekler": [
+        {"name": "Çay", "price": 5.00, "emoji": "🍵", "image": "https://example.com/images/cay.jpg"},
+        {"name": "Kahve", "price": 8.00, "emoji": "☕", "image": "https://example.com/images/kahve.jpg"},
+        {"name": "Ayran", "price": 8.00, "emoji": "🥛", "image": "https://example.com/images/ayran.jpg"},
+        {"name": "Şarap (Kırmızı)", "price": 40.00, "emoji": "🍷", "image": "https://example.com/images/sarap-kirmizi.jpg"},
+        {"name": "Şarap (Beyaz)", "price": 40.00, "emoji": "🍾", "image": "https://example.com/images/sarap-beyaz.jpg"}
+      ]
+    }
+  },
+  "rest_003": {
+    "name": "Pizza Express",
+    "phone": "0216-777-8888",
+    "website": "https://example.com/pizza-express",
+    "categories": {
+      "Pizzalar": [
+        {"name": "Margarita", "price": 35.00, "emoji": "🍕", "image": "https://example.com/images/margarita.jpg"},
+        {"name": "Pepperoni", "price": 40.00, "emoji": "🍕", "image": "https://example.com/images/pepperoni.jpg"},
+        {"name": "Quattro Formaggi", "price": 50.00, "emoji": "🧀", "image": "https://example.com/images/quattro-formaggi.jpg"},
+        {"name": "Végétarienne", "price": 38.00, "emoji": "🥬", "image": "https://example.com/images/vegetarienne.jpg"},
+        {"name": "Seafood", "price": 65.00, "emoji": "🦐", "image": "https://example.com/images/seafood.jpg"}
+      ],
+      "Pastayla": [
+        {"name": "Carbonara", "price": 45.00, "emoji": "🍝", "image": "https://example.com/images/carbonara.jpg"},
+        {"name": "Bolognese", "price": 42.00, "emoji": "🍝", "image": "https://example.com/images/bolognese.jpg"},
+        {"name": "Pesto", "price": 40.00, "emoji": "🌿", "image": "https://example.com/images/pesto.jpg"},
+        {"name": "Alfredo", "price": 48.00, "emoji": "🧈", "image": "https://example.com/images/alfredo.jpg"}
+      ],
+      "Atıştırmalıklar": [
+        {"name": "Garlic Bread", "price": 18.00, "emoji": "🥖", "image": "https://example.com/images/garlic-bread.jpg"},
+        {"name": "Buffalo Wings", "price": 32.00, "emoji": "🍗", "image": "https://example.com/images/buffalo-wings.jpg"},
+        {"name": "Mozzarella Sticks", "price": 22.00, "emoji": "🧀", "image": "https://example.com/images/mozzarella-sticks.jpg"}
+      ],
+      "İçecekler": [
+        {"name": "Coca Cola", "price": 8.00, "emoji": "🥤", "image": "https://example.com/images/coca-cola.jpg"},
+        {"name": "Fanta", "price": 8.00, "emoji": "🥤", "image": "https://example.com/images/fanta.jpg"},
+        {"name": "Su", "price": 3.00, "emoji": "💧", "image": "https://example.com/images/su.jpg"},
+        {"name": "Ayran", "price": 8.00, "emoji": "🥛", "image": "https://example.com/images/ayran.jpg"}
+      ]
+    }
+  }
+}

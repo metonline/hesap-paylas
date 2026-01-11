@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<!--
+    Hesap Paylaş - Bill Splitting App
+    Version: 2.0.0
+    Last Updated: 2026-01-11
+    IMPORTANT: Service Worker will handle cache busting for script.js via query params
+-->
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#FF6B6B">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Hesap Paylaş">
+    <meta name="description" content="Hızlı ve adil hesap bölüştürme uygulaması">
+    <meta name="keywords" content="hesap, bölüşme, restoran, seyahat, paylaşma">
+    
+    <title>Hesap Paylaş</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23FF6B6B' width='192' height='192'/><text x='96' y='110' font-size='80' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>HP</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23FF6B6B' width='180' height='180' rx='40'/><text x='90' y='105' font-size='70' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>HP</text></svg>">
+    
+    <link rel="stylesheet" href="styles.css?v=32">
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    
+    <!-- DEBUG PANEL - TEMPORARY -->
+    <style>
+        #debugPanel {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: #f0f0f0;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 10px;
+            font-size: 11px;
+            font-family: monospace;
+            max-width: 250px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 99999;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+        }
+        #debugPanel div {
+            margin: 3px 0;
+            padding: 3px;
+            background: white;
+            border-radius: 3px;
+        }
+        #debugPanel .status-ok { color: green; font-weight: bold; }
+        #debugPanel .status-error { color: red; font-weight: bold; }
+        #debugPanel .status-info { color: blue; }
+    </style>
+    <style>
+        * {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        input, textarea, select {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+        
+        /* Balon efekti animasyonu */
+        @keyframes balloonFloat {
+            0% {
+                transform: translateY(0px) translateX(0px);
+            }
+            25% {
+                transform: translateY(-15px) translateX(5px);
+            }
+            50% {
+                transform: translateY(-25px) translateX(-8px);
+            }
+            75% {
+                transform: translateY(-15px) translateX(3px);
+            }
+            100% {
+                transform: translateY(0px) translateX(0px);
+            }
+        }
+        
+        #activeGroupToggle {
+            animation: balloonFloat 4s ease-in-out infinite !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Onboarding/Kayıt Sayfası -->
+        <div id="onboardingPage" class="page active" style="background: white; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; overflow-y: auto;">
+            <div class="onboarding-content">
+                <div class="onboarding-header" style="background: linear-gradient(135deg, #e8f0ff 0%, #f5e8ff 100%); padding: 12px 15px; border-radius: 0; margin-bottom: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;">
+                    <h1 style="font-size: 1.5em; margin: 0 0 -10px 0; letter-spacing: 0.5px; line-height: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <span style="color: #4A90E2; font-weight: 900;">Hesap</span>
+                        <span style="color: #27ae60; font-weight: 400; font-size: 1.2em;">%</span>
+                        <span style="color: #9B59B6; font-weight: 900;">Paylaş</span>
+                    </h1>
+                    <p style="font-size: 1.1em; color: #666; font-style: italic; margin: 8px 0 0 0; font-family: 'Pacifico', 'Brush Script MT', 'Great Vibes', cursive; font-weight: 400; letter-spacing: 0.5px;">tükettiğin kadar öde !</p>
+                </div>
+
+                <div class="signup-section">
+                    <!-- Signup Form -->
+                    <div id="signupForm" class="auth-form login-card" style="display: none;">
+                        <div class="login-header">ÜYEOL</div>
+                        <form id="manualSignupForm" class="login-form" onsubmit="handleManualSignup(event)">
+                            <input type="text" id="signupFirstName" placeholder="Ad" required class="login-input">
+                            <input type="text" id="signupLastName" placeholder="Soyad" required class="login-input">
+                            <input type="tel" id="phone" placeholder="Telefon (0532 333 22 22)" value="0532 333 22 22" required class="login-input" oninput="handlePhoneInput(this)">
+                            <input type="email" id="email" placeholder="E-posta" required class="login-input">
+                            <input type="password" id="password" placeholder="Şifre" required class="login-input">
+                            <button type="submit" class="login-btn">KAYDOL</button>
+                        </form>
+                        <p class="signup-text" style="padding: 0 20px 20px 20px;">Kaydolarak <a href="#">Şartları</a> kabul etmiş olursunuz</p>
+                    </div>
+                    
+                    <!-- Login Form -->
+                    <div id="loginForm" class="auth-form login-card">
+                        <div class="login-header">ÜYE GİRİŞİ</div>
+                        <form id="manualLoginForm" class="login-form" onsubmit="handleManualLogin(event)">
+                            <input type="email" id="loginEmail" placeholder="E-posta" required class="login-input" style="pointer-events: auto;">
+                            <input type="password" id="loginPassword" placeholder="Şifre" required class="login-input" style="pointer-events: auto;">
+                            <p class="forgot-link"><a href="#" onclick="showPasswordResetForm(); return false;">Şifreni mi unuttun?</a></p>
+                            <button type="submit" class="login-btn" style="pointer-events: auto;">ÜYE GİRİŞİ</button>
+                        </form>
+                        <p class="signup-text">Hesabın yok mu? <a href="#" onclick="showAuthForm('signup'); return false;">ÜYE OL</a></p>
+                    </div>
+
+                    <!-- Şifre Sıfırlama Formu -->
+                    <div id="resetPasswordForm" class="auth-form login-card" style="display: none;">
+                        <div class="login-header">ŞİFRE SIFIRLA</div>
+                        <form id="resetForm" class="login-form" onsubmit="handlePasswordReset(event)">
+                            <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">E-posta adresinizi girin, size sıfırlama kodu göndereceğiz.</p>
+                            <input type="email" id="resetEmail" placeholder="E-posta" required class="login-input" style="pointer-events: auto;">
+                            <input type="hidden" id="resetToken">
+                            <div id="resetCodeSection" style="display: none;">
+                                <input type="text" id="resetCode" placeholder="Sıfırlama Kodu" class="login-input" style="pointer-events: auto;">
+                                <input type="password" id="newPassword" placeholder="Yeni Şifre" class="login-input" style="pointer-events: auto;">
+                            </div>
+                            <button type="submit" class="login-btn" id="resetSubmitBtn" style="pointer-events: auto;">KOD GÖNDER</button>
+                        </form>
+                        <p class="signup-text"><a href="#" onclick="showAuthForm('login'); return false;">Giriş Sayfasına Dön</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ana Sayfa -->
+        <div id="homePage" class="page">
+            <div class="header" style="position: relative; background: linear-gradient(135deg, #e8f0ff 0%, #f5e8ff 100%); padding: 12px 15px; border-radius: 0; margin-bottom: 12px;">
+                <!-- Hamburger Menu Butonu -->
+                <button id="menuToggleBtn" class="menu-toggle-btn" onclick="toggleSideMenu()" title="Menu" style="position: absolute !important; top: 15px !important; left: 15px !important; background: white; border: none; border-radius: 8px; width: 40px; height: 40px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; padding: 0;">
+                    <span style="width: 20px; height: 2px; background: #333; transition: all 0.3s;"></span>
+                    <span style="width: 20px; height: 2px; background: #333; transition: all 0.3s;"></span>
+                    <span style="width: 20px; height: 2px; background: #333; transition: all 0.3s;"></span>
+                </button>
+
+                <!-- Profil İkonu -->
+                <button id="homeProfileBtn" class="profile-btn" onclick="goToProfile()" title="Profil" style="position: absolute !important; top: 15px !important; right: 15px !important; left: auto !important; display: none; background: white; border: none; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.1); transition: all 0.3s; z-index: 10; flex-shrink: 0;">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#333" stroke-width="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                </button>
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                    <div style="flex: 1; text-align: center;">
+                        <h1 style="font-size: 1.5em; margin: 0 0 -10px 0; letter-spacing: 0.5px; line-height: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                            <span class="hesap">Hesap</span>
+                            <span style="color: #27ae60; font-weight: 400; font-size: 1.2em;">%</span>
+                            <span class="paylas">Paylaş</span>
+                        </h1>
+                        <p style="font-size: 1.1em; color: #666; font-style: italic; margin: 8px 0 0 0; font-family: 'Pacifico', 'Brush Script MT', 'Great Vibes', cursive; font-weight: 400; letter-spacing: 0.5px;">tükettiğin kadar öde !</p>
+                    </div>
+                </div>
+                
+                <!-- Hoşgeldin Mesajı -->
+                <div id="homeWelcomeMessage" style="display: none; margin-top: 10px; padding: 10px; background: rgba(255,255,255,0.7); border-radius: 8px; text-align: center;">
+                    <p style="margin: 0; color: #333; font-weight: 600;">Hoşgeldin, <span id="homeUserName"></span>! 👋</p>
+                </div>
+            </div>
+            </div>
+            
+            <!-- Login Olan Kullanıcılar için Menü -->
+            <div id="homeUserMenu" style="display: none; padding: 20px;">
+                <div style="display: grid; grid-template-columns: 1fr; gap: 15px; max-width: 400px; margin: 0 auto;">
+                    <div class="option-card" onclick="checkUserAndNavigate()">
+                        <div class="option-icon">👥</div>
+                        <h2>Grup Kur / Katıl</h2>
+                    </div>
+                    
+                    <div class="option-card" onclick="checkUserForReservation()">
+                        <div class="option-icon">☎️</div>
+                        <h2>Kolay Rezervasyon</h2>
+                    </div>
+                </div>
+                
+                <!-- Geri Butonu - Gizlenmiş -->
+                <div style="text-align: center; margin-top: 30px; display: none !important;">
+                    <button onclick="goToProfile()" style="padding: 10px 20px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 0.95em; color: #333;">← Geri</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rezervasyon Sayfası -->
+        <div id="reservationPage" class="page">
+            <button onclick="backToHome()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.8em; cursor: pointer; color: #999; z-index: 10;" title="Kapat">×</button>
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            
+            <div class="form-container" style="padding: 15px;">
+                <h2 style="text-align: center; margin-bottom: 20px;">Seçiminizi yapın !</h2>
+                
+                <!-- Tür Seçimi Butonları -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                    <button onclick="setReservationType('restaurant')" style="padding: 15px; background: linear-gradient(135deg, #FF6B6B 0%, #FF8787 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <span style="font-size: 2em;">🍽️</span>
+                        <span>Cafe / Restaurant</span>
+                    </button>
+                    <button onclick="setReservationType('hotel')" style="padding: 15px; background: linear-gradient(135deg, #4ECDC4 0%, #44B3AB 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                        <span style="font-size: 2em;">🏨</span>
+                        <span>Hotel</span>
+                    </button>
+                </div>
+                
+                <!-- Hedef Konum Seçimi -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">📍 Hedef Konum (2 km çapında)</label>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <input type="text" id="targetLocation" placeholder="Manuel gir (Örn: Kızılay, Ankara)" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; box-sizing: border-box; cursor: text;">
+                        <button onclick="openMapSelection()" style="padding: 12px 20px; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.2em; white-space: nowrap; display: flex; align-items: center; gap: 5px;" title="Haritadan seç">
+                            🗺️
+                        </button>
+                    </div>
+                    <small style="display: block; margin-top: 5px; color: #999;">Manuel yazabilir veya harita butonuna tıklayarak seçebilirsiniz</small>
+                </div>
+                
+                <!-- Manuel İsim Girişi -->
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Mekan Adı (Manuel Giriş)</label>
+                    <input type="text" id="manualVenueName" placeholder="Örn: Tarihi Kebapçı, Luxor Otel..." style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; box-sizing: border-box;">
+                </div>
+                
+                <!-- Devam Butonu -->
+                <button onclick="handleReservationSearch()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.05em; font-weight: 600;">Devam Et</button>
+            </div>
+        </div>
+        
+        <!-- Arama Sonuçları Sayfası -->
+        <div id="searchResultsPage" class="page">
+            <button onclick="showPage('reservationPage')" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.8em; cursor: pointer; color: #999; z-index: 10;" title="Kapat">×</button>
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            
+            <div class="form-container" style="padding: 15px;">
+                <h2 style="text-align: center; margin-bottom: 20px;" id="searchResultsTitle">Arama Sonuçları</h2>
+                
+                <div id="resultsList" style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- Dinamik sonuçlar buraya gelecek -->
+                </div>
+            </div>
+        </div>
+            
+        <!-- Harita Modal -->
+            <div id="mapModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+                <div style="background: white; width: 100%; max-width: 500px; max-height: 90vh; border-radius: 12px; overflow: hidden; position: relative; display: flex; flex-direction: column;">
+                    <div style="background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); padding: 15px; display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+                        <h3 style="margin: 0; color: white; font-size: 1.1em;">🗺️ Konum Seç</h3>
+                        <button onclick="closeMapModal()" style="background: none; border: none; color: white; font-size: 1.5em; cursor: pointer;">×</button>
+                    </div>
+                    
+                    <div id="mapContainer" style="width: 100%; padding: 20px; background: linear-gradient(135deg, #f0f7ff 0%, #e8f1ff 100%); flex-shrink: 0; text-align: center; color: #666;">
+                        <p style="font-size: 2.5em; margin: 10px 0;">🗺️</p>
+                        <p style="margin: 10px 0; font-weight: 600;">Mekan adresini aşağıya yazınız</p>
+                        <p style="margin: 5px 0; font-size: 0.9em; color: #999;">Örn: Kadıköy Belediyesi, İstanbul</p>
+                    </div>
+                    
+                    <div style="padding: 15px; overflow-y: auto; flex: 1;">
+                        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #333;">Konum (Adres)</label>
+                        <input type="text" id="locationInput" placeholder="Mekan adresini giriniz..." style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 0.95em; box-sizing: border-box; margin-bottom: 12px;">
+                    </div>
+                    
+                    <div style="padding: 15px; border-top: 1px solid #ddd; display: flex; gap: 10px; flex-shrink: 0;">
+                        <button onclick="closeMapModal()" style="flex: 1; padding: 12px; background: #ccc; color: #333; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">İptal</button>
+                        <button onclick="confirmMapLocation()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">Onayla</button>
+                    </div>
+                </div>
+            </div>            </div>        </div>
+        
+        <!-- Mekan Detay Sayfası -->
+        <div id="venueDetailPage" class="page">
+            <button onclick="showPage('reservationPage')" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.8em; cursor: pointer; color: #999; z-index: 10;" title="Kapat">×</button>
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            
+            <div class="form-container" style="padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h2 id="venueDetailName" style="margin: 0 0 10px 0; color: #333; font-size: 1.8em;"></h2>
+                    <p id="venueDetailAddress" style="margin: 0; color: #999; font-size: 1em;"></p>
+                </div>
+                
+                <!-- 3 Eşit Buton -->
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <!-- Telefon Butonu -->
+                    <a id="venuePhoneButton" href="" style="text-decoration: none;">
+                        <button style="width: 100%; padding: 18px; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                            <span style="font-size: 1.3em;">📞</span>
+                            <span id="venuePhoneText">Telefon</span>
+                        </button>
+                    </a>
+                    
+                    <!-- E-Rezervasyon Butonu -->
+                    <button onclick="handleEreservation()" style="width: 100%; padding: 18px; background: linear-gradient(135deg, #FF6B6B 0%, #FF8787 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <span style="font-size: 1.3em;">📧</span>
+                        <span>E-Rezervasyon</span>
+                    </button>
+                    
+                    <!-- Adrese Git Butonu -->
+                    <button onclick="navigateToVenue()" style="width: 100%; padding: 18px; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-size: 1.1em; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <span style="font-size: 1.3em;">🗺️</span>
+                        <span>Adrese Git!</span>
+                    </button>
+                </div>
+                
+                <!-- Ek Bilgiler (Opsiyonel) -->
+                <div style="margin-top: 30px; padding: 20px; background: #f9f9f9; border-radius: 10px;">
+                    <h3 style="margin: 0 0 15px 0; color: #333; font-size: 1.2em;">ℹ️ Bilgiler</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.2em;">📍</span>
+                            <span id="venueDetailDistance" style="color: #666;">Mesafe bilgisi</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 1.2em;">🏪</span>
+                            <span id="venueDetailType" style="color: #666;">Mekan türü</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bilgi Girişi Sayfası -->
+        <!-- Grup Seçimi Sayfası -->
+        <div id="groupChoicePage" class="page">
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            
+            <div class="options-grid" style="margin-top: 20px; display: grid; grid-template-columns: 1fr; gap: 15px;">
+                <div class="option-card" onclick="openCreateGroupModal()" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">
+                    <div class="option-icon">➕</div>
+                    <h2>Grup Kur</h2>
+                </div>
+                
+                <div class="option-card" onclick="openJoinGroupModal()" style="background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%);">
+                    <div class="option-icon">🔗</div>
+                    <h2>Gruba Katıl</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grup Kodu Giriş Sayfası -->
+        <div id="joinCodePage" class="page" style="background: linear-gradient(135deg, #f5f0f9 0%, #faf8fc 100%);">
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            <button onclick="backToGroupChoice()" style="position: absolute; top: 75px; right: 15px; background: none; border: none; font-size: 28px; cursor: pointer; color: #7c3aed; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">✕</button>
+            
+            <div class="form-container" style="text-align: center; padding: 15px;">
+                
+                <div style="display: flex; gap: 8px; margin-bottom: 20px;">
+                    <button onclick="showPage('qrScannerPage'); setTimeout(() => startQRScanner(), 100);" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.95em;">🎥 Kamerayı Aç</button>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; text-align: left; margin-bottom: 8px; font-weight: 600; color: #333;">Grup Kodunu Yazınız</label>
+                    <input type="text" id="joinGroupCode" placeholder="xxx-xxx" style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1em; font-family: monospace; letter-spacing: 2px; box-sizing: border-box;">
+                </div>
+                
+                <button onclick="submitJoinCode()" style="width: 100%; padding: 12px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-bottom: 15px;">Devam Et</button>
+                
+                <div id="joinCodeResult"></div>
+            </div>
+        </div>
+
+        <!-- QR Kod Okuyucu Sayfası -->
+        <div id="qrScannerPage" class="page">
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            <div class="back-button" onclick="backToJoinCodePage()">← Geri</div>
+            
+            <div class="form-container" style="text-align: center; padding: 15px;">
+                <h2 style="margin-bottom: 20px;">QR Kod Okut</h2>
+                
+                <div style="position: relative; width: 100%; max-width: 300px; margin: 0 auto; background: #000; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+                    <video id="qrVideo" style="width: 100%; height: 300px; display: block;"></video>
+                    <canvas id="qrCanvas" style="display: none;"></canvas>
+                </div>
+                
+                <div id="qrResult" style="margin-top: 20px; min-height: 40px;">
+                    <p style="color: #999; font-size: 0.9em;">Kamerayı grup kodunun üzerine getir...</p>
+                </div>
+                
+                <button onclick="stopQRScanner()" style="margin-top: 20px; padding: 12px 20px; background: #e0e0e0; border: none; border-radius: 8px; cursor: pointer; font-size: 1em;">Kamerayı Kapat</button>
+            </div>
+        </div>
+
+        <!-- Grup Kodu Sayfası -->
+        <div id="groupCodePage" class="page" style="background: linear-gradient(135deg, #f5f0f9 0%, #faf8fc 100%); min-height: 100vh;">
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            
+            <div class="form-container" style="text-align: center; padding: 8px 15px;">
+                <h3 style="font-size: 1.3em; margin: 5px 0 15px 0; font-weight: 600; color: #333;">Grup Adınız : <span id="groupWelcomeTitle"></span></h3>
+                
+                <!-- QR Kodu Container - Sabitlenmiş Genişlik, Kompakt -->
+                <div style="margin: 0 auto 15px auto; width: fit-content;">
+                    <div id="qrCodeContainer" style="display: inline-block; padding: 8px; background: white; border-radius: 8px; border: 2px solid #f0f0f0;"></div>
+                </div>
+                
+                <!-- 2 Sütunlu Grid: Kod Card ve Paylaş Butonu (QR kodun genişliğine uygun) -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 auto 15px; width: fit-content;">
+                    <!-- Kod Output Card -->
+                    <div style="background: linear-gradient(135deg, #d4e8f7 0%, #e8f4fb 100%); padding: 12px 10px; border-radius: 8px; border: 2px solid #3498db; box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2); min-width: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                        <p id="groupCodeDisplay" style="font-size: 1.4em; color: #333; font-weight: bold; letter-spacing: 2px; font-family: monospace; margin: 0; text-align: center;"></p>
+                    </div>
+                    
+                    <!-- Paylaş Butonu -->
+                    <div style="display: flex; flex-direction: column; justify-content: center;">
+                        <button onclick="smartShareGroup()" style="padding: 12px 10px; font-size: 0.95em; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(17, 168, 83, 0.3); transition: all 0.3s; height: 100%; display: flex; align-items: center; justify-content: center;">💬 WhatsApp</button>
+                    </div>
+                </div>
+                
+                <p style="color: #666; margin: 0 0 15px 0; font-size: 0.75em; line-height: 1.3; text-align: center;">QR kodu ve Grup Kodunu kamera ile okutarak veya Paylaş butonu ile göndererek arkadaşlarınızı gruba dahil edebilirsiniz.</p>
+                
+                <div class="back-button" onclick="backToHome()" style="margin: 0 auto; width: fit-content;">← Geri</div>
+            </div>
+        </div>
+
+        <!-- Paylaşma Seçenekleri Modal -->
+        <div id="shareModal" class="modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+            <div style="background: white; border-radius: 12px; padding: 25px; width: 90%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+                <p style="text-align: center; font-size: 1.1em; color: #666; font-style: italic; margin: 8px 0 15px 0; font-family: 'Pacifico', 'Brush Script MT', 'Great Vibes', cursive; font-weight: 400;">tükettiğin kadar öde !</p>
+                <h3 style="margin-top: 0; margin-bottom: 20px; text-align: center;">Gruba Davet Et</h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <button class="share-option" onclick="shareViaWhatsApp()" style="padding: 15px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 1em; text-align: left;">
+                        💬 WhatsApp'ta Paylaş
+                    </button>
+                    <button class="share-option" onclick="shareViaSMS()" style="padding: 15px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 1em; text-align: left;">
+                        📱 SMS ile Gönder
+                    </button>
+                    <button class="share-option" onclick="copyGroupCode()" style="padding: 15px; background: #f0f0f0; border: 1px solid #ddd; border-radius: 8px; cursor: pointer; font-size: 1em; text-align: left;">
+                        📋 Kodu Kopyala
+                    </button>
+                </div>
+                
+                <button onclick="closeShareModal()" style="width: 100%; padding: 12px; margin-top: 15px; background: #e0e0e0; border: none; border-radius: 6px; cursor: pointer; font-size: 0.95em;">Kapat</button>
+            </div>
+        </div>
+
+        <div id="infoPage" class="page">
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            <div class="back-button" onclick="backToHome()">← Geri</div>
+            
+            <div class="logo-card" style="margin: 20px 15px;">
+                <h1 style="font-size: 2em; margin: 0 0 8px 0; letter-spacing: 0.5px;">
+                    <span style="color: #4A90E2; font-weight: 900;">Hesap</span>
+                    <span style="color: #999; font-weight: 400; font-size: 1.2em; margin: 0 8px;">/</span>
+                    <span style="color: #9B59B6; font-weight: 900;">Paylaş</span>
+                </h1>
+                <p style="font-size: 0.95em; color: #666; font-style: italic; margin: 12px 0 0 0; font-family: 'Great Vibes', cursive;">hem çok kolay, hem çok adil !</p>
+            </div>
+            
+            <div class="form-container">
+                <h2 id="infoTitle">Bilgilerinizi Girin</h2>
+                
+                <div class="form-group">
+                    <label for="infoFirstName">Adı:</label>
+                    <input type="text" id="infoFirstName" placeholder="Örn: Ahmet" autocomplete="off">
+                </div>
+                
+                <div class="form-group">
+                    <label for="infoLastName">Soyadı:</label>
+                    <input type="text" id="infoLastName" placeholder="Örn: Yılmaz" autocomplete="off">
+                </div>
+                
+                <div class="form-group" id="groupIdGroup" style="display: none;">
+                    <label for="groupId">Grup ID (İsteğe bağlı):</label>
+                    <input type="text" id="groupId" placeholder="QR koddan group ID" autocomplete="off">
+                </div>
+                
+                <button class="btn btn-primary" onclick="submitInfo()">Devam Et</button>
+            </div>
+        </div>
+
+        <!-- Restaurant Seçimi -->
+        <div id="restaurantPage" class="page">
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            <div class="back-button" onclick="backToInfo()">← Geri</div>
+            
+            <div class="logo-card" style="margin: 20px 15px;">
+                <h1 style="font-size: 2em; margin: 0 0 8px 0; letter-spacing: 0.5px;">
+                    <span style="color: #4A90E2; font-weight: 900;">Hesap</span>
+                    <span style="color: #999; font-weight: 400; font-size: 1.2em; margin: 0 8px;">/</span>
+                    <span style="color: #9B59B6; font-weight: 900;">Paylaş</span>
+                </h1>
+                <p style="font-size: 0.95em; color: #666; font-style: italic; margin: 12px 0 0 0; font-family: 'Great Vibes', cursive;">hem çok kolay, hem çok adil !</p>
+            </div>
+            
+            <div class="section">
+                <h2>🍽️ Restaurant Seç</h2>
+                <div id="restaurantList" class="restaurant-grid"></div>
+            </div>
+        </div>
+
+        <!-- Sidebar Menü -->
+        <div id="sideMenu" class="side-menu" style="position: fixed; top: 0; left: -280px; width: 280px; height: 100vh; background: white; box-shadow: 2px 0 10px rgba(0,0,0,0.1); z-index: 9998; transition: left 0.3s ease; overflow-y: auto;">
+            <div style="padding: 20px 15px;">
+                <button onclick="toggleSideMenu()" style="float: right; background: none; border: none; font-size: 24px; cursor: pointer; color: #333;">×</button>
+                <h3 style="margin: 0 0 20px 0; clear: both; color: #333; font-size: 1.2em;">Menü</h3>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <button onclick="navigateToMenu('groups')" class="menu-item" style="padding: 8px 10px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.9em; transition: all 0.3s; line-height: 1.3;">
+                        👥 Gruplarım
+                    </button>
+                    <button onclick="navigateToMenu('reservations')" class="menu-item" style="padding: 8px 10px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.9em; transition: all 0.3s; line-height: 1.3;">
+                        📅 Rezervasyonlarım
+                    </button>
+                    <button onclick="navigateToMenu('orders')" class="menu-item" style="padding: 8px 10px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.9em; transition: all 0.3s; line-height: 1.3;">
+                        🛒 Siparişlerim
+                    </button>
+                    <button onclick="navigateToMenu('favorites')" class="menu-item" style="padding: 8px 10px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.9em; transition: all 0.3s; line-height: 1.3;">
+                        ⭐ Favori Yerlerim
+                    </button>
+                    <button onclick="navigateToMenu('coupons')" class="menu-item" style="padding: 8px 10px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.9em; transition: all 0.3s; line-height: 1.3;">
+                        🎟️ Kuponlarım
+                    </button>
+                    <button onclick="navigateToMenu('rewards')" class="menu-item" style="padding: 8px 10px; background: #f0f0f0; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.9em; transition: all 0.3s; line-height: 1.3;">
+                        🏆 Ödül Puanlarım
+                    </button>
+                </div>
+                
+                <!-- Profil ve Çıkış Seçenekleri -->
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0; display: flex; flex-direction: column; gap: 8px;">
+                    <button onclick="toggleSideMenu(); goToProfile();" class="menu-item" style="padding: 8px 10px; background: #667eea; color: white; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.9em; transition: all 0.3s; line-height: 1.3;">
+                        👤 Profil
+                    </button>
+                    <button onclick="toggleSideMenu(); logout();" class="menu-item" style="padding: 8px 10px; background: #e74c3c; color: white; border: none; border-radius: 8px; text-align: left; cursor: pointer; font-size: 0.9em; transition: all 0.3s; line-height: 1.3;">
+                        🚪 Çıkış Yap
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Overlay -->
+        <div id="sideMenuOverlay" onclick="toggleSideMenu()" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0); z-index: 9997; transition: background 0.3s; display: none;"></div>
+
+        <!-- Profil Sayfası - Modal -->
+        <div id="profilePage" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: none; align-items: center; justify-content: center;">
+            <div style="position: relative; background: white; border-radius: 20px; max-width: 400px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px;">
+            <button onclick="closeProfileModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
+            
+            <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.5em; text-align: center;">👤 Profil</h2>
+            
+            <div style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e0e0e0;">
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #666; font-size: 0.9em;">Ad Soyad</span>
+                        <span id="profileName" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                        <span style="color: #666; font-size: 0.9em;">📧 E-posta</span>
+                        <span id="profileEmail" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                        <span style="color: #666; font-size: 0.9em;">📱 Telefon</span>
+                        <span id="profilePhone" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <button onclick="editProfile()" style="padding: 12px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
+                    ✏️ Düzenle
+                </button>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <button onclick="changePassword()" style="padding: 12px; background: #f5576c; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
+                    🔐 Şifre
+                </button>
+            </div>
+
+            <button onclick="logout()" style="width: 100%; padding: 12px; background: white; color: #e74c3c; border: 2px solid #e74c3c; border-radius: 10px; font-size: 0.95em; font-weight: 600; cursor: pointer;">
+                🚪 Çıkış Yap
+            </button>
+            </div>
+        </div>
+
+        </div>
+
+        <!-- Sidebar Menu -->
+        <div id="groupDetailsModal" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; align-items: center; justify-content: center; overflow-y: auto;">
+            <div style="position: relative; background: white; border-radius: 20px; max-width: 500px; width: 90%; margin: 20px auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px; max-height: 90vh; overflow-y: auto;">
+                <button onclick="closeGroupDetailsModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
+                
+                <h2 id="groupDetailTitle" style="margin: 0 0 20px 0; color: #333; font-size: 1.5em; text-align: center;">Grup Detayları</h2>
+                
+                <!-- Grup Bilgileri -->
+                <div style="background: #f9f9f9; border-radius: 12px; padding: 15px; border: 1px solid #e0e0e0; margin-bottom: 20px;">
+                    <div style="display: flex; flex-direction: column; gap: 0;">
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
+                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">📌 Grup Adı</span>
+                            <span id="detailGroupName" style="color: #999; font-weight: 600; font-size: 0.9em;">Gri</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
+                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">🔑 Grup Kodu</span>
+                            <span id="detailGroupCode" style="color: #e74c3c; font-weight: 700; font-size: 1.1em; letter-spacing: 1px;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
+                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">🏷️ Kategori</span>
+                            <span id="detailGroupCategory" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0; cursor: pointer;" onclick="toggleGroupMembersDetails()">
+                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">👥 Grup Üyeleri</span>
+                            <span id="detailGroupMemberCount" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e0e0e0;">
+                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">💰 Ödeme Dengesi</span>
+                            <span id="detailGroupBalance" style="color: #27ae60; font-weight: 700; font-size: 0.95em;">₺0.00</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                            <span style="color: #666; font-size: 0.9em; font-weight: 500;">📅 Grup Oluşturma Tarihi</span>
+                            <span id="detailGroupDate" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hesap Özeti/Siparişler -->
+                <div style="margin-bottom: 20px;">
+                    <h3 onclick="toggleOrderDetails()" style="color: #333; margin: 0 0 10px 0; font-size: 0.95em; font-weight: 600; cursor: pointer; user-select: none;">📋 Hesap Özeti ▼</h3>
+                    <div id="detailGroupOrders" style="background: #f9f9f9; border-radius: 10px; padding: 12px; border: 1px solid #e0e0e0; max-height: 200px; overflow-y: auto; display: none;">
+                    </div>
+                </div>
+                
+                <!-- Hesap Yönetim Düğmeleri -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; border-top: 1px solid #e0e0e0; padding-top: 15px;">
+                    <button onclick="closeGroupAccount()" style="padding: 12px; background: #f39c12; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
+                        🔒 Hesap Kapat
+                    </button>
+                    <button onclick="deleteGroupAccount()" style="padding: 12px; background: #c0392b; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
+                        🗑️ Hesap Sil
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menü Sayfası -->
+        <div id="menuPage" class="page">
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            <div class="back-button" onclick="backToRestaurant()">← Geri</div>
+            
+            <div class="logo-card" style="margin: 20px 15px;">
+                <h1 style="font-size: 2em; margin: 0 0 8px 0; letter-spacing: 0.5px;">
+                    <span style="color: #4A90E2; font-weight: 900;">Hesap</span>
+                    <span style="color: #999; font-weight: 400; font-size: 1.2em; margin: 0 8px;">/</span>
+                    <span style="color: #9B59B6; font-weight: 900;">Paylaş</span>
+                </h1>
+                <p style="font-size: 0.95em; color: #666; font-style: italic; margin: 12px 0 0 0; font-family: 'Great Vibes', cursive;">hem çok kolay, hem çok adil !</p>
+            </div>
+            
+            <div class="menu-header">
+                <h2 id="restaurantName">Restaurant Adı</h2>
+                <p id="restaurantInfo">Telefon: <span id="restaurantPhone"></span></p>
+            </div>
+            
+            <div class="tabs">
+                <div id="categoryTabs" class="category-tabs"></div>
+            </div>
+            
+            <div id="menuItems" class="menu-items"></div>
+            
+            <div class="menu-footer">
+                <button class="btn btn-secondary" onclick="goToCart()">🛒 Sipariş Listesine Git (Adet: <span id="cartCount">0</span>)</button>
+            </div>
+        </div>
+
+        <!-- Sipariş Listesi ve Hesap Bölme -->
+        <div id="cartPage" class="page">
+            <div class="standard-header">
+                <h1>
+                    <span class="hesap-word">Hesap</span>
+                    <span class="percent-sign">%</span>
+                    <span class="paylas-word">Paylaş</span>
+                </h1>
+                <p>tükettiğin kadar öde !</p>
+            </div>
+            <div class="back-button" onclick="backToMenu()">← Geri</div>
+            
+            <div class="logo-card" style="margin: 20px 15px;">
+                <h1 style="font-size: 2em; margin: 0 0 8px 0; letter-spacing: 0.5px;">
+                    <span style="color: #4A90E2; font-weight: 900;">Hesap</span>
+                    <span style="color: #999; font-weight: 400; font-size: 1.2em; margin: 0 8px;">/</span>
+                    <span style="color: #9B59B6; font-weight: 900;">Paylaş</span>
+                </h1>
+                <p style="font-size: 0.95em; color: #666; font-style: italic; margin: 12px 0 0 0; font-family: 'Great Vibes', cursive;">hem çok kolay, hem çok adil !</p>
+            </div>
+            
+            <h2>🛒 Siparişler ve Hesap Bölme</h2>
+            
+            <div id="ordersSection" class="orders-section">
+                <div id="ordersList"></div>
+            </div>
+            
+            <div class="summary-section">
+                <div class="summary-card">
+                    <h3>💰 Toplam Tutarlar</h3>
+                    <div id="summaryItems"></div>
+                    <hr>
+                    <div class="total-row">
+                        <strong>Genel Toplam:</strong>
+                        <strong id="grandTotal">0.00 ₺</strong>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="resetAll()">Yeni Hesaplama</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gruba Katıl Modal -->
+    <div id="joinGroupModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 90%; width: 100%;">
+            <span class="close" onclick="closeJoinGroupModal()">&times;</span>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="margin: 0 0 10px 0; color: #333;">Gruba Katıl</h2>
+                <p style="color: #666; margin: 0;">QR kodu okut veya kodu manuel gir</p>
+            </div>
+
+            <!-- Sekme Seçimi -->
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee;">
+                <button class="join-tab-btn active" onclick="switchJoinTab('scan')" style="flex: 1; padding: 12px; border: none; background: none; border-bottom: 3px solid #4A90E2; color: #333; font-weight: 600; cursor: pointer;">📱 QR Kod Tarat</button>
+                <button class="join-tab-btn" onclick="switchJoinTab('manual')" style="flex: 1; padding: 12px; border: none; background: none; color: #999; font-weight: 600; cursor: pointer;">✏️ Manuel Gir</button>
+            </div>
+
+            <!-- QR Tarama Sekme -->
+            <div id="scanTab" style="display: block;">
+                <div id="qr-reader" style="width: 100%; border-radius: 10px; overflow: hidden; background: #000; margin-bottom: 15px; border: 2px solid #ddd;"></div>
+                <div id="qr-reader-results" style="text-align: center; color: #666; min-height: 30px; margin-bottom: 15px;"></div>
+                <button class="btn btn-primary" id="startScanBtn" onclick="startQRScanner()" style="width: 100%; margin-bottom: 10px;">🎥 Kamerayı Aç</button>
+                <button class="btn btn-secondary" id="stopScanBtn" onclick="stopQRScanner()" style="width: 100%; display: none;">🛑 Kamerayı Kapat</button>
+            </div>
+
+            <!-- Manuel Kod Girme Sekme -->
+            <div id="manualTab" style="display: none;">
+                <input 
+                    type="text" 
+                    id="groupCodeInput" 
+                    placeholder="Grup kodunu gir (xxx-xxx)" 
+                    maxlength="7"
+                    oninput="handleManualCodeInput(this)"
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1.1em; text-align: center; letter-spacing: 2px; margin-bottom: 15px; font-weight: 600;"
+                >
+                <button class="btn btn-primary" onclick="joinGroupWithManualCode()" style="width: 100%;">Gruba Katıl</button>
+            </div>
+
+            <div id="joinGroupMessage" style="text-align: center; margin-top: 15px; min-height: 20px; color: #27ae60; font-weight: 600;"></div>
+        </div>
+    </div>
+
+    <!-- Yeni Grup Oluştur Modal -->
+    <div id="createGroupModal" class="modal" style="display: none; z-index: 10000;">
+        <div class="modal-content" style="max-width: 90%; width: 100%; max-height: 90vh; overflow-y: auto;">
+            <span class="close" onclick="closeCreateGroupModal()">&times;</span>
+            
+            <div style="text-align: center; margin-bottom: 20px;">
+                <h2 style="margin: 0 0 10px 0; color: #333;" id="modalTitle">Grup Adınız</h2>
+            </div>
+
+            <!-- Rastgele Renk Adı (Başlangıçta gizli) -->
+            <div id="groupNameSection" style="margin-bottom: 15px; text-align: center; display: none;">
+                <label style="display: none; margin-bottom: 8px; color: #333; font-weight: 600;">Grup Adı:</label>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 10px; padding: 15px; background: #f5f5f5; border-radius: 8px;">
+                    <div id="groupColorBox" style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #ddd; background-color: #FF0000;"></div>
+                    <div style="text-align: left;">
+                        <div style="font-weight: 600; font-size: 1.1em; color: #333;" id="groupColorName">Kırmızı</div>
+                    </div>
+                </div>
+                <input type="hidden" id="newGroupName" value="">
+            </div>
+
+            <!-- Kategori Seçimi - Butonlar (Başlangıçta gizli) -->
+            <div id="categorySection" style="margin-bottom: 15px; display: none;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+                    <button 
+                        id="cat-cafe" 
+                        onclick="selectCategory('Cafe / Restaurant')" 
+                        style="padding: 14px; border: 2px solid #ddd; border-radius: 8px; background: #FFE8B6; cursor: pointer; font-size: 0.75em; transition: all 0.2s; font-weight: 600; text-align: center; min-height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;"
+                    >
+<div style="font-size: 2em;">🍴</div>
+Cafe
+<br>
+Restaurant
+                    </button>
+                    <button 
+                        id="cat-life" 
+                        onclick="selectCategory('Genel Yaşam')" 
+                        style="padding: 14px; border: 2px solid #66BB6A; background: #C8E6C9; border-radius: 8px; cursor: pointer; font-size: 0.75em; transition: all 0.2s; font-weight: 600; text-align: center; min-height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;"
+                    >
+<div style="font-size: 2em;">🏠</div>
+Genel
+<br>
+Yaşam
+                    </button>
+                    <button 
+                        id="cat-travel" 
+                        onclick="selectCategory('Seyahat / Konaklama')" 
+                        style="padding: 14px; border: 2px solid #ddd; border-radius: 8px; background: #B3E5FC; cursor: pointer; font-size: 0.75em; transition: all 0.2s; font-weight: 600; text-align: center; min-height: 90px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;"
+                    >
+<div style="font-size: 2em;">✈️</div>
+Seyahat
+<br>
+Konaklama
+                    </button>
+                </div>
+                <input type="hidden" id="newGroupCategory" value="Genel Yaşam">
+            </div>
+
+            <!-- Grup Açıklaması (Opsiyonel) -->
+            <div id="descriptionSection" style="margin-bottom: 15px; display: none;">
+                <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600; text-align: center;">Kısa Açıklama Yazınız (Opsiyonel):</label>
+                <textarea 
+                    id="newGroupDescription" 
+                    placeholder="Örneğin Akşam yemeği, Brunch, Divan veya Develi'de yemek şeklinde belirtebilirsiniz" 
+                    style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-family: Arial, sans-serif; font-size: 1em; resize: vertical; min-height: 70px; box-sizing: border-box; transition: border-color 0.2s;"
+                    onchange="this.style.borderColor='#ddd'"
+                    onfocus="this.style.borderColor='#66BB6A'"
+                ></textarea>
+                <div style="font-size: 0.85em; color: #999; margin-top: 4px; display: none;">💡 Grup hakkında kısa bir açıklama yazabilirsiniz</div>
+            </div>
+
+            <button id="createGroupBtn" class="btn btn-primary" onclick="createNewGroup()" style="width: 100%; margin-bottom: 10px; display: none;">✅ Grubu Kur</button>
+            
+            <div id="createGroupMessage" style="text-align: center; margin-top: 15px; min-height: 20px; color: #27ae60; font-weight: 600;"></div>
+            <!-- Grup Oluşturma Başarılı - Sonuç Ekranı -->
+            <div id="groupSuccessSection" style="display: none; text-align: center;">
+                <!-- Grup Adı ve Renk Paleti -->
+                <div id="successColorSection" style="margin-bottom: 20px; text-align: center;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+                        <div id="successColorBox" style="width: 50px; height: 50px; border-radius: 50%; border: 3px solid #ddd; background-color: #FF0000;"></div>
+                        <div id="successColorName" style="font-weight: 700; font-size: 1.2em; color: #333;">Kırmızı</div>
+                    </div>
+                    <div id="successColorCode" style="display: none; font-size: 0.9em; color: #666; margin-top: 8px;">#FF0000</div>
+                </div>
+                
+                <!-- QR Kodu -->
+                <div style="margin-bottom: 20px; text-align: center;">
+                    <div style="font-size: 0.9em; color: #666; margin-bottom: 10px; font-weight: 600;">QR Kodu:</div>
+                    <div id="successQRCode" style="display: flex; justify-content: center;">
+                        <!-- QR kod buraya yerleştirilecek -->
+                    </div>
+                </div>
+                
+                <!-- Grup Kodu -->
+                <div style="margin-bottom: 20px; padding: 15px; background: #f0f0f0; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 0.9em; color: #666; margin-bottom: 10px; font-weight: 600;">Grup Kodu:</div>
+                    <div id="successGroupCode" style="font-weight: 700; font-size: 1.3em; color: #0066ff; letter-spacing: 2px;">867-765</div>
+                </div>
+                
+                <!-- Katılım Linki -->
+                <div style="margin-bottom: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 0.9em; color: #666; margin-bottom: 10px; font-weight: 600;">🔗 Katılım Linki:</div>
+                    <div id="successParticipationLink" style="font-weight: 600; font-size: 0.85em; color: #0099cc; word-break: break-all; line-height: 1.4;">https://hesap-paylas.onrender.com?code=867-765</div>
+                    <button onclick="copyParticipationLink()" style="width: 100%; margin-top: 10px; background: #0099cc; border: none; color: white; padding: 8px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.9em;">📋 Linki Kopyala</button>
+                </div>
+                
+                <!-- WhatsApp Paylaş Butonu -->
+                <button id="whatsappShareBtn" class="btn" onclick="shareGroupOnWhatsapp()" style="width: 100%; background: #25D366; border: none; color: white; padding: 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1em;">
+                    📱 WhatsApp'ta Paylaş
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ürün Detay Modal -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <p style="text-align: center; font-size: 1.1em; color: #666; font-style: italic; margin: 8px 0 15px 0; font-family: 'Pacifico', 'Brush Script MT', 'Great Vibes', cursive; font-weight: 400;">tükettiğin kadar öde !</p>
+            <span class="close" onclick="closeItemModal()">&times;</span>
+            
+            <div id="itemModalBody">
+                <!-- Dinamik içerik -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Yüzen Aktif Grup Buton -->
+    <div id="activeGroupButton" style="position: fixed; bottom: 30px; right: 30px; z-index: 999; cursor: pointer; display: none;">
+        <button id="activeGroupToggle" onclick="toggleActiveGroupPanel()" style="width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, #FF8800 0%, #E67E22 100%); border: none; color: white; font-size: 2em; box-shadow: 0 4px 15px rgba(255, 136, 0, 0.4); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease;">
+            👥
+        </button>
+        <div id="activeGroupPanel" style="display: none; position: absolute; bottom: 90px; right: 0; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); width: 280px; max-height: 400px; overflow-y: auto; padding: 15px;">
+            <h3 style="margin: 0 0 15px 0; color: #333; font-size: 1.1em; text-align: center; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">Aktif Gruplarım</h3>
+            <div id="activeGroupsFloatingList" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Gruplar dinamikman JavaScript tarafından yüklenir -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Grup Üyeleri Modal -->
+    <div id="groupMembersModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10001; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box;">
+        <div style="background: white; width: 100%; max-width: 400px; border-radius: 12px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);">
+            <button onclick="closeGroupMembersModal()" style="float: right; background: none; border: none; font-size: 24px; cursor: pointer; color: #999;">×</button>
+            <h3 id="memberModalTitle" style="margin: 0 0 20px 0; color: #333; font-size: 1.2em; text-align: center; clear: both;">Grup Üyeleri</h3>
+            <div id="membersList" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Üyeler buraya dinamikman eklenir -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Gruplarım Sayfası - Modal (MOVED OUTSIDE CONTAINER) -->
+    <div id="groupsPage" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: none; align-items: center; justify-content: center; overflow-y: auto;">
+        <div style="position: relative; background: white; border-radius: 20px; max-width: 500px; width: 90%; margin: 20px auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px;">
+            <button onclick="closeGroupsModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; line-height: 1;">×</button>
+            
+            <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.5em; text-align: center;">👥 Gruplarım</h2>
+            
+            <!-- Aktif Gruplar -->
+            <div style="margin-bottom: 25px;">
+                <h3 style="color: #27ae60; margin: 0 0 15px 0; font-size: 1.1em;">🟢 Aktif Gruplar</h3>
+                <div id="activeGroupsList" style="display: flex; flex-direction: column; gap: 10px;">
+                    <p style="color: #999; text-align: center; padding: 20px;">Yükleniyor...</p>
+                </div>
+            </div>
+            
+            <!-- Kapanmış Gruplar -->
+            <div>
+                <h3 style="color: #95a5a6; margin: 0 0 15px 0; font-size: 1.1em;">⚪ Kapanmış Gruplar</h3>
+                <div id="closedGroupsList" style="display: flex; flex-direction: column; gap: 10px;">
+                    <p style="color: #999; text-align: center; padding: 20px;">Yükleniyor...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR Code Libraries -->
+    <script src="https://unpkg.com/html5-qrcode@2.1.48/dist/html5-qrcode.min.js"></script>
+    
+    <script src="script.js"></script>
+</body>
+</html>
