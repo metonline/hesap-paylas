@@ -640,6 +640,7 @@ def create_group():
 def get_group(group_id):
     """Get group details"""
     group = Group.query.get_or_404(group_id)
+    creator = User.query.get(group.created_by) if group.created_by else None
     return jsonify({
         'id': group.id,
         'name': group.name,
@@ -649,6 +650,8 @@ def get_group(group_id):
         'code_formatted': format_group_code(group.code),
         'qr_code': group.qr_code,
         'created_at': group.created_at.isoformat(),
+        'created_by': group.created_by,
+        'creator': creator.to_dict() if creator else None,
         'members': [u.to_dict() for u in group.members],
         'orders': [{
             'id': o.id,
@@ -879,7 +882,22 @@ def server_error(e):
 def health():
     return jsonify({'status': 'ok', 'service': 'hesap-paylas-api'}), 200
 
-# ==================== Static Files Routes ====================
+@app.route('/api/stats', methods=['GET'])
+def get_stats():
+    """Get database statistics"""
+    try:
+        user_count = User.query.count()
+        group_count = Group.query.count()
+        order_count = Order.query.count()
+        
+        return jsonify({
+            'users': user_count,
+            'groups': group_count,
+            'orders': order_count,
+            'timestamp': datetime.utcnow().isoformat()
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 # Root index.html - must be BEFORE wildcard route
 @app.route('/api/admin/init-db', methods=['POST', 'GET'])

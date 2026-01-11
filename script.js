@@ -2179,16 +2179,17 @@ function displayGroups(groups) {
         try {
             const html = activeGroups.map((group, index) => {
                 console.log('[DISPLAY-MODAL] Rendering modal group', index + 1, ':', group.name, 'Status:', group.status);
-                const memberNames = (group.members || []).map(m => m.first_name).join(', ');
+                const memberCount = (group.members || []).length;
                 const groupName = group.name || 'İsimsiz Grup';
                 const groupDesc = group.description || 'Açıklama yok';
+                const groupCode = formatQRCode(group.qr_code);
+                
+                // Tek satırda gösterim: "Mor (3 kişi) Divan'da akşam yemeği (Grup kodu:123-456)"
+                const displayText = `${groupName} (${memberCount} kişi) ${groupDesc} (Grup kodu:${groupCode})`;
                 
                 return `
-            <div class="group-card-modal" data-group-id="${group.id}" data-group-name="${groupName.replace(/"/g, '&quot;')}" data-group-desc="${groupDesc.replace(/"/g, '&quot;')}" data-group-date="${group.created_at}" data-group-qr="${group.qr_code}" style="padding: 12px; background: #e8f8f5; border-left: 4px solid #27ae60; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
-                <div style="font-weight: 600; color: #27ae60; cursor: pointer; user-select: none;">⬇ ${groupName}</div>
-                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${groupDesc}</div>
-                <div style="font-size: 0.8em; color: #555; margin-top: 4px;">👥 ${memberNames || 'Üye yok'}</div>
-                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qr_code)}</div>
+            <div class="group-card-modal" data-group-id="${group.id}" data-group-name="${groupName.replace(/"/g, '&quot;')}" data-group-desc="${groupDesc.replace(/"/g, '&quot;')}" data-group-date="${group.created_at}" data-group-qr="${group.qr_code}" style="padding: 12px; background: #e3f2fd; border-left: 4px solid #1a237e; border-radius: 8px; cursor: pointer; transition: all 0.3s;">
+                <div style="font-weight: 600; color: #1a237e; cursor: pointer; user-select: none; word-break: break-word; line-height: 1.4;">${displayText}</div>
             </div>
         `;
             }).join('');
@@ -2222,15 +2223,17 @@ function displayGroups(groups) {
     const closedList = document.getElementById('closedGroupsList');
     if (closedGroups.length > 0) {
         const closedHtml = closedGroups.map(group => {
-            const memberNames = (group.members || []).map(m => m.first_name).join(', ');
+            const memberCount = (group.members || []).length;
             const groupName = group.name || 'İsimsiz Grup';
             const groupDesc = group.description || 'Açıklama yok';
+            const groupCode = formatQRCode(group.qr_code);
+            
+            // Tek satırda gösterim: "Mor (3 kişi) Divan'da akşam yemeği (Grup kodu:123-456)"
+            const displayText = `${groupName} (${memberCount} kişi) ${groupDesc} (Grup kodu:${groupCode})`;
+            
             return `
-            <div class="group-card-modal" data-group-id="${group.id}" data-group-name="${groupName.replace(/"/g, '&quot;')}" data-group-desc="${groupDesc.replace(/"/g, '&quot;')}" data-group-date="${group.created_at}" data-group-qr="${group.qr_code}" style="padding: 12px; background: #ecf0f1; border-left: 4px solid #95a5a6; border-radius: 8px; cursor: pointer; opacity: 0.8; transition: all 0.3s;">
-                <div style="font-weight: 600; color: #7f8c8d; cursor: pointer; user-select: none;">⬇ ${groupName}</div>
-                <div style="font-size: 0.85em; color: #666; margin-top: 4px;">${groupDesc}</div>
-                <div style="font-size: 0.8em; color: #555; margin-top: 4px;">👥 ${memberNames || 'Üye yok'}</div>
-                <div style="font-size: 0.75em; color: #999; margin-top: 6px;">📅 ${new Date(group.created_at).toLocaleDateString('tr-TR')} | 📊 Kod: ${formatQRCode(group.qr_code)}</div>
+            <div class="group-card-modal" data-group-id="${group.id}" data-group-name="${groupName.replace(/"/g, '&quot;')}" data-group-desc="${groupDesc.replace(/"/g, '&quot;')}" data-group-date="${group.created_at}" data-group-qr="${group.qr_code}" style="padding: 12px; background: #f5f5f5; border-left: 4px solid #9E9E9E; border-radius: 8px; cursor: pointer; opacity: 0.8; transition: all 0.3s;">
+                <div style="font-weight: 600; color: #757575; cursor: pointer; user-select: none; word-break: break-word; line-height: 1.4;">${displayText}</div>
             </div>
         `}).join('');
         closedList.innerHTML = closedHtml;
@@ -2299,9 +2302,46 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
         document.getElementById('detailGroupCategory').textContent = group.category || 'Genel Yaşam';
         document.getElementById('detailGroupDate').textContent = new Date(group.created_at).toLocaleDateString('tr-TR');
         
-        // Üye sayısını parantez içinde göster - onclick ile detay açılacak
+        // Üye sayısını parantez içinde göster
         const memberCount = (group.members || []).length;
         document.getElementById('detailGroupMemberCount').textContent = `(${memberCount} üye)`;
+        
+        // Üyeleri isim olarak inline göster - aynı isim varsa M. Güven formatı yap
+        const members = group.members || [];
+        const creator = group.creator;
+        
+        // Grubu kuran kişi + tüm üyeler
+        let allPeople = [];
+        if (creator) {
+            allPeople.push({ ...creator, isCreator: true });
+        }
+        // Grubu kuran kişi zaten üyeler arasında varsa tekrar ekleme
+        members.forEach(m => {
+            if (!creator || m.id !== creator.id) {
+                allPeople.push({ ...m, isCreator: false });
+            }
+        });
+        
+        if (allPeople.length > 0) {
+            // Aynı adlara sahip kişileri bul
+            const nameCount = {};
+            allPeople.forEach(p => {
+                const firstName = (p.first_name || p.firstName || '');
+                nameCount[firstName] = (nameCount[firstName] || 0) + 1;
+            });
+            
+            const memberNamesHtml = allPeople.map(p => {
+                const firstName = (p.first_name || p.firstName || '');
+                const lastName = (p.last_name || p.lastName || '');
+                // Aynı addan birden fazla varsa baş harfi göster
+                const displayName = nameCount[firstName] > 1 ? `${firstName.charAt(0)}. ${lastName}` : firstName;
+                const crownIcon = p.isCreator ? '👑 ' : '';
+                return `<span class="member-name-tag" onclick="showUserAccountDetails('${p.id}')" style="padding: 4px 8px; background: ${p.isCreator ? '#fff3cd' : '#e3f2fd'}; border: 1px solid ${p.isCreator ? '#ffc107' : '#90CAF9'}; border-radius: 12px; font-size: 0.85em; color: ${p.isCreator ? '#856404' : '#1976D2'}; cursor: pointer; font-weight: 500; user-select: none;" title="${firstName} ${lastName}${p.isCreator ? ' (Kuran)' : ''}">${crownIcon}${displayName}</span>`;
+            }).join('');
+            document.getElementById('detailGroupMemberNames').innerHTML = memberNamesHtml;
+        } else {
+            document.getElementById('detailGroupMemberNames').innerHTML = '<span style="color: #999; font-size: 0.85em;">Üye yok</span>';
+        }
         
         // Siparişleri/Hesap Özeti göster
         if (group.orders && group.orders.length > 0) {
@@ -2362,16 +2402,11 @@ function toggleOrderDetails() {
     }
 }
 
-// Grup üyeleri detaylarını toggle et
-function toggleGroupMembersDetails() {
-    const members = window.currentGroupMembers || [];
-    if (members.length === 0) {
-        alert('Henüz üye yok');
-        return;
-    }
-    
-    const membersList = members.map(m => `👤 ${m.first_name} ${m.last_name}`).join('\n');
-    alert(`Grup Üyeleri:\n\n${membersList}`);
+// Kullanıcı hesap detaylarını göster
+function showUserAccountDetails(userId) {
+    console.log('[MEMBER-DETAILS] Showing details for user:', userId);
+    // TODO: Kullanıcı hesap detayları modalı açılacak
+    alert(`Kullanıcı ${userId} için hesap detayları açılacak (çok yakında!)`);
 }
 
 // Grup hesabını kapat
@@ -2986,7 +3021,7 @@ function loadActiveGroups() {
                     padding: 12px;
                     background: #f9f9f9;
                     border-radius: 8px;
-                    border-left: 4px solid #FF8800;
+                    border-left: 4px solid #00BCD4;
                     cursor: pointer;
                     transition: all 0.2s ease;
                 `;
@@ -3046,15 +3081,12 @@ function selectActiveGroup(groupId, groupName) {
 function showGroupMembersModal(groupId) {
     console.log('showGroupMembersModal çağrıldı:', groupId);
     
-    const modal = document.getElementById('groupMembersModal');
+    const modal = document.getElementById('gruphızlıerişim');
     const membersList = document.getElementById('membersList');
     const memberModalTitle = document.getElementById('memberModalTitle');
     
-    console.log('Modal:', modal, 'membersList:', membersList, 'memberModalTitle:', memberModalTitle);
-    
     // Modal'ı aç
     modal.style.display = 'flex';
-    console.log('Modal display set to flex');
     
     // Token al
     const token = localStorage.getItem('hesapPaylas_token');
@@ -3065,7 +3097,6 @@ function showGroupMembersModal(groupId) {
     
     // Grup verilerini API'den getir
     const baseURL = getBaseURL();
-    console.log('API isteği gönderiliyor:', `${baseURL}/api/groups/${groupId}`);
     
     fetch(`${baseURL}/api/groups/${groupId}`, {
         headers: {
@@ -3073,167 +3104,157 @@ function showGroupMembersModal(groupId) {
         }
     })
     .then(response => {
-        console.log('API yanıtı alındı:', response.status);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
     })
     .then(group => {
-        console.log('Grup verisi başarıyla yüklendi:', group);
-        console.log('Modal açık mı?', modal.style.display);
-        
-        // Modal'ı tekrar aç (emin olmak için)
+        // Modal'ı aç
         modal.style.display = 'flex';
-        console.log('Modal yeniden flex olarak ayarlandı');
         
-        memberModalTitle.innerHTML = `
-            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px;">
-                <span>${group.name || 'İsimsiz Grup'}</span>
-            </div>
-        `;
+        // Başlık: "Hızlı İşlemler"
+        memberModalTitle.textContent = 'Hızlı İşlemler';
         membersList.innerHTML = '';
         
-        // Grup Kodu ve Paylaş Butonu
-        const shareSection = document.createElement('div');
-        shareSection.style.cssText = `
+        // Grup adı ve açıklaması tek satırda - MASK: Grup adı maskelenmiş gösterilir
+        const groupInfoSection = document.createElement('div');
+        groupInfoSection.style.cssText = `
             background: #f0f8ff;
-            border: 2px solid #FF8800;
             border-radius: 8px;
-            padding: 15px;
+            padding: 12px;
             margin-bottom: 15px;
-            text-align: center;
+            border-left: 4px solid #2196F3;
+            cursor: pointer;
         `;
-        
-        const participationLink = `${window.location.origin}?code=${group.code}`;
-        
-        shareSection.innerHTML = `
-            <div style="margin-bottom: 10px;">
-                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px; font-weight: 600;">🔑 Grup Kodu:</div>
-                <div style="font-size: 1.3em; font-weight: 700; color: #FF8800; letter-spacing: 2px; font-family: monospace;">${group.code || '---'}</div>
-            </div>
-            <button id="shareWhatsAppBtn" data-link="${participationLink}" data-name="${group.name || 'Grup'}" style="
-                width: 100%;
-                padding: 10px;
-                background: #25D366;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s ease;
-                margin-bottom: 8px;
-            " onmouseover="this.style.background='#20BA5A'" onmouseout="this.style.background='#25D366'">
-                💬 WhatsApp'ta Paylaş
-            </button>
-            <div style="margin-bottom: 10px;">
-                <button id="copyLinkBtn" data-link="${participationLink}" style="
-                    width: 100%;
-                    padding: 8px;
-                    background: #FF8800;
-                    color: white;
-                    border: none;
-                    border-radius: 6px;
-                    font-weight: 600;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    font-size: 0.9em;
-                " onmouseover="this.style.background='#E67E00'" onmouseout="this.style.background='#FF8800'">
-                    📋 Linki Kopyala
-                </button>
-            </div>
-            <div style="font-size: 0.75em; color: #999; padding: 8px; background: white; border-radius: 4px; word-break: break-all; font-family: monospace;">
-                ${participationLink}
-            </div>
+        // Grup adını maskeleyerek göster (ilk harfi + nokta + son harfi)
+        const groupName = group.name || 'İsimsiz Grup';
+        const maskedGroupName = groupName.length > 2 ? `${groupName.charAt(0)}${'.'.repeat(Math.max(1, groupName.length - 2))}${groupName.charAt(groupName.length - 1)}` : groupName;
+        const groupDisplay = `${maskedGroupName} (${group.code || '---'}) ${group.description || 'Açıklama yok'}`;
+        groupInfoSection.innerHTML = `
+            <div style="font-size: 0.9em; color: #1976D2; font-weight: 600; word-break: break-word; line-height: 1.4;" title="${groupName}">${groupDisplay}</div>
         `;
-        membersList.appendChild(shareSection);
+        groupInfoSection.onclick = () => showUserAccountDetails(group.created_by);
+        membersList.appendChild(groupInfoSection);
         
-        // WhatsApp butonu event handler
-        document.getElementById('shareWhatsAppBtn').onclick = (e) => {
-            const link = e.target.getAttribute('data-link');
-            const name = e.target.getAttribute('data-name');
-            console.log('WhatsApp paylaş tıklandı. Link:', link, 'Name:', name);
-            shareToWhatsApp(link, name);
-        };
-        
-        // Copy butonu event handler
-        document.getElementById('copyLinkBtn').onclick = (e) => {
-            const link = e.target.getAttribute('data-link');
-            copyToClipboard(link);
-            showNotification('Katılım linki kopyalandı!');
-        };
-        
-        // Grup Açıklaması
-        if (group.description) {
-            const descSection = document.createElement('div');
-            descSection.style.cssText = `
-                background: #f9f9f9;
-                border-radius: 8px;
-                padding: 12px;
-                margin-bottom: 15px;
-                border-left: 4px solid #FF8800;
-            `;
-            descSection.innerHTML = `
-                <div style="font-size: 0.85em; color: #666; margin-bottom: 5px; font-weight: 600;">Açıklama:</div>
-                <div style="color: #333; font-size: 0.95em;">${group.description}</div>
-            `;
-            membersList.appendChild(descSection);
-        }
-        
-        // Üyeler Listesi
+        // Üyeler - aynı isimli olanları işle
         if (group.members && group.members.length > 0) {
+            // Üyeleri inceleyerek aynı isim olanları bul
+            const memberNames = group.members.map(m => m.first_name || m.firstName);
+            const duplicates = memberNames.filter((item, index) => memberNames.indexOf(item) !== index);
+            
             const membersTitle = document.createElement('div');
             membersTitle.style.cssText = `
                 font-weight: 600;
                 color: #333;
-                margin-bottom: 10px;
-                margin-top: 10px;
+                margin-bottom: 15px;
                 font-size: 0.95em;
             `;
-            membersTitle.textContent = `👥 Üyeler (${group.members.length})`;
-            membersList.appendChild(membersTitle);
             
+            // Başlık
+            const titleSpan = document.createElement('span');
+            titleSpan.textContent = `👥 Üyeler (${group.members.length}): `;
+            membersTitle.appendChild(titleSpan);
+            
+            // Her üyeyi tıklanabilir span olarak ekle
             group.members.forEach((member, index) => {
-                const memberItem = document.createElement('div');
-                memberItem.style.cssText = `
-                    padding: 12px;
-                    background: #f9f9f9;
+                const firstName = member.first_name || member.firstName;
+                const lastName = member.last_name || member.lastName;
+                
+                // Eğer bu isim duplicate ise, isim + soyadının baş harfini göster
+                const displayName = duplicates.includes(firstName) ? `${firstName.charAt(0)}.${lastName}` : firstName;
+                
+                const memberSpan = document.createElement('span');
+                memberSpan.textContent = displayName;
+                memberSpan.style.cssText = `
+                    padding: 2px 6px;
+                    background: #e3f2fd;
+                    border: 1px solid #90CAF9;
                     border-radius: 8px;
-                    border-left: 4px solid #FF8800;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
+                    color: #1976D2;
+                    cursor: pointer;
+                    font-weight: 500;
+                    margin-right: 6px;
+                    user-select: none;
+                    transition: all 0.2s ease;
                 `;
-                memberItem.innerHTML = `
-                    <span style="font-size: 1em; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; background: #FF8800; color: white; border-radius: 50%; font-weight: 600; font-size: 0.85em;">${index + 1}</span>
-                    <div>
-                        <div style="font-weight: 600; color: #333;">${member.first_name} ${member.last_name}</div>
-                        <div style="font-size: 0.8em; color: #999;">${member.email}</div>
-                    </div>
-                `;
-                membersList.appendChild(memberItem);
+                memberSpan.onmouseover = () => {
+                    memberSpan.style.background = '#90CAF9';
+                    memberSpan.style.color = 'white';
+                };
+                memberSpan.onmouseout = () => {
+                    memberSpan.style.background = '#e3f2fd';
+                    memberSpan.style.color = '#1976D2';
+                };
+                memberSpan.onclick = () => showUserAccountDetails(member.id);
+                memberSpan.title = `${firstName} ${lastName}`;
+                
+                membersTitle.appendChild(memberSpan);
             });
-        } else {
-            const noMembers = document.createElement('p');
-            noMembers.style.cssText = 'color: #999; text-align: center; padding: 10px;';
-            noMembers.textContent = 'Henüz üye bulunmamaktadır';
-            membersList.appendChild(noMembers);
+            
+            membersList.appendChild(membersTitle);
         }
+        
+        // Sipariş / Harcama Butonu
+        const orderBtn = document.createElement('button');
+        orderBtn.style.cssText = `
+            width: 100%;
+            padding: 12px;
+            background: #FF9800;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 15px;
+            font-size: 0.95em;
+        `;
+        orderBtn.textContent = '📊 Sipariş / Harcama';
+        orderBtn.onmouseover = () => orderBtn.style.background = '#F57C00';
+        orderBtn.onmouseout = () => orderBtn.style.background = '#FF9800';
+        orderBtn.onclick = () => {
+            console.log('Sipariş / Harcama tıklandı');
+            // Bu buton henüz implement edilmemiş, ileride doldurulacak
+            showNotification('Sipariş/Harcama özelliği yakında aktif olacak');
+        };
+        membersList.appendChild(orderBtn);
+        
+        // Davet linkini WhatsApp'ta Paylaş - Yeşil Buton (EN ALTTA)
+        const participationLink = `${window.location.origin}?code=${group.code}`;
+        const whatsappBtn = document.createElement('button');
+        whatsappBtn.style.cssText = `
+            width: 100%;
+            padding: 12px;
+            background: #25D366;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95em;
+        `;
+        whatsappBtn.textContent = '💬 Davet linkini WhatsApp\'ta Paylaş';
+        whatsappBtn.onmouseover = () => whatsappBtn.style.background = '#20BA5A';
+        whatsappBtn.onmouseout = () => whatsappBtn.style.background = '#25D366';
+        whatsappBtn.onclick = () => shareToWhatsApp(participationLink, group.name);
+        membersList.appendChild(whatsappBtn);
     })
     .catch(error => {
-        console.error('Grup detayları yüklenemedi - CATCH:', error);
+        console.error('Grup detayları yüklenemedi:', error);
         membersList.innerHTML = '<p style="color: #c0392b; text-align: center; padding: 20px;">Grup detayları yüklenemedi: ' + error.message + '</p>';
     });
 }
 
 function closeGroupMembersModal() {
-    const modal = document.getElementById('groupMembersModal');
+    const modal = document.getElementById('gruphızlıerişim');
     modal.style.display = 'none';
 }
 
 // Modal dışına tıklandığında kapat
 document.addEventListener('click', (e) => {
-    const modal = document.getElementById('groupMembersModal');
+    const modal = document.getElementById('gruphızlıerişim');
     if (e.target === modal) {
         closeGroupMembersModal();
     }
