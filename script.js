@@ -1,8 +1,9 @@
 /**
  * Hesap Paylaş - Main Application Script
- * Version: 2.0.6-no-sw
- * Last Updated: 2026-01-11
+ * Version: 2.0.7-force-deploy
+ * Last Updated: 2026-01-11 13:45:00
  * NOTE: Service Worker disabled - Using HTTP headers for cache control only
+ * BUILD: Forced Render redeploy - Timestamp marker to verify deployment
  */
 
 // SERVICE WORKER COMPLETELY DISABLED

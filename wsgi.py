@@ -1,5 +1,6 @@
 """
 WSGI entry point for Flask
+FORCE DEPLOY: 2026-01-11 13:45:00 - Service Worker disable fix v2.0.7
 """
 import os
 import sys
