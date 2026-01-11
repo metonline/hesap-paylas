@@ -1,5 +1,5 @@
 // Service Worker - PWA desteği
-const CACHE_NAME = 'hesap-paylas-v2';
+const CACHE_NAME = 'hesap-paylas-v3-' + Date.now();  // Timestamp for aggressive cache busting
 
 // GitHub Pages pathed deployment'ı handle et
 const isGitHubPages = self.location.hostname === 'metonline.github.io';
@@ -48,6 +48,14 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', event => {
   // API istekleri network-only - cache yapma
   if (event.request.url.includes('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+  
+  // HTML ve script dosyaları ALWAYS network-only - cache yapma
+  if (event.request.url.includes('index.html') || 
+      event.request.url.includes('script.js') ||
+      event.request.url.endsWith('/')) {
     event.respondWith(fetch(event.request));
     return;
   }
