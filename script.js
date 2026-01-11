@@ -2816,6 +2816,9 @@ function loadActiveGroups() {
                     border-left: 4px solid #FF8800;
                     cursor: pointer;
                     transition: all 0.2s ease;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
                 `;
                 groupItem.onmouseover = () => groupItem.style.background = '#f0f0f0';
                 groupItem.onmouseout = () => groupItem.style.background = '#f9f9f9';
@@ -2826,15 +2829,23 @@ function loadActiveGroups() {
                 
                 const groupName = group.name || 'İsimsiz Grup';
                 const memberCount = group.members_count || 0;
-                const description = group.description || '';
+                const category = group.category || 'Genel Yaşam';
                 
-                // Format: "Sarı (1 kişi) Big Chef'te öğle yemeği"
-                let displayText = `${groupName} (${memberCount} kişi)`;
-                if (description) {
-                    displayText += ` ${description}`;
-                }
-                
-                groupItem.innerHTML = `<div style="font-weight: 600; color: #333; word-break: break-word; line-height: 1.4;">${displayText}</div>`;
+                // Format: 3 lines
+                // Line 1: Group name
+                // Line 2: 🍽️ Category
+                // Line 3: 👥 Member count
+                groupItem.innerHTML = `
+                    <div style="font-weight: 700; color: #333; font-size: 1.05em;">${groupName}</div>
+                    <div style="font-size: 0.9em; color: #666; display: flex; align-items: center; gap: 6px;">
+                        <span>🍽️</span>
+                        <span>${category}</span>
+                    </div>
+                    <div style="font-size: 0.9em; color: #999; display: flex; align-items: center; gap: 6px;">
+                        <span>👥</span>
+                        <span>${memberCount} kişi</span>
+                    </div>
+                `;
                 listContainer.appendChild(groupItem);
             });
         }
