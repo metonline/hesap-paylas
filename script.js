@@ -120,17 +120,25 @@ function joinGroupWithCode(groupCode) {
 
 // Detect environment and set API base URL
 const API_BASE_URL = (() => {
-    // API is on same server/port
     const protocol = window.location.protocol;
     const hostname = window.location.hostname;
     const port = window.location.port;
     
-    // Build API URL with same host/port as frontend
+    // Local development detection
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        // Local: Frontend runs on Live Server (usually port 5500 or 3000)
+        // Backend runs on Flask (port 5000)
+        // Always use backend's actual port
+        console.log('[API] Local environment detected - using Flask backend on port 5000');
+        return `${protocol}//${hostname}:5000/api`;
+    }
+    
+    // Production: API is on same server/port (via nginx proxy)
     const baseUrl = port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}`;
     return `${baseUrl}/api`;
 })();
 
-console.log('API Base URL:', API_BASE_URL);
+console.log('[API] Base URL:', API_BASE_URL);
 
 // Helper function to get base URL for API
 function getBaseURL() {
@@ -218,7 +226,17 @@ function handleGoogleResponse(response) {
             localStorage.setItem('hesapPaylas_token', response.token);
             localStorage.setItem('hesapPaylas_user', JSON.stringify(response.user));
             app.currentUser = response.user;
-            
+
+            // Check for pending group code after Google login
+            const pendingCode = sessionStorage.getItem('pendingGroupCode');
+            if (pendingCode) {
+                console.log('Processing pending group code after Google login:', pendingCode);
+                sessionStorage.removeItem('pendingGroupCode');
+                setTimeout(() => {
+                    joinGroupWithCode(pendingCode);
+                }, 500);
+            }
+
             showPage('homePage');
         })
         .catch(error => {
@@ -492,15 +510,15 @@ const api = {
             
             if (!response.ok) {
                 const contentType = response.headers.get('content-type');
-                let error;
                 if (contentType && contentType.includes('application/json')) {
                     const result = await response.json();
-                    error = result.error || 'API request failed';
+                    console.error('API Error:', result);
+                    throw result; // JSON'u doğrudan fırlat
                 } else {
-                    error = `HTTP ${response.status}: ${response.statusText}`;
+                    const error = `HTTP ${response.status}: ${response.statusText}`;
+                    console.error('API Error:', error);
+                    throw new Error(error);
                 }
-                console.error('API Error:', error);
-                throw new Error(error);
             }
             
             const contentType = response.headers.get('content-type');
@@ -799,8 +817,24 @@ function handleManualLogin(event) {
         })
         .catch(error => {
             console.error('Login error:', error);
-            const errorStr = error.message || error.toString();
-            alert(errorStr.includes('401') || errorStr.includes('Invalid') ? 'E-posta veya şifre yanlış!' : 'Giriş sırasında hata oluştu: ' + errorStr);
+            // error nesnesi hem string hem object olabilir, kontrol et
+            let errorCode = '';
+            if (typeof error === 'object' && error.error) {
+                errorCode = error.error;
+            } else if (typeof error === 'string') {
+                errorCode = error;
+            } else if (error.message) {
+                errorCode = error.message;
+            }
+            if (errorCode.includes('user_not_found')) {
+                alert('Sistemde böyle bir kullanıcı bulunmuyor... Üye ol sayfasına yönlendirileceksiniz...');
+                showAuthForm('signup');
+                showPage('onboardingPage');
+            } else if (errorCode.includes('wrong_password')) {
+                alert('Şifre yanlış!');
+            } else {
+                alert('Giriş sırasında hata oluştu: ' + errorCode);
+            }
         });
 }
 

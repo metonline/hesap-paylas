@@ -108,7 +108,7 @@ class Group(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.Text, nullable=True)
-    code = db.Column(db.String(10), unique=True, nullable=False)  # 6 digit code: XXX-XXX
+    code = db.Column(db.String(10), unique=True, nullable=False, default=lambda: generate_group_code())  # 6 digit code: XXX-XXX
     qr_code = db.Column(db.String(255), nullable=True)
     category = db.Column(db.String(100), nullable=True, default='Genel Yaşam')  # Cafe/Restaurant, Genel Yaşam, Seyahat/Konaklama
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
@@ -209,14 +209,12 @@ def login():
         return jsonify({'error': 'Missing email or password'}), 400
     
     user = User.query.filter_by(email=data['email']).first()
-    
     if not user:
         print(f"[LOGIN] User not found: {data['email']}")
-        return jsonify({'error': 'Invalid email or password'}), 401
-    
+        return jsonify({'error': 'user_not_found'}), 404
     if not user.check_password(data['password']):
         print(f"[LOGIN] Password mismatch for user: {data['email']}")
-        return jsonify({'error': 'Invalid email or password'}), 401
+        return jsonify({'error': 'wrong_password'}), 401
     
     print(f"[LOGIN] Successful login for: {data['email']}")
     token = generate_token(user.id)
