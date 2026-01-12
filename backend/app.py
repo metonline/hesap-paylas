@@ -1054,6 +1054,39 @@ def debug_database():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/debug/current-user', methods=['GET'])
+@token_required
+def debug_current_user():
+    """Debug endpoint - check current logged-in user"""
+    from sqlalchemy import text
+    
+    user_id = request.user_id
+    user = User.query.get(user_id)
+    
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Raw SQL query for groups
+    sql = text("""
+        SELECT DISTINCT g.id, g.name, g.code FROM groups g
+        INNER JOIN group_members gm ON g.id = gm.group_id
+        WHERE gm.user_id = :user_id AND g.is_active = true
+    """)
+    
+    groups_result = db.session.execute(sql, {"user_id": user_id}).fetchall()
+    groups_list = [{'id': row[0], 'name': row[1], 'code': row[2]} for row in groups_result]
+    
+    return jsonify({
+        'user': {
+            'id': user.id,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name
+        },
+        'groups_from_sql': groups_list,
+        'groups_count': len(groups_list)
+    }), 200
+
 @app.route('/api/stats', methods=['GET'])
 def get_stats():
     """Get database statistics"""
