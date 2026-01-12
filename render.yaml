@@ -2,7 +2,7 @@ services:
   - type: web
     name: hesap-paylas-api
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && python init_db.py
     startCommand: gunicorn --workers 1 --worker-class sync --timeout 120 --access-logfile - --error-logfile - wsgi:app
     envVars:
       - key: DATABASE_URL
