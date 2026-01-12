@@ -38,13 +38,9 @@ print(f"[APP] BASE_DIR exists: {BASE_DIR.exists()}")
 print(f"[APP] index.html exists: {(BASE_DIR / 'index.html').exists()}")
 print(f"[APP] Files in BASE_DIR: {sorted([f.name for f in BASE_DIR.glob('*') if f.is_file()])[:10]}", flush=True)
 
-# Initialize Flask with static folder for frontend files
-app = Flask(
-    __name__,
-    static_folder=str(BASE_DIR),
-    static_url_path='',
-    template_folder=str(BASE_DIR)
-)
+# Initialize Flask - DON'T use static_folder for now, serve manually
+# Using explicit path serving instead of Flask's static system
+app = Flask(__name__)
 
 # CORS configuration for GitHub Pages and local development
 CORS(app, resources={
@@ -718,40 +714,78 @@ def serve_index():
     """Serve index.html for root path"""
     try:
         index_file = BASE_DIR / 'index.html'
+        print(f"[SERVE /] Attempting to serve from: {index_file}", flush=True)
+        print(f"[SERVE /] File exists: {index_file.exists()}", flush=True)
+        
         if not index_file.exists():
-            print(f"[STATIC] index.html not found at {index_file}", flush=True)
-            return jsonify({'error': 'Frontend not available'}), 503
+            print(f"[ERROR] index.html not found", flush=True)
+            return jsonify({'error': f'Frontend not found at {index_file}'}), 503
+        
         with open(index_file, 'r', encoding='utf-8') as f:
             content = f.read()
+        
+        print(f"[SERVE /] SUCCESS: Serving {len(content)} bytes", flush=True)
         return content, 200, {'Content-Type': 'text/html; charset=utf-8'}
     except Exception as e:
+        import traceback
         print(f"[ERROR] serve_index failed: {e}", flush=True)
-        return jsonify({'error': str(e)}), 500
+        print(traceback.format_exc(), flush=True)
+        return jsonify({'error': f'Error: {str(e)}'}), 500
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    """Serve static files or fallback to index.html"""
+    """Serve static files or fallback to index.html for SPA"""
     # Skip API routes - they're handled by Flask routes above
     if filename.startswith('api/'):
+        print(f"[API] {filename} - skipped (routed via Flask)", flush=True)
         return jsonify({'error': 'Not Found'}), 404
     
     try:
         file_path = BASE_DIR / filename
+        print(f"[STATIC] {filename} -> {file_path}", flush=True)
+        
         if file_path.exists() and file_path.is_file():
-            # Serve the file
-            return send_from_directory(str(BASE_DIR), filename)
+            # Serve the file with proper MIME type
+            with open(file_path, 'rb') as f:
+                content = f.read()
+            
+            # Basic MIME type detection
+            mime_types = {
+                '.html': 'text/html; charset=utf-8',
+                '.css': 'text/css; charset=utf-8',
+                '.js': 'application/javascript; charset=utf-8',
+                '.json': 'application/json',
+                '.png': 'image/png',
+                '.jpg': 'image/jpeg',
+                '.jpeg': 'image/jpeg',
+                '.svg': 'image/svg+xml',
+                '.ico': 'image/x-icon',
+                '.webp': 'image/webp'
+            }
+            
+            file_ext = file_path.suffix.lower()
+            mime_type = mime_types.get(file_ext, 'application/octet-stream')
+            
+            print(f"[STATIC] {filename} FOUND ({len(content)} bytes), mime={mime_type}", flush=True)
+            return content, 200, {'Content-Type': mime_type}
+        
+        print(f"[STATIC] {filename} NOT FOUND", flush=True)
         
         # Fallback to index.html for SPA routing
         index_file = BASE_DIR / 'index.html'
         if index_file.exists():
+            print(f"[SPA] Serving index.html as fallback", flush=True)
             with open(index_file, 'r', encoding='utf-8') as f:
                 content = f.read()
             return content, 200, {'Content-Type': 'text/html; charset=utf-8'}
         
+        print(f"[ERROR] No fallback index.html", flush=True)
         return jsonify({'error': 'Not Found'}), 404
     except Exception as e:
+        import traceback
         print(f"[ERROR] serve_static({filename}) failed: {e}", flush=True)
-        return jsonify({'error': str(e)}), 500
+        print(traceback.format_exc(), flush=True)
+        return jsonify({'error': f'Error: {str(e)}'}), 500
 
 # ==================== Group Routes ====================
 
