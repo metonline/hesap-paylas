@@ -716,35 +716,42 @@ def reopen_account():
 @app.route('/')
 def serve_index():
     """Serve index.html for root path"""
-    print(f"[STATIC] Serving index.html from {BASE_DIR}", flush=True)
     try:
-        return send_from_directory(BASE_DIR, 'index.html')
+        index_file = BASE_DIR / 'index.html'
+        if not index_file.exists():
+            print(f"[STATIC] index.html not found at {index_file}", flush=True)
+            return jsonify({'error': 'Frontend not available'}), 503
+        with open(index_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return content, 200, {'Content-Type': 'text/html; charset=utf-8'}
     except Exception as e:
-        print(f"[ERROR] Failed to serve index.html: {e}", flush=True)
-        return jsonify({'error': 'Index file not found'}), 404
+        print(f"[ERROR] serve_index failed: {e}", flush=True)
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/<path:filename>')
 def serve_static(filename):
-    """Serve static files"""
+    """Serve static files or fallback to index.html"""
     # Skip API routes - they're handled by Flask routes above
     if filename.startswith('api/'):
         return jsonify({'error': 'Not Found'}), 404
     
-    print(f"[STATIC] Requested: {filename}", flush=True)
-    
-    # Try to serve as file
-    file_path = os.path.join(BASE_DIR, filename)
-    if os.path.exists(file_path) and os.path.isfile(file_path):
-        print(f"[STATIC] Found file: {file_path}", flush=True)
-        return send_from_directory(BASE_DIR, filename)
-    
-    # Otherwise serve index.html (for SPA routing)
-    print(f"[STATIC] File not found, serving index.html as fallback", flush=True)
     try:
-        return send_from_directory(BASE_DIR, 'index.html')
+        file_path = BASE_DIR / filename
+        if file_path.exists() and file_path.is_file():
+            # Serve the file
+            return send_from_directory(str(BASE_DIR), filename)
+        
+        # Fallback to index.html for SPA routing
+        index_file = BASE_DIR / 'index.html'
+        if index_file.exists():
+            with open(index_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return content, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        
+        return jsonify({'error': 'Not Found'}), 404
     except Exception as e:
-        print(f"[ERROR] Failed to serve fallback index.html: {e}", flush=True)
-        return jsonify({'error': 'Index file not found'}), 404
+        print(f"[ERROR] serve_static({filename}) failed: {e}", flush=True)
+        return jsonify({'error': str(e)}), 500
 
 # ==================== Group Routes ====================
 
