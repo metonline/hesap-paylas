@@ -3,16 +3,12 @@ services:
     name: hesap-paylas-api
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python wsgi.py
+    startCommand: gunicorn wsgi:app
     envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: hesap-paylas-db
           property: connectionString
-      - key: FLASK_ENV
-        value: production
-      - key: PORT
-        value: "10000"
 
   - type: postgres
     name: hesap-paylas-db
