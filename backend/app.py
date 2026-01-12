@@ -22,11 +22,21 @@ from google.oauth2 import id_token
 load_dotenv()
 
 # Get parent directory (main project root)
+# On Render, working directory is /app, so this will resolve to /app
 BASE_DIR = Path(__file__).parent.parent
 
-print(f"\n[APP] BASE_DIR: {BASE_DIR}")
+# Fallback: if BASE_DIR/index.html doesn't exist, check common Render paths
+if not (BASE_DIR / 'index.html').exists():
+    # Try /app (Render default)
+    alt_dir = Path('/app')
+    if (alt_dir / 'index.html').exists():
+        BASE_DIR = alt_dir
+        print(f"[APP] Using alternative BASE_DIR: {BASE_DIR}", flush=True)
+
+print(f"[APP] BASE_DIR: {BASE_DIR}")
 print(f"[APP] BASE_DIR exists: {BASE_DIR.exists()}")
-print(f"[APP] Files in BASE_DIR: {list(BASE_DIR.glob('*.html'))[:5]}", flush=True)
+print(f"[APP] index.html exists: {(BASE_DIR / 'index.html').exists()}")
+print(f"[APP] Files in BASE_DIR: {sorted([f.name for f in BASE_DIR.glob('*') if f.is_file()])[:10]}", flush=True)
 
 # Initialize Flask with static folder for frontend files
 app = Flask(
