@@ -73,8 +73,8 @@ def sync_local_to_render():
                         password_hash=row['password_hash'] if row['password_hash'] else None,
                         avatar_url=row['avatar_url'] if row['avatar_url'] else None,
                         bonus_points=row['bonus_points'] if row['bonus_points'] else 0,
-                        is_active=row['is_active'] if row['is_active'] else True,
-                        is_deleted=row['is_deleted'] if row['is_deleted'] else False,
+                        is_active=bool(row['is_active']) if row['is_active'] is not None else True,
+                        is_deleted=bool(row['is_deleted']) if row['is_deleted'] is not None else False,
                         account_type=row['account_type'] if row['account_type'] else 'owner'
                     )
                     db.session.add(new_user)

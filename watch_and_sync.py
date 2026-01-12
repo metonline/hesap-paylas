@@ -1,8 +1,9 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 Real-time Database Sync Watcher
-Lokal SQLite'deki değişiklikleri sürekli Render'a aktarır
 Watches local SQLite for changes and syncs to Render in real-time
+Lokal SQLite'deki değişiklikleri sürekli Render'a aktarır
 """
 
 import os
@@ -15,11 +16,20 @@ from dotenv import load_dotenv
 
 # Add backend to path
 sys.path.insert(0, os.path.dirname(__file__))
-
 load_dotenv()
 
-# Track last sync time per table
+# Force UTF-8 on Windows
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 last_sync_times = {}
+
+def log(message):
+    """Print with timestamp"""
+    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"[{timestamp}] {message}", flush=True)
 
 def sync_users_realtime(sqlite_path, render_url):
     """Sync users from SQLite to Render in real-time"""
@@ -30,31 +40,20 @@ def sync_users_realtime(sqlite_path, render_url):
         sqlite_conn.row_factory = sqlite3.Row
         sqlite_cursor = sqlite_conn.cursor()
         
-        # Connect to Render
-        render_engine = create_engine(render_url, echo=False)
+        render_engine = create_engine(render_url, echo=False, pool_pre_ping=True)
         render_conn = render_engine.connect()
         
-        # Get all users from SQLite
-        sqlite_cursor.execute("SELECT * FROM users ORDER BY updated_at DESC LIMIT 1")
-        latest = sqlite_cursor.fetchone()
+        sqlite_cursor.execute("SELECT * FROM users ORDER BY updated_at DESC")
+        all_users = sqlite_cursor.fetchall()
+        synced = 0
         
-        if latest:
-            # Check if there are new/updated users since last sync
-            sqlite_cursor.execute("""
-                SELECT * FROM users 
-                WHERE updated_at > datetime('now', '-30 seconds')
-            """)
-            
-            new_users = sqlite_cursor.fetchall()
-            synced = 0
-            
-            for row in new_users:
-                # Check if exists in Render
+        for row in all_users:
+            try:
                 check_sql = text("SELECT id FROM users WHERE email = :email LIMIT 1")
                 result = render_conn.execute(check_sql, {"email": row['email']})
+                existing = result.fetchone()
                 
-                if result.fetchone():
-                    # Update
+                if existing:
                     update_sql = text("""
                         UPDATE users 
                         SET first_name = :fn, last_name = :ln, phone = :ph,
@@ -69,14 +68,12 @@ def sync_users_realtime(sqlite_path, render_url):
                         "ph": row['phone'],
                         "ph_hash": row['password_hash'],
                         "bp": row['bonus_points'],
-                        "active": row['is_active'],
-                        "deleted": row['is_deleted'],
+                        "active": bool(row['is_active']),
+                        "deleted": bool(row['is_deleted']),
                         "at": row['account_type'],
                         "email": row['email']
                     })
-                    synced += 1
                 else:
-                    # Insert
                     insert_sql = text("""
                         INSERT INTO users 
                         (first_name, last_name, email, phone, password_hash, 
@@ -91,22 +88,30 @@ def sync_users_realtime(sqlite_path, render_url):
                         "ph": row['phone'],
                         "ph_hash": row['password_hash'],
                         "bp": row['bonus_points'],
-                        "active": row['is_active'],
-                        "deleted": row['is_deleted'],
+                        "active": bool(row['is_active']),
+                        "deleted": bool(row['is_deleted']),
                         "at": row['account_type']
                     })
-                    synced += 1
-            
-            if synced > 0:
+                
+                synced += 1
+            except Exception as row_err:
+                log(f"[WARN] User sync error for {row['email']}: {str(row_err)[:100]}")
+                continue
+        
+        if synced > 0:
+            try:
                 render_conn.commit()
-                print(f"✅ Synced {synced} users")
+                log(f"[SYNC] Synced {synced} users to Render")
+            except Exception as e:
+                log(f"[ERROR] Commit error: {str(e)[:100]}")
+                render_conn.rollback()
         
         sqlite_conn.close()
         render_conn.close()
         return True
         
     except Exception as e:
-        print(f"❌ User sync error: {e}")
+        log(f"[ERROR] User sync failed: {str(e)[:100]}")
         return False
 
 def sync_groups_realtime(sqlite_path, render_url):
@@ -118,64 +123,108 @@ def sync_groups_realtime(sqlite_path, render_url):
         sqlite_conn.row_factory = sqlite3.Row
         sqlite_cursor = sqlite_conn.cursor()
         
-        # Connect to Render
-        render_engine = create_engine(render_url, echo=False)
+        render_engine = create_engine(render_url, echo=False, pool_pre_ping=True)
         render_conn = render_engine.connect()
         
-        # Get all groups (simple approach - get all and upsert)
         sqlite_cursor.execute("SELECT * FROM groups")
-        
         all_groups = sqlite_cursor.fetchall()
         synced = 0
         
         for row in all_groups:
             try:
-                # Check if exists in Render
                 check_sql = text("SELECT id FROM groups WHERE code = :code LIMIT 1")
                 result = render_conn.execute(check_sql, {"code": row['code']})
+                existing = result.fetchone()
                 
-                if not result.fetchone():
-                    # Insert
+                if not existing:
                     insert_sql = text("""
                         INSERT INTO groups 
-                        (name, code, description, created_by, is_active)
-                        VALUES (:name, :code, :desc, :cb, :active)
+                        (name, code, description, created_by, is_active, created_at, updated_at)
+                        VALUES (:name, :code, :desc, :cb, :active, NOW(), NOW())
                         ON CONFLICT (code) DO NOTHING
                     """)
                     render_conn.execute(insert_sql, {
                         "name": row['name'],
                         "code": row['code'],
-                        "desc": row['description'] if row['description'] else None,
-                        "cb": row['created_by'] if row['created_by'] else 1,
-                        "active": row['is_active'] if row['is_active'] else True
+                        "desc": row.get('description'),
+                        "cb": row.get('created_by', 1),
+                        "active": bool(row.get('is_active', True))
                     })
                     synced += 1
             except Exception as row_err:
-                print(f"⚠️  Row sync error for group {row['code']}: {row_err}")
+                log(f"[WARN] Group sync error for {row['code']}: {str(row_err)[:100]}")
                 continue
         
         if synced > 0:
             try:
                 render_conn.commit()
-                print(f"✅ Synced {synced} groups")
-            except Exception as commit_err:
-                print(f"⚠️  Commit error: {commit_err}")
+                log(f"[SYNC] Synced {synced} groups to Render")
+            except Exception as e:
+                log(f"[ERROR] Commit error: {str(e)[:100]}")
+                render_conn.rollback()
         
         sqlite_conn.close()
         render_conn.close()
         return True
         
     except Exception as e:
-        print(f"❌ Group sync error: {e}")
+        log(f"[ERROR] Group sync failed: {str(e)[:100]}")
+        return False
+
+def sync_group_members_realtime(sqlite_path, render_url):
+    """Sync group members from SQLite to Render"""
+    try:
+        from sqlalchemy import create_engine, text
+        
+        sqlite_conn = sqlite3.connect(sqlite_path)
+        sqlite_conn.row_factory = sqlite3.Row
+        sqlite_cursor = sqlite_conn.cursor()
+        
+        render_engine = create_engine(render_url, echo=False, pool_pre_ping=True)
+        render_conn = render_engine.connect()
+        
+        sqlite_cursor.execute("SELECT group_id, user_id FROM group_members")
+        all_members = sqlite_cursor.fetchall()
+        synced = 0
+        
+        for row in all_members:
+            try:
+                insert_sql = text("""
+                    INSERT INTO group_members (group_id, user_id)
+                    VALUES (:gid, :uid)
+                    ON CONFLICT (group_id, user_id) DO NOTHING
+                """)
+                result = render_conn.execute(insert_sql, {
+                    "gid": row['group_id'],
+                    "uid": row['user_id']
+                })
+                synced += 1
+            except Exception as row_err:
+                log(f"[WARN] Group member sync error: {str(row_err)[:100]}")
+                continue
+        
+        if synced > 0:
+            try:
+                render_conn.commit()
+                log(f"[SYNC] Synced {synced} group members to Render")
+            except Exception as e:
+                log(f"[ERROR] Commit error: {str(e)[:100]}")
+                render_conn.rollback()
+        
+        sqlite_conn.close()
+        render_conn.close()
+        return True
+        
+    except Exception as e:
+        log(f"[ERROR] Group member sync failed: {str(e)[:100]}")
         return False
 
 def watch_and_sync():
-    """Watch SQLite and sync changes to Render in real-time"""
+    """Main watch and sync loop"""
     
     render_url = os.getenv('RENDER_DATABASE_URL') or os.getenv('DATABASE_URL')
     if not render_url:
-        print("❌ RENDER_DATABASE_URL not found in .env")
-        print("Add: RENDER_DATABASE_URL=postgresql://...")
+        log("[ERROR] RENDER_DATABASE_URL not found in .env")
         return
     
     if render_url.startswith('postgres://'):
@@ -184,33 +233,42 @@ def watch_and_sync():
     sqlite_path = os.path.join(os.path.dirname(__file__), 'backend', 'instance', 'hesap_paylas.db')
     
     if not os.path.exists(sqlite_path):
-        print(f"❌ SQLite database not found: {sqlite_path}")
+        log(f"[ERROR] SQLite database not found: {sqlite_path}")
         return
     
-    print("\n" + "="*70)
-    print("🔄 REAL-TIME DATABASE SYNC WATCHER")
-    print("="*70)
-    print(f"📦 Local: {sqlite_path}")
-    print(f"🌐 Render: {render_url[:50]}...")
-    print("✅ Watching for changes... (Ctrl+C to stop)")
-    print("="*70 + "\n")
+    log("="*70)
+    log("[START] Real-Time Database Sync Watcher")
+    log("="*70)
+    log(f"[CONFIG] Local DB: {sqlite_path}")
+    log(f"[CONFIG] Render DB: {render_url[:50]}...")
+    log("[CONFIG] Sync interval: 10 seconds")
+    log("[STATUS] Watching for changes... (Press Ctrl+C to stop)")
+    log("="*70)
+    
+    sync_count = 0
     
     try:
         while True:
-            # Sync users
+            sync_count += 1
+            log(f"\n[CYCLE {sync_count}] Starting sync cycle...")
+            
             sync_users_realtime(sqlite_path, render_url)
-            
-            # Sync groups
             sync_groups_realtime(sqlite_path, render_url)
+            sync_group_members_realtime(sqlite_path, render_url)
             
-            # Check every 10 seconds
+            log(f"[CYCLE {sync_count}] Waiting 10 seconds until next cycle...")
+            
             time.sleep(10)
     
     except KeyboardInterrupt:
-        print("\n\n❌ Watcher stopped")
+        log("\n" + "="*70)
+        log("[STOPPED] Watcher stopped by user")
+        log("="*70)
         sys.exit(0)
     except Exception as e:
-        print(f"\n❌ Fatal error: {e}")
+        log("\n" + "="*70)
+        log(f"[FATAL] Critical error: {e}")
+        log("="*70)
         sys.exit(1)
 
 if __name__ == '__main__':
