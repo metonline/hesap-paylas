@@ -66,6 +66,33 @@ CORS(app, resources={
     }
 })
 
+# ==================== Database Initialization ====================
+# Initialize database on first startup
+@app.before_request
+def init_db():
+    """Initialize database if needed (runs once per process)"""
+    if not hasattr(app, '_db_initialized'):
+        try:
+            db.create_all()
+            # Ensure default user exists
+            user = User.query.filter_by(email='metonline@gmail.com').first()
+            if not user:
+                user = User(
+                    first_name='Metin',
+                    last_name='Güven',
+                    email='metonline@gmail.com',
+                    phone='05323332222'
+                )
+                user.set_password('test123')
+                db.session.add(user)
+                db.session.commit()
+            app._db_initialized = True
+            print("[DB] Database initialized on first request", flush=True)
+        except Exception as e:
+            print(f"[DB] Initialization error: {e}", flush=True)
+            # Don't crash, just log the error
+            pass
+
 # Config
 # ABSOLUTE path for database - avoid path conflicts
 if os.getenv('DATABASE_URL'):
@@ -1093,12 +1120,6 @@ def not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return jsonify({'error': 'Server error'}), 500
-
-# ==================== Health Check ====================
-
-@app.route('/api/health', methods=['GET'])
-def health():
-    return jsonify({'status': 'ok', 'service': 'hesap-paylas-api'}), 200
 
 @app.route('/api/debug/database', methods=['GET'])
 def debug_database():

@@ -1,50 +1,51 @@
 """
-WSGI entry point for Flask
+WSGI entry point for Flask - Render Production
 """
 import os
 import sys
+import traceback
 from pathlib import Path
 
-# Set UTF-8 encoding
-os.environ['PYTHONIOENCODING'] = 'utf-8'
+print("[WSGI] ===== WSGI INITIALIZATION START =====", flush=True)
+print(f"[WSGI] Python: {sys.version}", flush=True)
+print(f"[WSGI] CWD: {os.getcwd()}", flush=True)
 
-# Add project root to Python path
-sys.path.insert(0, str(Path(__file__).parent.absolute()))
+try:
+    # Set UTF-8 encoding
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    
+    # Add project root to Python path
+    project_root = Path(__file__).parent.absolute()
+    sys.path.insert(0, str(project_root))
+    print(f"[WSGI] Project root: {project_root}", flush=True)
+    
+    # Load environment variables
+    from dotenv import load_dotenv
+    print("[WSGI] Loading .env...", flush=True)
+    load_dotenv()
+    print(f"[WSGI] DATABASE_URL set: {bool(os.getenv('DATABASE_URL'))}", flush=True)
+    
+    # Import Flask app - this is where errors usually happen
+    print("[WSGI] Importing Flask app from backend.app...", flush=True)
+    from backend.app import app
+    print("[WSGI] ✓ Flask app imported successfully!", flush=True)
+    
+    print("[WSGI] ===== WSGI INITIALIZATION COMPLETE =====", flush=True)
+    
+except Exception as e:
+    print(f"[WSGI] ✗ CRITICAL ERROR during import:", flush=True)
+    print(f"[WSGI] {type(e).__name__}: {e}", flush=True)
+    print("[WSGI] Full traceback:", flush=True)
+    traceback.print_exc(file=sys.stdout)
+    print("[WSGI] Flask app will NOT be available!", flush=True)
+    sys.exit(1)
 
-# Load environment variables
-from dotenv import load_dotenv
-load_dotenv()
-
-# Import Flask app
-from backend.app import app
-
-# Initialize database on startup
-def init_database():
-    """Initialize database on first startup"""
-    try:
-        from backend.app import db, User
-        with app.app_context():
-            db.create_all()
-            user = User.query.filter_by(email='metonline@gmail.com').first()
-            if not user:
-                user = User(first_name='Metin', last_name='Güven', email='metonline@gmail.com', phone='05323332222')
-                user.set_password('test123')
-                db.session.add(user)
-                db.session.commit()
-    except Exception as e:
-        print(f"[WSGI] Database init error (non-blocking): {e}")
-
+# Local testing only
 if __name__ == '__main__':
-    # Initialize database
-    init_database()
-    
-    # Get port from environment or use default
-    port = int(os.getenv('PORT', 10000))
+    port = int(os.getenv('PORT', 5000))
     print(f"[WSGI] Starting Flask on port {port}")
-    
-    # For Render: use development server (not production-grade but works)
-    # Render's free tier doesn't support Gunicorn well, use Flask dev server
-    app.run(host='0.0.0.0', port=port, debug=False, threaded=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
+
 
 
 
