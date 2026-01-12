@@ -40,7 +40,20 @@ print(f"[APP] Files in BASE_DIR: {sorted([f.name for f in BASE_DIR.glob('*') if 
 
 # Initialize Flask - DON'T use static_folder for now, serve manually
 # Using explicit path serving instead of Flask's static system
+print(f"[INIT] Creating Flask app", flush=True)
 app = Flask(__name__)
+print(f"[INIT] Flask app created successfully", flush=True)
+
+# Print all registered routes at startup (for debugging Render)
+def print_routes():
+    """Print all registered Flask routes"""
+    routes = []
+    for rule in app.url_map.iter_rules():
+        routes.append(f"{rule.rule} -> {rule.endpoint}")
+    print(f"[ROUTES] Registered {len(routes)} routes", flush=True)
+
+# Will be called after app is fully initialized
+# print_routes() is called later in the code
 
 # CORS configuration for GitHub Pages and local development
 CORS(app, resources={
@@ -1275,6 +1288,10 @@ def serve_css(filename):
 @app.route('/js/<path:filename>')
 def serve_js(filename):
     return send_from_directory(str(BASE_DIR), f'js/{filename}')
+
+# Print registered routes for debugging
+print(f"[INIT] Flask app fully initialized", flush=True)
+print_routes()
 
 # ==================== Main ====================
 
