@@ -28,7 +28,7 @@ with app.app_context():
     groups = Group.query.all()
     print(f"\nGroups in Render: {len(groups)}")
     for g in groups:
-        print(f"  - ID: {g.id}, Name: {g.name}, Code: {g.code}")
+        print(f"  - ID: {g.id}, Name: {g.name}, Code: {g.code}, is_active: {g.is_active}")
     
     # Check group members
     result = db.session.execute(text("SELECT COUNT(*) as cnt FROM group_members"))

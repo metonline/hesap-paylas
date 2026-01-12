@@ -24,8 +24,13 @@ load_dotenv()
 # Get parent directory (main project root)
 BASE_DIR = Path(__file__).parent.parent
 
-# Initialize - don't use static_folder, we'll handle it manually
-app = Flask(__name__, static_folder=None)
+# Initialize Flask with static folder for frontend files
+app = Flask(
+    __name__,
+    static_folder=str(BASE_DIR),
+    static_url_path='',
+    template_folder=str(BASE_DIR)
+)
 
 # CORS configuration for GitHub Pages and local development
 CORS(app, resources={
@@ -691,6 +696,23 @@ def reopen_account():
         db.session.rollback()
         print(f"[ERROR] Account reopen failed: {str(e)}")
         return jsonify({'error': 'Account reopen failed. Please try again.'}), 500
+
+# ==================== Static Files & Root Route ====================
+
+@app.route('/')
+def serve_index():
+    """Serve index.html for root path"""
+    return send_from_directory(BASE_DIR, 'index.html')
+
+@app.route('/<path:filename>')
+def serve_static(filename):
+    """Serve static files"""
+    # Try to serve as file
+    file_path = os.path.join(BASE_DIR, filename)
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        return send_from_directory(BASE_DIR, filename)
+    # Otherwise serve index.html (for SPA routing)
+    return send_from_directory(BASE_DIR, 'index.html')
 
 # ==================== Group Routes ====================
 
