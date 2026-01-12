@@ -306,6 +306,18 @@ def signup():
         db.session.add(user)
         db.session.commit()
         
+        # Auto-add new user to all active groups
+        try:
+            from sqlalchemy import text
+            active_groups = Group.query.filter_by(is_active=True).all()
+            for group in active_groups:
+                if user not in group.members:
+                    group.members.append(user)
+            db.session.commit()
+            print(f"[SIGNUP] User {user.id} added to {len(active_groups)} groups")
+        except Exception as e:
+            print(f"[SIGNUP] Warning: Could not add user to groups: {e}")
+        
         token = generate_token(user.id)
         print(f"[SIGNUP] User created: {data['email']}")
         return jsonify({
