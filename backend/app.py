@@ -745,60 +745,7 @@ def serve_index():
         print(traceback.format_exc(), flush=True)
         return jsonify({'error': f'Error: {str(e)}'}), 500
 
-@app.route('/<path:filename>')
-def serve_static(filename):
-    """Serve static files or fallback to index.html for SPA"""
-    # Skip API routes - they're handled by Flask routes above
-    if filename.startswith('api/'):
-        print(f"[API] {filename} - skipped (routed via Flask)", flush=True)
-        return jsonify({'error': 'Not Found'}), 404
-    
-    try:
-        file_path = BASE_DIR / filename
-        print(f"[STATIC] {filename} -> {file_path}", flush=True)
-        
-        if file_path.exists() and file_path.is_file():
-            # Serve the file with proper MIME type
-            with open(file_path, 'rb') as f:
-                content = f.read()
-            
-            # Basic MIME type detection
-            mime_types = {
-                '.html': 'text/html; charset=utf-8',
-                '.css': 'text/css; charset=utf-8',
-                '.js': 'application/javascript; charset=utf-8',
-                '.json': 'application/json',
-                '.png': 'image/png',
-                '.jpg': 'image/jpeg',
-                '.jpeg': 'image/jpeg',
-                '.svg': 'image/svg+xml',
-                '.ico': 'image/x-icon',
-                '.webp': 'image/webp'
-            }
-            
-            file_ext = file_path.suffix.lower()
-            mime_type = mime_types.get(file_ext, 'application/octet-stream')
-            
-            print(f"[STATIC] {filename} FOUND ({len(content)} bytes), mime={mime_type}", flush=True)
-            return content, 200, {'Content-Type': mime_type}
-        
-        print(f"[STATIC] {filename} NOT FOUND", flush=True)
-        
-        # Fallback to index.html for SPA routing
-        index_file = BASE_DIR / 'index.html'
-        if index_file.exists():
-            print(f"[SPA] Serving index.html as fallback", flush=True)
-            with open(index_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-            return content, 200, {'Content-Type': 'text/html; charset=utf-8'}
-        
-        print(f"[ERROR] No fallback index.html", flush=True)
-        return jsonify({'error': 'Not Found'}), 404
-    except Exception as e:
-        import traceback
-        print(f"[ERROR] serve_static({filename}) failed: {e}", flush=True)
-        print(traceback.format_exc(), flush=True)
-        return jsonify({'error': f'Error: {str(e)}'}), 500
+
 
 # ==================== Group Routes ====================
 
@@ -1288,6 +1235,35 @@ def serve_css(filename):
 @app.route('/js/<path:filename>')
 def serve_js(filename):
     return send_from_directory(str(BASE_DIR), f'js/{filename}')
+
+# ==================== 404 Handler - Serve SPA ====================
+# This catches ALL 404s and serves index.html for SPA routing
+
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 by serving index.html for SPA routing"""
+    try:
+        # First check if it's a real static file that exists
+        requested_path = request.path.lstrip('/')
+        if requested_path and not requested_path.startswith('api/'):
+            file_path = BASE_DIR / requested_path
+            if file_path.exists() and file_path.is_file():
+                return send_from_directory(str(BASE_DIR), requested_path)
+        
+        # Otherwise serve index.html for SPA routing
+        index_file = BASE_DIR / 'index.html'
+        if index_file.exists():
+            print(f"[SPA-404] Serving index.html for path: {request.path}", flush=True)
+            with open(index_file, 'r', encoding='utf-8') as f:
+                content = f.read()
+            return content, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        
+        # If index.html doesn't exist, return error
+        print(f"[ERROR-404] index.html not found, path: {request.path}", flush=True)
+        return jsonify({'error': 'Not Found'}), 404
+    except Exception as e:
+        print(f"[ERROR-404] Exception: {e}", flush=True)
+        return jsonify({'error': 'Server Error'}), 500
 
 # Print registered routes for debugging
 print(f"[INIT] Flask app fully initialized", flush=True)
