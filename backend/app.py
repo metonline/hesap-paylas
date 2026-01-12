@@ -702,17 +702,35 @@ def reopen_account():
 @app.route('/')
 def serve_index():
     """Serve index.html for root path"""
-    return send_from_directory(BASE_DIR, 'index.html')
+    print(f"[STATIC] Serving index.html from {BASE_DIR}", flush=True)
+    try:
+        return send_from_directory(BASE_DIR, 'index.html')
+    except Exception as e:
+        print(f"[ERROR] Failed to serve index.html: {e}", flush=True)
+        return jsonify({'error': 'Index file not found'}), 404
 
 @app.route('/<path:filename>')
 def serve_static(filename):
     """Serve static files"""
+    # Skip API routes - they're handled by Flask routes above
+    if filename.startswith('api/'):
+        return jsonify({'error': 'Not Found'}), 404
+    
+    print(f"[STATIC] Requested: {filename}", flush=True)
+    
     # Try to serve as file
     file_path = os.path.join(BASE_DIR, filename)
     if os.path.exists(file_path) and os.path.isfile(file_path):
+        print(f"[STATIC] Found file: {file_path}", flush=True)
         return send_from_directory(BASE_DIR, filename)
+    
     # Otherwise serve index.html (for SPA routing)
-    return send_from_directory(BASE_DIR, 'index.html')
+    print(f"[STATIC] File not found, serving index.html as fallback", flush=True)
+    try:
+        return send_from_directory(BASE_DIR, 'index.html')
+    except Exception as e:
+        print(f"[ERROR] Failed to serve fallback index.html: {e}", flush=True)
+        return jsonify({'error': 'Index file not found'}), 404
 
 # ==================== Group Routes ====================
 
