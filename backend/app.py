@@ -24,6 +24,10 @@ load_dotenv()
 # Get parent directory (main project root)
 BASE_DIR = Path(__file__).parent.parent
 
+print(f"\n[APP] BASE_DIR: {BASE_DIR}")
+print(f"[APP] BASE_DIR exists: {BASE_DIR.exists()}")
+print(f"[APP] Files in BASE_DIR: {list(BASE_DIR.glob('*.html'))[:5]}", flush=True)
+
 # Initialize Flask with static folder for frontend files
 app = Flask(
     __name__,
