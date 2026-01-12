@@ -15,6 +15,10 @@ services:
         value: secret-key-change-in-production
       - key: FLASK_ENV
         value: production
+      - key: PYTHONIOENCODING
+        value: utf-8
+      - key: PYTHONUNBUFFERED
+        value: "1"
 
   - type: postgres
     name: hesap-paylas-db
