@@ -3,7 +3,7 @@ services:
     name: hesap-paylas-api
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn wsgi:app
+    startCommand: gunicorn run_app:app
     envVars:
       - key: DATABASE_URL
         fromDatabase:
