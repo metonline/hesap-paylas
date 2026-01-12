@@ -1,5 +1,20 @@
 # Local Development Guide
 
+## 📌 Database Setup
+Lokal development'ta **SQLite** kullanıyoruz. Render'a deploy öncesi:
+
+```bash
+# Database durumunu kontrol et
+python sync_databases.py status
+
+# Lokal verileri Render'a taşı
+python sync_databases.py local2render
+```
+
+Detaylı rehber: [DATABASE_SYNC_GUIDE.md](DATABASE_SYNC_GUIDE.md)
+
+---
+
 ## Quick Start
 
 ### 1. Install Dependencies

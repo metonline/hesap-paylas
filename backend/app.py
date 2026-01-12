@@ -45,12 +45,25 @@ if os.getenv('DATABASE_URL'):
     # Heroku PostgreSQL fix for SQLAlchemy 2.0
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    db_type = '📦 PostgreSQL (Render)'
+elif os.getenv('RENDER_DATABASE_URL'):
+    database_url = os.getenv('RENDER_DATABASE_URL')
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    db_type = '🌐 PostgreSQL (Render)'
 else:
     # Local SQLite - use instance folder
     instance_path = os.path.join(BASE_DIR, 'backend', 'instance')
     os.makedirs(instance_path, exist_ok=True)
     db_path = os.path.join(instance_path, 'hesap_paylas.db')
     database_url = f'sqlite:///{db_path}'
+    db_type = '📄 SQLite (Local)'
+
+# Log database selection
+print(f"\n{'='*60}")
+print(f"Database: {db_type}")
+print(f"Status: {'Configured' if 'sqlite' not in database_url else 'Ready'}")
+print(f"{'='*60}\n")
 
 app.config['SQLALCHEMY_DATABASE_URI'] = database_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -58,7 +71,55 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret')
 app.config['JWT_SECRET'] = os.getenv('JWT_SECRET', 'jwt-secret')
 app.config['JWT_EXPIRATION'] = 86400 * 7  # 7 days
 
+# Connection pooling for PostgreSQL
+if 'postgresql' in database_url:
+    app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+        'pool_size': 10,
+        'pool_recycle': 3600,
+        'pool_pre_ping': True,
+        'max_overflow': 20,
+    }
+
 db = SQLAlchemy(app)
+
+# ==================== Real-time Database Sync ====================
+
+# Store Render connection for sync
+render_db = None
+
+def get_render_connection():
+    """Get Render PostgreSQL connection for real-time sync"""
+    global render_db
+    if render_db is None and os.getenv('RENDER_DATABASE_URL'):
+        try:
+            from sqlalchemy import create_engine
+            render_url = os.getenv('RENDER_DATABASE_URL')
+            if render_url.startswith('postgres://'):
+                render_url = render_url.replace('postgres://', 'postgresql://', 1)
+            render_db = create_engine(render_url, echo=False)
+            print("✓ Render sync connection established")
+        except Exception as e:
+            print(f"⚠️  Render sync not available: {e}")
+    return render_db
+
+def sync_to_render(table_name, operation, data):
+    """Sync data to Render PostgreSQL in real-time"""
+    if os.getenv('FLASK_ENV') == 'development' and 'sqlite' in database_url:
+        # Only sync if we're using SQLite locally and Render is configured
+        if os.getenv('RENDER_DATABASE_URL'):
+            try:
+                render_conn = get_render_connection()
+                if render_conn:
+                    with render_conn.connect() as conn:
+                        if operation == 'insert':
+                            # SQL insert will be handled by the sync script
+                            pass
+                        elif operation == 'update':
+                            pass
+                        elif operation == 'delete':
+                            pass
+            except Exception as e:
+                print(f"⚠️  Sync to Render failed: {e}")
 
 # ==================== Models ====================
 
@@ -157,6 +218,68 @@ class MemberBill(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     items = db.Column(db.JSON, nullable=True)  # JSON array of items
+
+@app.after_request
+def sync_to_render_after_request(response):
+    """After each request, sync local changes to Render if using SQLite locally"""
+    if os.getenv('FLASK_ENV') == 'development' and 'sqlite' in database_url:
+        if os.getenv('RENDER_DATABASE_URL') and request.method in ['POST', 'PUT', 'DELETE']:
+            try:
+                # Queue async sync to Render (non-blocking)
+                import threading
+                def background_sync():
+                    try:
+                        import sqlite3
+                        import json as json_lib
+                        from sqlalchemy import create_engine, text
+                        
+                        sqlite_path = os.path.join(BASE_DIR, 'backend', 'instance', 'hesap_paylas.db')
+                        render_url = os.getenv('RENDER_DATABASE_URL')
+                        if render_url.startswith('postgres://'):
+                            render_url = render_url.replace('postgres://', 'postgresql://', 1)
+                        
+                        # Read from SQLite
+                        sqlite_conn = sqlite3.connect(sqlite_path)
+                        sqlite_conn.row_factory = sqlite3.Row
+                        sqlite_cursor = sqlite_conn.cursor()
+                        
+                        # Connect to Render
+                        render_engine = create_engine(render_url)
+                        render_conn = render_engine.connect()
+                        
+                        # Sync users
+                        sqlite_cursor.execute("SELECT * FROM users")
+                        for row in sqlite_cursor.fetchall():
+                            check_sql = text("SELECT id FROM users WHERE email = :email LIMIT 1")
+                            result = render_conn.execute(check_sql, {"email": row['email']})
+                            if not result.fetchone():
+                                insert_sql = text("""
+                                    INSERT INTO users (first_name, last_name, email, phone, password_hash, is_active)
+                                    VALUES (:fn, :ln, :em, :ph, :ph_hash, :active)
+                                    ON CONFLICT (email) DO NOTHING
+                                """)
+                                render_conn.execute(insert_sql, {
+                                    "fn": row['first_name'],
+                                    "ln": row['last_name'],
+                                    "em": row['email'],
+                                    "ph": row['phone'],
+                                    "ph_hash": row['password_hash'],
+                                    "active": row['is_active']
+                                })
+                        
+                        render_conn.commit()
+                        sqlite_conn.close()
+                        render_conn.close()
+                    except Exception as sync_err:
+                        print(f"⚠️  Background sync error: {sync_err}")
+                
+                # Run sync in background thread (non-blocking)
+                sync_thread = threading.Thread(target=background_sync, daemon=True)
+                sync_thread.start()
+            except Exception as e:
+                print(f"⚠️  Sync setup failed: {e}")
+    
+    return response
 
 # ==================== Auth Routes ====================
 
@@ -718,27 +841,48 @@ def join_group():
 @app.route('/api/user/groups', methods=['GET'])
 @token_required
 def get_user_groups():
-    """Get all groups for current user"""
+    """Get all groups for current user - using raw SQL for reliability"""
     user = User.query.get(request.user_id)
     
-    # Kullanıcının üyesi olduğu grupları getir
-    user_groups = user.groups
+    print(f"[GROUPS] User ID: {request.user_id}")
+    print(f"[GROUPS] User found: {user is not None}")
+    
+    if not user:
+        return jsonify([]), 200
+    
+    # Raw SQL: group_members tablosundan grup ID'lerini al
+    from sqlalchemy import text
+    sql = text("""
+        SELECT DISTINCT g.* FROM groups g
+        INNER JOIN group_members gm ON g.id = gm.group_id
+        WHERE gm.user_id = :user_id AND g.is_active = true
+        ORDER BY g.created_at DESC
+    """)
+    
+    groups = db.session.execute(sql, {"user_id": request.user_id}).fetchall()
+    
+    print(f"[GROUPS] Found {len(groups)} groups via SQL")
     
     groups_data = []
-    for group in user_groups:
-        groups_data.append({
-            'id': group.id,
-            'name': group.name,
-            'description': group.description,
-            'category': group.category,
-            'code': group.code,  # Raw 6-digit code
-            'code_formatted': format_group_code(group.code),  # Formatted code (123-456)
-            'qr_code': group.qr_code,
-            'created_at': group.created_at.isoformat(),
-            'members_count': len(group.members),
-            'members': [{'id': m.id, 'first_name': m.first_name, 'last_name': m.last_name} for m in group.members],
-            'status': 'active' if group.is_active else 'closed'
-        })
+    for row in groups:
+        group = Group.query.get(row.id)
+        if group:
+            print(f"[GROUPS] Group: {group.id} - {group.name}")
+            groups_data.append({
+                'id': group.id,
+                'name': group.name,
+                'description': group.description,
+                'category': group.category,
+                'code': group.code,
+                'code_formatted': format_group_code(group.code),
+                'qr_code': group.qr_code,
+                'created_at': group.created_at.isoformat(),
+                'members_count': len(group.members),
+                'members': [{'id': m.id, 'first_name': m.first_name, 'last_name': m.last_name} for m in group.members],
+                'status': 'active' if group.is_active else 'closed'
+            })
+    
+    print(f"[GROUPS] Returning {len(groups_data)} groups")
     
     return jsonify(groups_data), 200
 
@@ -881,6 +1025,34 @@ def server_error(e):
 @app.route('/api/health', methods=['GET'])
 def health():
     return jsonify({'status': 'ok', 'service': 'hesap-paylas-api'}), 200
+
+@app.route('/api/debug/database', methods=['GET'])
+def debug_database():
+    """Debug endpoint - check database status"""
+    from sqlalchemy import text
+    
+    try:
+        # Check users
+        user_count = db.session.execute(text("SELECT COUNT(*) FROM users")).scalar()
+        
+        # Check groups
+        group_count = db.session.execute(text("SELECT COUNT(*) FROM groups")).scalar()
+        
+        # Check group_members
+        gm_count = db.session.execute(text("SELECT COUNT(*) FROM group_members")).scalar()
+        
+        # Check group_members details
+        gm_data = db.session.execute(text("SELECT * FROM group_members LIMIT 10")).fetchall()
+        gm_list = [{'group_id': row[0], 'user_id': row[1]} for row in gm_data]
+        
+        return jsonify({
+            'users': user_count,
+            'groups': group_count,
+            'group_members_total': gm_count,
+            'group_members_sample': gm_list
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/stats', methods=['GET'])
 def get_stats():

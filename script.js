@@ -145,6 +145,21 @@ function getBaseURL() {
     return API_BASE_URL.replace('/api', '');
 }
 
+// Helper function to get app base URL (for sharing/invitations)
+function getAppURL() {
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    const port = window.location.port;
+    
+    // Local development: use Flask backend
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        return `${protocol}//${hostname}:5000`;
+    }
+    
+    // Production: use current domain
+    return port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}`;
+}
+
 // ==================== Sidebar Menu Functions ====================
 
 // Sidebar menüyü aç/kapat
@@ -1745,14 +1760,14 @@ function smartShareGroup() {
 
 // URL parametresi ile WhatsApp paylaşımı
 function shareViaWhatsAppWithUrl() {
-    const appUrl = 'https://metonline.github.io/hesap-paylas/?groupCode=' + app.currentGroupCode;
+    const appUrl = getAppURL() + '/?groupCode=' + app.currentGroupCode;
     const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl:\n\n${appUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
 }
 
 function shareViaWhatsApp() {
     // Uygulama URL'sine grup kodu parametresi ile beraber
-    const appUrl = 'https://metonline.github.io/hesap-paylas/?groupCode=' + app.currentGroupCode;
+    const appUrl = getAppURL() + '/?groupCode=' + app.currentGroupCode;
     const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl:\n\n${appUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     closeShareModal();
@@ -2940,8 +2955,8 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, rawCode, format
     // Grup kodunu göster (formatted: "123-456")
     document.getElementById('successGroupCode').textContent = formattedCode;
     
-    // Katılım linkini oluştur ve göster (production URL kullan)
-    const baseURL = 'https://hesap-paylas.onrender.com';
+    // Katılım linkini oluştur ve göster (dynamic URL kullan)
+    const baseURL = getAppURL();
     const participationLink = `${baseURL}?code=${formattedCode}`;
     document.getElementById('successParticipationLink').textContent = participationLink;
     
@@ -3221,7 +3236,7 @@ function showGroupMembersModal(groupId) {
         membersList.appendChild(orderBtn);
         
         // Davet linkini WhatsApp'ta Paylaş - Yeşil Buton (EN ALTTA)
-        const participationLink = `${window.location.origin}?code=${group.code}`;
+        const participationLink = `${getAppURL()}?code=${group.code}`;
         const whatsappBtn = document.createElement('button');
         whatsappBtn.style.cssText = `
             width: 100%;
@@ -3238,7 +3253,7 @@ function showGroupMembersModal(groupId) {
         whatsappBtn.textContent = '💬 Davet linkini WhatsApp\'ta Paylaş';
         whatsappBtn.onmouseover = () => whatsappBtn.style.background = '#20BA5A';
         whatsappBtn.onmouseout = () => whatsappBtn.style.background = '#25D366';
-        whatsappBtn.onclick = () => shareToWhatsApp(participationLink, group.name);
+        whatsappBtn.onclick = () => shareToWhatsApp(participationLink, group.name, group.description);
         membersList.appendChild(whatsappBtn);
     })
     .catch(error => {
@@ -3261,7 +3276,7 @@ document.addEventListener('click', (e) => {
 });
 
 // Helper Functions
-function shareToWhatsApp(link, groupName) {
+function shareToWhatsApp(link, groupName, groupDescription) {
     // Link parametresinin doğru gelip gelmediğini kontrol et
     if (!link) {
         console.error('ERROR: Link undefined!');
@@ -3270,7 +3285,8 @@ function shareToWhatsApp(link, groupName) {
     }
     
     // Mesajda MUTLAKA linki ekle
-    const message = `📱 ${groupName} grubuna katıl\n\nLinki tıkla: ${link}`;
+    const descriptionText = groupDescription ? ` (${groupDescription})` : '';
+    const message = `${groupName} Grubuna${descriptionText} katıl!\n\nLinki tıkla: ${link}`;
     const encodedMessage = encodeURIComponent(message);
     
     console.log('shareToWhatsApp çağrıldı');
