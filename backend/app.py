@@ -720,6 +720,13 @@ def reopen_account():
         print(f"[ERROR] Account reopen failed: {str(e)}")
         return jsonify({'error': 'Account reopen failed. Please try again.'}), 500
 
+# ==================== Health Check ====================
+
+@app.route('/health')
+def health():
+    """Simple health check endpoint"""
+    return jsonify({'status': 'ok', 'timestamp': str(datetime.now())}), 200
+
 # ==================== Static Files & Root Route ====================
 
 @app.route('/')
