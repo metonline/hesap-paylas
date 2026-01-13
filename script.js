@@ -3016,7 +3016,7 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, rawCode, format
     
     // Katılım linkini oluştur ve göster (dynamic URL kullan)
     const baseURL = getAppURL();
-    const participationLink = `${baseURL}?code=${formattedCode}`;
+    const participationLink = `${baseURL}?code=${rawCode}`;
     const linkElement = document.getElementById('successParticipationLink');
     linkElement.textContent = participationLink;
     linkElement.href = participationLink;
