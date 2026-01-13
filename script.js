@@ -3532,26 +3532,42 @@ function showGroupMembersModal(groupId) {
         groupInfoSection.onclick = () => showUserAccountDetails(group.created_by);
         membersList.appendChild(groupInfoSection);
         
-        // Üyeler - aynı isimli olanları işle
+        // Katılımcılar - Grid layout with collapse if needed
         if (group.members && group.members.length > 0) {
             // Üyeleri inceleyerek aynı isim olanları bul
             const memberNames = group.members.map(m => m.first_name || m.firstName);
             const duplicates = memberNames.filter((item, index) => memberNames.indexOf(item) !== index);
             
-            const membersTitle = document.createElement('div');
-            membersTitle.style.cssText = `
-                font-weight: 600;
-                color: #333;
-                margin-bottom: 15px;
-                font-size: 0.95em;
+            const membersContainer = document.createElement('div');
+            membersContainer.style.cssText = `
+                margin-bottom: 20px;
             `;
             
             // Başlık
-            const titleSpan = document.createElement('span');
-            titleSpan.textContent = `👥 Üyeler (${group.members.length}): `;
-            membersTitle.appendChild(titleSpan);
+            const membersHeader = document.createElement('div');
+            membersHeader.style.cssText = `
+                font-weight: 600;
+                color: #333;
+                margin-bottom: 12px;
+                font-size: 0.95em;
+            `;
+            membersHeader.textContent = `👥 Katılımcılar (${group.members.length})`;
+            membersContainer.appendChild(membersHeader);
             
-            // Her üyeyi tıklanabilir span olarak ekle
+            // Grid container for members
+            const membersGrid = document.createElement('div');
+            const isLargeGroup = group.members.length > 6; // Show collapse button if more than 6 members
+            
+            membersGrid.style.cssText = `
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 8px;
+                margin-bottom: 12px;
+                ${isLargeGroup ? 'max-height: 80px; overflow: hidden; transition: max-height 0.3s ease;' : ''}
+            `;
+            membersGrid.id = `members-grid-${group.id}`;
+            
+            // Her üyeyi grid item olarak ekle
             group.members.forEach((member, index) => {
                 const firstName = member.first_name || member.firstName;
                 const lastName = member.last_name || member.lastName;
@@ -3559,19 +3575,23 @@ function showGroupMembersModal(groupId) {
                 // Eğer bu isim duplicate ise, isim + soyadının baş harfini göster
                 const displayName = duplicates.includes(firstName) ? `${firstName.charAt(0)}.${lastName}` : firstName;
                 
-                const memberSpan = document.createElement('span');
+                const memberSpan = document.createElement('div');
                 memberSpan.textContent = displayName;
                 memberSpan.style.cssText = `
-                    padding: 2px 6px;
+                    padding: 6px 10px;
                     background: #e3f2fd;
                     border: 1px solid #90CAF9;
                     border-radius: 8px;
                     color: #1976D2;
                     cursor: pointer;
                     font-weight: 500;
-                    margin-right: 6px;
                     user-select: none;
                     transition: all 0.2s ease;
+                    text-align: center;
+                    font-size: 0.85em;
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                 `;
                 memberSpan.onmouseover = () => {
                     memberSpan.style.background = '#90CAF9';
@@ -3584,10 +3604,41 @@ function showGroupMembersModal(groupId) {
                 memberSpan.onclick = () => showUserAccountDetails(member.id);
                 memberSpan.title = `${firstName} ${lastName}`;
                 
-                membersTitle.appendChild(memberSpan);
+                membersGrid.appendChild(memberSpan);
             });
             
-            membersList.appendChild(membersTitle);
+            membersContainer.appendChild(membersGrid);
+            
+            // Collapse/Expand button if large group
+            if (isLargeGroup) {
+                const toggleBtn = document.createElement('button');
+                toggleBtn.style.cssText = `
+                    width: 100%;
+                    padding: 8px 12px;
+                    background: #e3f2fd;
+                    color: #1976D2;
+                    border: 1px solid #90CAF9;
+                    border-radius: 6px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    font-size: 0.85em;
+                    transition: all 0.2s ease;
+                `;
+                toggleBtn.textContent = `Tümünü Gör (${group.members.length})`;
+                
+                let isExpanded = false;
+                toggleBtn.onclick = () => {
+                    isExpanded = !isExpanded;
+                    membersGrid.style.maxHeight = isExpanded ? '500px' : '80px';
+                    toggleBtn.textContent = isExpanded ? `Gizle` : `Tümünü Gör (${group.members.length})`;
+                    toggleBtn.style.background = isExpanded ? '#90CAF9' : '#e3f2fd';
+                    toggleBtn.style.color = isExpanded ? 'white' : '#1976D2';
+                };
+                
+                membersContainer.appendChild(toggleBtn);
+            }
+            
+            membersList.appendChild(membersContainer);
         }
         
         // Sipariş / Harcama Butonu
