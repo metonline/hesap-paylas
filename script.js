@@ -3558,6 +3558,72 @@ function showGroupMembersModal(groupId) {
         whatsappBtn.onmouseout = () => whatsappBtn.style.background = '#25D366';
         whatsappBtn.onclick = () => shareToWhatsApp(participationLink, group.name, group.description);
         membersList.appendChild(whatsappBtn);
+        
+        // QR Code Display Area - Below WhatsApp button
+        const qrContainer = document.createElement('div');
+        qrContainer.style.cssText = `
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px dashed #ddd;
+        `;
+        
+        const qrTitle = document.createElement('p');
+        qrTitle.textContent = '📱 Grup QR Kodu';
+        qrTitle.style.cssText = `
+            margin: 0 0 15px 0;
+            color: #333;
+            font-weight: 600;
+            font-size: 0.95em;
+        `;
+        qrContainer.appendChild(qrTitle);
+        
+        const qrCode = document.createElement('div');
+        qrCode.id = `qr-code-display-${group.id}`;
+        qrCode.style.cssText = `
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 180px;
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+        `;
+        qrContainer.appendChild(qrCode);
+        membersList.appendChild(qrContainer);
+        
+        // Generate QR Code
+        try {
+            // Clear any existing QR code
+            document.getElementById(`qr-code-display-${group.id}`).innerHTML = '';
+            
+            // Create QR code from the group's QR code string
+            if (group.qr_code) {
+                new QRCode(document.getElementById(`qr-code-display-${group.id}`), {
+                    text: group.qr_code,
+                    width: 150,
+                    height: 150,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            } else {
+                // Fallback: generate QR from participation link
+                new QRCode(document.getElementById(`qr-code-display-${group.id}`), {
+                    text: participationLink,
+                    width: 150,
+                    height: 150,
+                    colorDark: '#000000',
+                    colorLight: '#ffffff',
+                    correctLevel: QRCode.CorrectLevel.H
+                });
+            }
+        } catch (err) {
+            console.error('[QR] Error generating QR code:', err);
+            document.getElementById(`qr-code-display-${group.id}`).innerHTML = '<p style="color: #999;">QR kod oluşturulamadı</p>';
+        }
     })
     .catch(error => {
         console.error('Grup detayları yüklenemedi:', error);
