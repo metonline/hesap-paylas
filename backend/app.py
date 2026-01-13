@@ -300,6 +300,42 @@ class MemberBill(db.Model):
     amount = db.Column(db.Float, nullable=False)
     items = db.Column(db.JSON, nullable=True)  # JSON array of items
 
+class OTPVerification(db.Model):
+    __tablename__ = 'otp_verifications'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    phone = db.Column(db.String(20), nullable=False, index=True)
+    otp_code = db.Column(db.String(6), nullable=False)
+    twilio_sid = db.Column(db.String(255), nullable=True)  # Twilio verification SID
+    is_verified = db.Column(db.Boolean, default=False)
+    attempts = db.Column(db.Integer, default=0)
+    max_attempts = db.Column(db.Integer, default=3)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    
+    def is_expired(self):
+        return datetime.utcnow() > self.expires_at
+    
+    def can_attempt(self):
+        return self.attempts < self.max_attempts
+
+# ==================== Twilio Configuration ====================
+try:
+    from twilio.rest import Client
+    TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
+    TWILIO_SERVICE_SID = os.getenv('TWILIO_SERVICE_SID')
+    
+    if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN and TWILIO_SERVICE_SID:
+        twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        print("[TWILIO] Client initialized successfully", flush=True)
+    else:
+        print("[TWILIO] Missing credentials - SMS OTP disabled", flush=True)
+        twilio_client = None
+except Exception as e:
+    print(f"[TWILIO] Initialization failed: {e}", flush=True)
+    twilio_client = None
+
 @app.after_request
 def sync_to_render_after_request(response):
     """After each request, sync local changes to Render if using SQLite locally"""
@@ -572,6 +608,124 @@ def reset_password():
         db.session.rollback()
         print(f"[ERROR] Password reset failed: {str(e)}")
         return jsonify({'error': 'Password reset failed. Please try again.'}), 500
+
+# ==================== Phone OTP Authentication ====================
+
+@app.route('/api/auth/request-otp', methods=['POST'])
+def request_otp():
+    """Request OTP via SMS to phone number"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'phone' not in data:
+            return jsonify({'error': 'Phone number is required'}), 400
+        
+        phone = data['phone'].strip()
+        
+        # Validate phone format (basic)
+        if not phone.startswith('+'):
+            phone = '+90' + phone.lstrip('0')
+        
+        if not twilio_client:
+            print("[OTP] Twilio client not initialized")
+            return jsonify({'error': 'SMS service temporarily unavailable'}), 503
+        
+        try:
+            # Use Twilio Verify API
+            verification = twilio_client.verify \
+                .v2 \
+                .services(TWILIO_SERVICE_SID) \
+                .verifications \
+                .create(to=phone, channel='sms')
+            
+            print(f"[OTP] Verification sent to {phone}, SID: {verification.sid}")
+            
+            return jsonify({
+                'message': 'OTP sent to your phone',
+                'verification_sid': verification.sid,
+                'phone_masked': phone[-4:]
+            }), 200
+        
+        except Exception as e:
+            print(f"[OTP] Twilio error: {str(e)}")
+            return jsonify({'error': 'Failed to send OTP. Please try again.'}), 500
+    
+    except Exception as e:
+        print(f"[ERROR] Request OTP failed: {str(e)}")
+        return jsonify({'error': 'Request OTP failed. Please try again.'}), 500
+
+@app.route('/api/auth/verify-otp', methods=['POST'])
+def verify_otp():
+    """Verify OTP code and authenticate user"""
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ['phone', 'code']):
+            return jsonify({'error': 'Phone and OTP code are required'}), 400
+        
+        phone = data['phone'].strip()
+        code = data['code'].strip()
+        verification_sid = data.get('verification_sid')
+        
+        # Validate phone format
+        if not phone.startswith('+'):
+            phone = '+90' + phone.lstrip('0')
+        
+        if not twilio_client:
+            return jsonify({'error': 'SMS service temporarily unavailable'}), 503
+        
+        try:
+            # Verify code with Twilio
+            verification_check = twilio_client.verify \
+                .v2 \
+                .services(TWILIO_SERVICE_SID) \
+                .verification_checks \
+                .create(to=phone, code=code)
+            
+            if verification_check.status == 'approved':
+                print(f"[OTP] Verification approved for {phone}")
+                
+                # Check if user exists with this phone
+                user = User.query.filter_by(phone=phone).first()
+                
+                if not user:
+                    print(f"[OTP] New user with phone {phone}, creating account")
+                    # Create new user with phone (name and email optional for now)
+                    user = User(
+                        first_name='User',
+                        last_name='',
+                        email=f"phone_{phone}@hesappaylas.local",  # Temporary email
+                        phone=phone
+                    )
+                    # Generate a secure random password
+                    user.set_password(''.join(random.choices(string.ascii_letters + string.digits, k=16)))
+                    db.session.add(user)
+                    db.session.commit()
+                    is_new_user = True
+                else:
+                    is_new_user = False
+                
+                # Generate JWT token
+                token = generate_token(user.id)
+                
+                return jsonify({
+                    'message': 'Phone verified successfully',
+                    'user': user.to_dict(),
+                    'token': token,
+                    'is_new_user': is_new_user
+                }), 200
+            else:
+                print(f"[OTP] Verification failed for {phone}: {verification_check.status}")
+                return jsonify({'error': 'Invalid OTP code'}), 401
+        
+        except Exception as e:
+            print(f"[OTP] Twilio verification error: {str(e)}")
+            return jsonify({'error': 'Verification failed. Please try again.'}), 500
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Verify OTP failed: {str(e)}")
+        return jsonify({'error': 'Verification failed. Please try again.'}), 500
 
 # ==================== Helper Functions ====================
 
