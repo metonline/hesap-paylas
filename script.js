@@ -135,6 +135,29 @@ function getAppURL() {
     return port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}`;
 }
 
+// ==================== Library Availability Check ====================
+
+// Ensure Html5Qrcode library is available
+let html5QrcodeLibraryReady = false;
+
+function waitForHtml5QrcodeLibrary(callback, maxAttempts = 10, attempt = 0) {
+    if (typeof Html5Qrcode !== 'undefined') {
+        html5QrcodeLibraryReady = true;
+        console.log('[LIBRARY] Html5Qrcode library is ready');
+        if (callback) callback();
+    } else if (attempt < maxAttempts) {
+        console.log('[LIBRARY] Waiting for Html5Qrcode library... (attempt ' + (attempt + 1) + '/' + maxAttempts + ')');
+        setTimeout(() => waitForHtml5QrcodeLibrary(callback, maxAttempts, attempt + 1), 100);
+    } else {
+        console.error('[LIBRARY] Html5Qrcode library failed to load after ' + maxAttempts + ' attempts');
+    }
+}
+
+// Check library on page load
+window.addEventListener('load', () => {
+    waitForHtml5QrcodeLibrary();
+});
+
 // ==================== Sidebar Menu Functions ====================
 
 // Sidebar menüyü aç/kapat
@@ -2813,6 +2836,17 @@ function closeJoinGroupModal() {
 
 // New unified function for QR scanning and joining
 function startQRScannerForJoin() {
+    // Check if Html5Qrcode is available
+    if (typeof Html5Qrcode === 'undefined') {
+        console.error('[QR] Html5Qrcode library not loaded yet');
+        const resultsDiv = document.getElementById('qr-reader-results');
+        resultsDiv.innerHTML = '❌ Kütüphane yükleniyor, lütfen bekleyin...';
+        resultsDiv.style.color = '#e74c3c';
+        // Retry after 1 second
+        setTimeout(startQRScannerForJoin, 1000);
+        return;
+    }
+    
     const qrReader = document.getElementById('qr-reader');
     const startBtn = document.getElementById('startScanBtn');
     const stopBtn = document.getElementById('stopScanBtn');
