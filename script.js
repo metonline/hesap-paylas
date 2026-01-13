@@ -2786,6 +2786,7 @@ function joinGroupWithCode(code) {
             setTimeout(() => {
                 closeJoinGroupModal();
                 loadUserGroups(); // Grupları yenile
+                loadActiveGroups(); // Balonu güncelle
             }, 1500);
         } else {
             document.getElementById('joinGroupMessage').textContent = `❌ ${data.message || 'Grup bulunamadı'}`;
