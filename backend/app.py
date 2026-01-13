@@ -879,31 +879,51 @@ def request_pin_reset():
         db.session.commit()
         
         # Send SMS via Twilio
+        sms_sent = False
+        sms_error_msg = None
+        
         try:
             from twilio.rest import Client
             account_sid = os.getenv('TWILIO_ACCOUNT_SID')
             auth_token = os.getenv('TWILIO_AUTH_TOKEN')
             twilio_phone = os.getenv('TWILIO_PHONE_NUMBER')
             
+            print(f"[DEBUG] Twilio config - SID: {account_sid[:10] if account_sid else 'NONE'}..., Phone: {twilio_phone}")
+            
             if account_sid and auth_token and twilio_phone:
-                client = Client(account_sid, auth_token)
-                message = client.messages.create(
-                    body=f"PIN sıfırlama kodunuz: {reset_code}\n\nBu kodu paylaşmayınız!",
-                    from_=twilio_phone,
-                    to=phone
-                )
-                print(f"[SMS] Reset code sent to {phone}: {message.sid}")
+                try:
+                    client = Client(account_sid, auth_token)
+                    message = client.messages.create(
+                        body=f"PIN sıfırlama kodunuz: {reset_code}\n\nBu kodu paylaşmayınız!",
+                        from_=twilio_phone,
+                        to=phone
+                    )
+                    print(f"[SMS] ✅ Reset code sent to {phone}: {message.sid}")
+                    sms_sent = True
+                except Exception as twilio_error:
+                    sms_error_msg = str(twilio_error)
+                    print(f"[SMS] ❌ Twilio error: {sms_error_msg}")
             else:
-                print("[WARNING] Twilio credentials not configured")
-                # For testing, you can still use the code
+                sms_error_msg = "Twilio not configured (missing credentials)"
+                print("[SMS] ⚠️  Twilio credentials not configured")
+                # Still allow reset with code stored in DB
         except Exception as sms_error:
-            print(f"[WARNING] SMS send failed: {str(sms_error)}")
-            # Continue anyway - user can still reset
+            sms_error_msg = str(sms_error)
+            print(f"[SMS] ⚠️  Import error: {sms_error_msg}")
         
-        return jsonify({
-            'message': 'Reset code sent to your phone',
-            'phone': phone
-        }), 200
+        # Return response
+        response = {
+            'message': 'Reset code generated and stored',
+            'phone': phone,
+            'code_sent': sms_sent
+        }
+        
+        # In development/test mode, include the code for debugging
+        if not sms_sent and not os.getenv('PRODUCTION'):
+            response['debug_code'] = reset_code
+            response['debug_error'] = sms_error_msg
+        
+        return jsonify(response), 200
     
     except Exception as e:
         db.session.rollback()
