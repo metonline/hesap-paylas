@@ -2811,35 +2811,25 @@ function closeJoinGroupModal() {
     stopQRScanner();
 }
 
-function switchJoinTab(tab) {
-    // Sekmeleri göster/gizle
-    document.getElementById('scanTab').style.display = tab === 'scan' ? 'block' : 'none';
-    document.getElementById('manualTab').style.display = tab === 'manual' ? 'block' : 'none';
-    
-    // Buton stillerini güncelle
-    document.querySelectorAll('.join-tab-btn').forEach(btn => {
-        btn.style.color = btn.textContent.includes(tab === 'scan' ? '📱' : '✏️') ? '#333' : '#999';
-        btn.style.borderBottomColor = btn.textContent.includes(tab === 'scan' ? '📱' : '✏️') ? '#4A90E2' : 'transparent';
-    });
-    
-    // Kamerayı kapat eğer manuel sekmeye geçiyorsa
-    if (tab === 'manual') {
-        stopQRScanner();
-    }
-}
-
-function startQRScanner() {
+// New unified function for QR scanning and joining
+function startQRScannerForJoin() {
+    const qrReader = document.getElementById('qr-reader');
     const startBtn = document.getElementById('startScanBtn');
     const stopBtn = document.getElementById('stopScanBtn');
+    const joinBtn = document.getElementById('joinGroupBtn');
+    const input = document.getElementById('groupCodeInput');
     
+    qrReader.style.display = 'block';
     startBtn.style.display = 'none';
     stopBtn.style.display = 'block';
+    joinBtn.style.display = 'none';
+    input.style.display = 'none';
     
     html5QrcodeScanner = new Html5Qrcode("qr-reader");
     
     // Kamera izni iste
     const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-        onQRCodeScanned(decodedText);
+        onQRCodeScannedForJoin(decodedText);
     };
     
     const config = {
@@ -2848,6 +2838,65 @@ function startQRScanner() {
         rememberLastUsedCamera: true,
         supportedScanTypes: ['IMAGE', 'CAMERA']
     };
+    
+    const errorCallback = (error) => {
+        console.log('[QR] Error:', error);
+    };
+    
+    html5QrcodeScanner.start(
+        { facingMode: "environment" },
+        config,
+        qrCodeSuccessCallback,
+        errorCallback
+    ).catch(err => {
+        console.error('[QR] Failed to start scanner:', err);
+        document.getElementById('qr-reader-results').innerHTML = '❌ Kamera açılamadı';
+        document.getElementById('qr-reader-results').style.color = '#e74c3c';
+        stopQRScanner();
+    });
+}
+
+function onQRCodeScannedForJoin(decodedText) {
+    console.log('[QR] Code scanned:', decodedText);
+    
+    // Try to extract group code from QR
+    // Could be a URL or just the code
+    let groupCode = decodedText;
+    
+    // If it's a URL, try to extract the code parameter
+    if (decodedText.includes('code=')) {
+        const url = new URL(decodedText);
+        groupCode = url.searchParams.get('code') || decodedText;
+    }
+    
+    // Clean code - remove any formatting
+    let cleanCode = groupCode.replace(/[^\d]/g, '');
+    
+    if (cleanCode.length === 6) {
+        stopQRScanner();
+        
+        // Show success and auto-redirect to login with code
+        document.getElementById('qr-reader-results').textContent = `✅ Kod bulundu: ${cleanCode.slice(0,3)}-${cleanCode.slice(3)}`;
+        document.getElementById('qr-reader-results').style.color = '#27ae60';
+        
+        // Auto-redirect to login with group code after 1.5 seconds
+        setTimeout(() => {
+            closeJoinGroupModal();
+            // Set pending code and go to login
+            localStorage.setItem('pendingGroupCode', cleanCode);
+            showLoginPage();
+        }, 1500);
+    } else {
+        document.getElementById('qr-reader-results').textContent = '❌ Geçersiz QR kodu';
+        document.getElementById('qr-reader-results').style.color = '#e74c3c';
+    }
+}
+
+// Keep old function for backwards compatibility
+function switchJoinTab(tab) {
+    // This function is deprecated - tabs are removed
+    return;
+}
     
     html5QrcodeScanner.start(
         { facingMode: "environment" },
@@ -2904,6 +2953,10 @@ function onQRCodeScanned(decodedText) {
 }
 
 function handleManualCodeInput(input) {
+    const qrReader = document.getElementById('qr-reader');
+    const startBtn = document.getElementById('startScanBtn');
+    const joinBtn = document.getElementById('joinGroupBtn');
+    
     // Sadece rakamları kabul et
     let value = input.value.replace(/[^\d]/g, '');
     
@@ -2918,6 +2971,13 @@ function handleManualCodeInput(input) {
     } else {
         input.value = value;
     }
+    
+    // Show join button if full code is entered
+    if (value.length === 6) {
+        qrReader.style.display = 'none';
+        startBtn.style.display = 'none';
+        joinBtn.style.display = 'block';
+    }
 }
 
 function joinGroupWithManualCode() {
@@ -2929,6 +2989,9 @@ function joinGroupWithManualCode() {
         document.getElementById('joinGroupMessage').style.color = '#e74c3c';
         return;
     }
+    
+    // Stop scanner if running
+    stopQRScanner();
     
     joinGroupWithCode(cleanCode);
 }

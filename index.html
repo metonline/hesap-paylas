@@ -831,35 +831,29 @@
             
             <div style="text-align: center; margin-bottom: 20px;">
                 <h2 style="margin: 0 0 10px 0; color: #333;">Gruba Katıl</h2>
-                <p style="color: #666; margin: 0;">QR kodu okut veya kodu manuel gir</p>
+                <p style="color: #666; margin: 0;">QR kodu taratmak için kamerayı çalıştır !</p>
             </div>
 
-            <!-- Sekme Seçimi -->
-            <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #eee;">
-                <button class="join-tab-btn active" onclick="switchJoinTab('scan')" style="flex: 1; padding: 12px; border: none; background: none; border-bottom: 3px solid #4A90E2; color: #333; font-weight: 600; cursor: pointer;">📱 QR Kod Tarat</button>
-                <button class="join-tab-btn" onclick="switchJoinTab('manual')" style="flex: 1; padding: 12px; border: none; background: none; color: #999; font-weight: 600; cursor: pointer;">✏️ Manuel Gir</button>
-            </div>
+            <!-- QR Tarama Alanı -->
+            <div id="qr-reader" style="width: 100%; border-radius: 10px; overflow: hidden; background: #000; margin-bottom: 15px; border: 2px solid #ddd; display: none;"></div>
+            <div id="qr-reader-results" style="text-align: center; color: #666; min-height: 30px; margin-bottom: 15px;"></div>
 
-            <!-- QR Tarama Sekme -->
-            <div id="scanTab" style="display: block;">
-                <div id="qr-reader" style="width: 100%; border-radius: 10px; overflow: hidden; background: #000; margin-bottom: 15px; border: 2px solid #ddd;"></div>
-                <div id="qr-reader-results" style="text-align: center; color: #666; min-height: 30px; margin-bottom: 15px;"></div>
-                <button class="btn btn-primary" id="startScanBtn" onclick="startQRScanner()" style="width: 100%; margin-bottom: 10px;">🎥 Kamerayı Aç</button>
-                <button class="btn btn-secondary" id="stopScanBtn" onclick="stopQRScanner()" style="width: 100%; display: none;">🛑 Kamerayı Kapat</button>
-            </div>
+            <!-- Manuel Kod Girme -->
+            <input 
+                type="text" 
+                id="groupCodeInput" 
+                placeholder="Grup kodunu gir (xxx-xxx)" 
+                maxlength="7"
+                oninput="handleManualCodeInput(this)"
+                style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1.1em; text-align: center; letter-spacing: 2px; margin-bottom: 15px; font-weight: 600; box-sizing: border-box;"
+            >
 
-            <!-- Manuel Kod Girme Sekme -->
-            <div id="manualTab" style="display: none;">
-                <input 
-                    type="text" 
-                    id="groupCodeInput" 
-                    placeholder="Grup kodunu gir (xxx-xxx)" 
-                    maxlength="7"
-                    oninput="handleManualCodeInput(this)"
-                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 1.1em; text-align: center; letter-spacing: 2px; margin-bottom: 15px; font-weight: 600;"
-                >
-                <button class="btn btn-primary" onclick="joinGroupWithManualCode()" style="width: 100%;">Gruba Katıl</button>
+            <!-- Aksiyon Düğmeleri -->
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <button class="btn btn-primary" id="startScanBtn" onclick="startQRScannerForJoin()" style="flex: 1;">📱 Kamerayı Aç</button>
+                <button class="btn btn-primary" id="joinGroupBtn" onclick="joinGroupWithManualCode()" style="flex: 1; display: none;">Gruba Katıl</button>
             </div>
+            <button class="btn btn-secondary" id="stopScanBtn" onclick="stopQRScanner()" style="width: 100%; display: none;">🛑 Kamerayı Kapat</button>
 
             <div id="joinGroupMessage" style="text-align: center; margin-top: 15px; min-height: 20px; color: #27ae60; font-weight: 600;"></div>
         </div>
