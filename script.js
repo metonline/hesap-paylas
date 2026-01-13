@@ -52,6 +52,8 @@ function handleDeepLink() {
             // User varsa, gruba direkt katıl
             console.log('User logged in, joining group with code:', groupCode);
             joinGroupWithCode(groupCode);
+            // Clean URL to avoid re-processing
+            window.history.replaceState({}, document.title, window.location.pathname);
         } else {
             // Login değilse, group code'u sessionStorage'e kaydet ve login sayfasına yönlendir
             sessionStorage.setItem('pendingGroupCode', groupCode);
@@ -247,6 +249,8 @@ function handleGoogleResponse(response) {
             if (pendingCode) {
                 console.log('Processing pending group code after Google login:', pendingCode);
                 sessionStorage.removeItem('pendingGroupCode');
+                // Clear URL to avoid re-processing
+                window.history.replaceState({}, document.title, window.location.pathname);
                 setTimeout(() => {
                     joinGroupWithCode(pendingCode);
                 }, 500);
@@ -810,6 +814,8 @@ function handleManualLogin(event) {
                 if (pendingCode) {
                     console.log('Processing pending group code from deep link:', pendingCode);
                     sessionStorage.removeItem('pendingGroupCode');
+                    // Clear URL to avoid re-processing
+                    window.history.replaceState({}, document.title, window.location.pathname);
                     setTimeout(() => {
                         joinGroupWithCode(pendingCode);
                     }, 500);
