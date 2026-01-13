@@ -2818,42 +2818,70 @@ function startQRScannerForJoin() {
     const stopBtn = document.getElementById('stopScanBtn');
     const joinBtn = document.getElementById('joinGroupBtn');
     const input = document.getElementById('groupCodeInput');
+    const resultsDiv = document.getElementById('qr-reader-results');
+    
+    // Clear any existing scanner first
+    if (html5QrcodeScanner) {
+        try {
+            html5QrcodeScanner.stop();
+            html5QrcodeScanner.clear();
+        } catch (err) {
+            console.log('[QR] Clearing previous scanner:', err);
+        }
+        html5QrcodeScanner = null;
+    }
     
     qrReader.style.display = 'block';
     startBtn.style.display = 'none';
     stopBtn.style.display = 'block';
     joinBtn.style.display = 'none';
     input.style.display = 'block';
+    resultsDiv.innerHTML = '📱 Kamerayı aç...';
+    resultsDiv.style.color = '#3498db';
     
-    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    // Clear the QR reader div
+    qrReader.innerHTML = '';
     
-    // Kamera izni iste
-    const qrCodeSuccessCallback = (decodedText, decodedResult) => {
-        onQRCodeScannedForJoin(decodedText);
-    };
-    
-    const config = {
-        fps: 10,
-        qrbox: { width: 250, height: 250 },
-        rememberLastUsedCamera: true,
-        supportedScanTypes: ['IMAGE', 'CAMERA']
-    };
-    
-    const errorCallback = (error) => {
-        console.log('[QR] Error:', error);
-    };
-    
-    html5QrcodeScanner.start(
-        { facingMode: "environment" },
-        config,
-        qrCodeSuccessCallback,
-        errorCallback
-    ).catch(err => {
-        console.error('[QR] Failed to start scanner:', err);
-        document.getElementById('qr-reader-results').innerHTML = '❌ Kamera açılamadı';
-        document.getElementById('qr-reader-results').style.color = '#e74c3c';
+    try {
+        html5QrcodeScanner = new Html5Qrcode("qr-reader");
+        
+        // Kamera izni iste
+        const qrCodeSuccessCallback = (decodedText, decodedResult) => {
+            onQRCodeScannedForJoin(decodedText);
+        };
+        
+        const config = {
+            fps: 10,
+            qrbox: { width: 250, height: 250 },
+            rememberLastUsedCamera: true,
+            supportedScanTypes: ['IMAGE', 'CAMERA']
+        };
+        
+        const errorCallback = (error) => {
+            console.log('[QR] Error:', error);
+        };
+        
+        html5QrcodeScanner.start(
+            { facingMode: "environment" },
+            config,
+            qrCodeSuccessCallback,
+            errorCallback
+        ).then(() => {
+            resultsDiv.innerHTML = '✅ Kamera başlatıldı. QR kodu taratınız.';
+            resultsDiv.style.color = '#27ae60';
+            console.log('[QR] Scanner started successfully');
+        }).catch(err => {
+            console.error('[QR] Failed to start scanner:', err);
+            resultsDiv.innerHTML = '❌ Kamera açılamadı: ' + err.message;
+            resultsDiv.style.color = '#e74c3c';
+            stopQRScanner();
+        });
+    } catch (err) {
+        console.error('[QR] Error creating scanner:', err);
+        resultsDiv.innerHTML = '❌ Hata: ' + err.message;
+        resultsDiv.style.color = '#e74c3c';
         stopQRScanner();
-    });
+    }
 }
 
 function onQRCodeScannedForJoin(decodedText) {
@@ -2900,19 +2928,28 @@ function switchJoinTab(tab) {
 
 function stopQRScanner() {
     if (html5QrcodeScanner) {
-        html5QrcodeScanner.stop().catch(err => console.error('Kamera kapatılamadı:', err));
-        html5QrcodeScanner = null;
+        html5QrcodeScanner.stop().then(() => {
+            html5QrcodeScanner.clear();
+            html5QrcodeScanner = null;
+        }).catch(err => {
+            console.error('Kamera kapatılamadı:', err);
+            html5QrcodeScanner = null;
+        });
     }
     
     const startBtn = document.getElementById('startScanBtn');
     const stopBtn = document.getElementById('stopScanBtn');
     const qrReader = document.getElementById('qr-reader');
     const input = document.getElementById('groupCodeInput');
+    const resultsDiv = document.getElementById('qr-reader-results');
     
     startBtn.style.display = 'block';
     stopBtn.style.display = 'none';
     qrReader.style.display = 'none';
+    qrReader.innerHTML = '';
     input.style.display = 'block';
+    resultsDiv.innerHTML = '';
+    resultsDiv.style.color = '#666';
 }
 
 
