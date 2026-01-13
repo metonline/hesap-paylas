@@ -1577,6 +1577,29 @@ body {
     }
 }
 
+/* Slide up animation for expenditure modal */
+@keyframes slideUpModal {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideDownModal {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+}
+
 .modal-content {
     background-color: white;
     padding: 30px;

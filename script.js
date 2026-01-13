@@ -2365,10 +2365,11 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     
     // Backend'den detaylı grup bilgisini çek
     const token = localStorage.getItem('hesapPaylas_token');
-    console.log('[GROUP-DETAILS] Fetching group details from:', `${API_BASE_URL}/groups/${groupId}`);
+    const endpoint = `${API_BASE_URL}/api/groups/${groupId}`;
+    console.log('[GROUP-DETAILS] Fetching group details from:', endpoint);
     console.log('[GROUP-DETAILS] Token:', token ? 'present' : 'MISSING');
     
-    fetch(`${API_BASE_URL}/groups/${groupId}`, {
+    fetch(endpoint, {
         headers: {
             'Authorization': `Bearer ${token}`
         }
@@ -2472,18 +2473,189 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     window.currentGroupId = groupId;
 }
 
-// Hesap Özeti detaylarını aç/kapat
-function toggleOrderDetails() {
-    const detailsBox = document.getElementById('detailGroupOrders');
-    const h3 = document.querySelector('#groupDetailsModal h3');
-    
-    if (detailsBox.style.display === 'none') {
-        detailsBox.style.display = 'block';
-        if (h3) h3.textContent = '📋 Hesap Özeti ▲';
-    } else {
-        detailsBox.style.display = 'none';
-        if (h3) h3.textContent = '📋 Hesap Özeti ▼';
+// Open Expenditure Modal with detailed report
+function openExpenditureModal() {
+    // Close the group details modal first to avoid cascading
+    const groupDetailsModal = document.getElementById('groupDetailsModal');
+    if (groupDetailsModal) {
+        groupDetailsModal.style.display = 'none';
+        groupDetailsModal.style.visibility = 'hidden';
+        groupDetailsModal.style.pointerEvents = 'none';
+        groupDetailsModal.classList.remove('modal-open');
+        groupDetailsModal.classList.add('modal-close');
     }
+    
+    const modal = document.getElementById('expenditureModal');
+    const contentDiv = document.getElementById('expenditureModalContent');
+    
+    // Get current group data
+    const groupId = window.currentGroupId;
+    if (!groupId) {
+        contentDiv.innerHTML = '<p style="color: #c0392b; text-align: center;">Grup verisi bulunamadı</p>';
+        modal.style.display = 'flex';
+        return;
+    }
+    
+    // Fetch group data to get orders
+    fetch(`${API_BASE_URL}/api/groups/${groupId}`, {
+        method: 'GET',
+        headers: {
+            'Authorization': `Bearer ${localStorage.getItem('hesapPaylas_token')}`,
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(group => {
+        if (group.orders && group.orders.length > 0) {
+            // Calculate statistics
+            let totalExpenditure = 0;
+            let totalItems = 0;
+            const restaurantStats = {};
+            
+            group.orders.forEach(order => {
+                totalExpenditure += order.total_amount;
+                totalItems += 1;
+                
+                if (!restaurantStats[order.restaurant]) {
+                    restaurantStats[order.restaurant] = { count: 0, total: 0 };
+                }
+                restaurantStats[order.restaurant].count += 1;
+                restaurantStats[order.restaurant].total += order.total_amount;
+            });
+            
+            // Build detailed HTML
+            let html = `
+                <div style="margin-bottom: 25px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 15px; border-radius: 10px; color: white; text-align: center;">
+                            <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">Toplam Harcama</div>
+                            <div style="font-size: 1.8em; font-weight: bold;">₺${totalExpenditure.toFixed(2)}</div>
+                        </div>
+                        <div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 15px; border-radius: 10px; color: white; text-align: center;">
+                            <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 5px;">İşlem Sayısı</div>
+                            <div style="font-size: 1.8em; font-weight: bold;">${totalItems}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: #f5f7fa; padding: 15px; border-radius: 10px; margin-bottom: 20px;">
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 10px; font-weight: 600;">Ortalama Işlem: ₺${(totalExpenditure / totalItems).toFixed(2)}</div>
+                        <div style="width: 100%; background: #ddd; height: 6px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); height: 100%; border-radius: 3px; width: 100%;"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 1.1em; color: #333; font-weight: 600;">🏪 Restoranlar</h3>
+            `;
+            
+            // Restaurant breakdown
+            Object.entries(restaurantStats).sort((a, b) => b[1].total - a[1].total).forEach(([restaurant, stats]) => {
+                const percentage = (stats.total / totalExpenditure) * 100;
+                html += `
+                    <div style="margin-bottom: 12px; padding: 12px; background: white; border-radius: 8px; border-left: 4px solid #667eea;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div style="font-weight: 600; color: #333;">${restaurant}</div>
+                            <div style="font-weight: bold; color: #667eea;">₺${stats.total.toFixed(2)}</div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.85em; color: #666;">
+                            <span>${stats.count} işlem</span>
+                            <span>${percentage.toFixed(1)}%</span>
+                        </div>
+                        <div style="width: 100%; background: #e8ecf1; height: 5px; border-radius: 3px; overflow: hidden;">
+                            <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); height: 100%; width: ${percentage}%; border-radius: 3px;"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>
+                <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 1.1em; color: #333; font-weight: 600;">📋 Tüm Işlemler</h3>
+            `;
+            
+            // Detailed orders list
+            group.orders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).forEach(order => {
+                const date = new Date(order.created_at);
+                const formattedDate = date.toLocaleDateString('tr-TR', { 
+                    year: 'numeric', 
+                    month: 'short', 
+                    day: 'numeric'
+                });
+                const formattedTime = date.toLocaleTimeString('tr-TR', { 
+                    hour: '2-digit', 
+                    minute: '2-digit'
+                });
+                
+                html += `
+                    <div style="padding: 12px; background: #f9f9f9; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #f5576c;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                            <div>
+                                <div style="font-weight: 600; color: #333; margin-bottom: 3px;">🍽️ ${order.restaurant}</div>
+                                <div style="font-size: 0.85em; color: #999;">${formattedDate} ${formattedTime}</div>
+                            </div>
+                            <div style="font-weight: bold; color: #f5576c; font-size: 1.1em;">₺${order.total_amount.toFixed(2)}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `</div>`;
+            contentDiv.innerHTML = html;
+        } else {
+            contentDiv.innerHTML = '<div style="text-align: center; padding: 40px 20px;"><div style="font-size: 3em; margin-bottom: 15px;">📭</div><p style="color: #999; font-size: 1em;">Henüz harcama kaydı yok</p></div>';
+        }
+        
+        modal.style.display = 'flex';
+    })
+    .catch(error => {
+        console.error('Error fetching group data:', error);
+        contentDiv.innerHTML = '<p style="color: #c0392b; text-align: center;">Harcama detayları yüklenirken hata oluştu</p>';
+        modal.style.display = 'flex';
+    });
+}
+
+// Close Expenditure Modal
+function closeExpenditureModal() {
+    const modal = document.getElementById('expenditureModal');
+    const content = modal.querySelector('div > div');
+    
+    // Add slide down animation
+    content.style.animation = 'slideDownModal 0.3s ease-out';
+    
+    setTimeout(() => {
+        modal.style.display = 'none';
+        content.style.animation = 'slideUpModal 0.4s ease-out';
+        
+        // Reopen the group details modal
+        const groupDetailsModal = document.getElementById('groupDetailsModal');
+        if (groupDetailsModal) {
+            groupDetailsModal.style.display = 'flex';
+            groupDetailsModal.style.visibility = 'visible';
+            groupDetailsModal.style.pointerEvents = 'auto';
+            groupDetailsModal.classList.remove('modal-close');
+            groupDetailsModal.classList.add('modal-open');
+            groupDetailsModal.style.setProperty('z-index', '99999', 'important');
+        }
+    }, 300);
+}
+
+// Close modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    const expenditureModal = document.getElementById('expenditureModal');
+    if (expenditureModal) {
+        expenditureModal.addEventListener('click', function(e) {
+            if (e.target === expenditureModal) {
+                closeExpenditureModal();
+            }
+        });
+    }
+});
+
+// Hesap Özeti detaylarını aç/kapat (deprecated - keeping for reference)
+function toggleOrderDetails() {
+    // This function is deprecated - use openExpenditureModal() instead
+    openExpenditureModal();
 }
 
 // Kullanıcı hesap detaylarını göster
