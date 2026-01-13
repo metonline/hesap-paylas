@@ -682,11 +682,20 @@
 
                 if (response.ok) {
                     // SMS was sent OR code was generated even if SMS failed
+                    let message = '';
                     if (data.code_sent) {
-                        showResetStatusMessage('✅ SMS gönderildi! Lütfen mesajınızı kontrol edin.', 'success');
+                        message = '✅ SMS gönderildi! Lütfen mesajınızı kontrol edin.';
                     } else if (data.code_stored) {
-                        showResetStatusMessage('✅ Kod oluşturuldu. Lütfen mesajınızı kontrol edin.', 'success');
+                        message = '✅ Kod oluşturuldu. Lütfen mesajınızı kontrol edin.';
+                        
+                        // In development, show debug info
+                        if (data.debug_code) {
+                            console.log('DEV MODE - Debug code:', data.debug_code);
+                            message += `<br><small style="opacity: 0.6">Dev Mode - Kod: ${data.debug_code}</small>`;
+                        }
                     }
+                    
+                    showResetStatusMessage(message, 'success');
                     
                     // Move to step 2 after a short delay
                     setTimeout(() => {
@@ -695,7 +704,15 @@
                         document.getElementById('verificationCodeInput').focus();
                     }, 1000);
                 } else {
-                    showResetStatusMessage(data.error || 'Kod oluşturulamadı. Lütfen tekrar deneyin.', 'error');
+                    let errorMsg = data.error || 'Kod oluşturulamadı. Lütfen tekrar deneyin.';
+                    
+                    // Show debug info if available
+                    if (data.debug) {
+                        errorMsg += `<br><small style="opacity: 0.6">Debug: ${data.debug}</small>`;
+                        console.error('Debug info:', data.debug);
+                    }
+                    
+                    showResetStatusMessage(errorMsg, 'error');
                 }
             } catch (error) {
                 console.error('SMS Error:', error);

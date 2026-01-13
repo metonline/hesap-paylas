@@ -1041,6 +1041,38 @@ def confirm_pin_reset():
         print(f"[ERROR] PIN reset confirmation failed: {str(e)}")
         return jsonify({'error': 'PIN reset failed'}), 500
 
+@app.route('/api/auth/debug-reset-codes', methods=['GET'])
+def debug_reset_codes():
+    """DEBUG ONLY: Show all pending reset codes (development only)"""
+    if os.getenv('FLASK_ENV') != 'development':
+        return jsonify({'error': 'Not available in production'}), 403
+    
+    try:
+        # Get all pending reset codes from last 30 minutes
+        thirty_mins_ago = datetime.utcnow() - timedelta(minutes=30)
+        pending_codes = OTPVerification.query.filter(
+            OTPVerification.purpose == 'pin_reset',
+            OTPVerification.used == False,
+            OTPVerification.expires_at > thirty_mins_ago
+        ).all()
+        
+        codes_list = []
+        for otp in pending_codes:
+            codes_list.append({
+                'phone': otp.phone,
+                'code': otp.code,
+                'expires_at': otp.expires_at.isoformat(),
+                'created_at': otp.created_at.isoformat() if hasattr(otp, 'created_at') else None
+            })
+        
+        return jsonify({
+            'message': 'Pending PIN reset codes (DEV ONLY)',
+            'count': len(codes_list),
+            'codes': codes_list
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # ==================== Helper Functions ====================
 
 def format_group_code(code):
