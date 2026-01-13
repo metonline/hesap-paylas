@@ -716,7 +716,19 @@ function completeSignup(userData) {
     
     console.log("Kullanıcı kaydı tamamlandı:", userData);
     
-    showPage('homePage');
+    // Check if there's a pending group code to join (from deep link)
+    const pendingCode = sessionStorage.getItem('pendingGroupCode');
+    if (pendingCode) {
+        console.log('Processing pending group code after signup:', pendingCode);
+        sessionStorage.removeItem('pendingGroupCode');
+        // Clear URL to avoid re-processing
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setTimeout(() => {
+            joinGroupWithCode(pendingCode);
+        }, 500);
+    } else {
+        showPage('homePage');
+    }
 }
 
 // Kaydolmış Kullanıcı Kontrolü
