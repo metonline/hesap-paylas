@@ -7,6 +7,9 @@ import os
 import jwt
 import random
 import string
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
@@ -43,6 +46,75 @@ print(f"[APP] Files in BASE_DIR: {sorted([f.name for f in BASE_DIR.glob('*') if 
 print(f"[INIT] Creating Flask app", flush=True)
 app = Flask(__name__)
 print(f"[INIT] Flask app created successfully", flush=True)
+
+# ==================== EMAIL UTILITY ====================
+def send_reset_email(email, reset_code, user_name):
+    """Send password reset code via email"""
+    try:
+        smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+        smtp_port = int(os.getenv('SMTP_PORT', '587'))
+        sender_email = os.getenv('SENDER_EMAIL')
+        sender_password = os.getenv('SENDER_PASSWORD')
+        
+        if not all([sender_email, sender_password]):
+            print(f"[EMAIL] ⚠️  Email not configured (missing SENDER_EMAIL or SENDER_PASSWORD)")
+            return False
+        
+        # Create message
+        message = MIMEMultipart('alternative')
+        message['Subject'] = 'Hesap Paylaş - PIN Sıfırlama Kodu'
+        message['From'] = sender_email
+        message['To'] = email
+        
+        # HTML template
+        html = f"""\
+        <html>
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; color: white;">
+                    <h1 style="margin: 0; font-size: 28px;">🥄 Hesap Paylaş</h1>
+                </div>
+                
+                <div style="padding: 30px; background: #f9f9f9;">
+                    <h2>Merhaba {user_name}!</h2>
+                    <p>PIN kodunuzu sıfırlamak için aşağıdaki kodu kullanabilirsiniz:</p>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
+                        <p style="font-size: 32px; font-weight: bold; color: #667eea; margin: 0; text-align: center; letter-spacing: 5px;">
+                            {reset_code}
+                        </p>
+                        <p style="text-align: center; color: #999; margin-top: 10px; font-size: 12px;">
+                            Bu kod 10 dakika geçerlidir
+                        </p>
+                    </div>
+                    
+                    <p style="color: #666; font-size: 14px; margin: 20px 0;">
+                        <strong>Güvenlik Uyarısı:</strong> Bu kodu kimseyle paylaşmayın!
+                    </p>
+                    
+                    <p style="color: #999; font-size: 12px; margin-top: 30px;">
+                        Bu e-postayı tarafından gönderilen istek olmaksızın aldıysanız, lütfen dikkate almayın.
+                    </p>
+                </div>
+            </body>
+        </html>
+        """
+        
+        part = MIMEText(html, 'html')
+        message.attach(part)
+        
+        # Send email
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.send_message(message)
+        server.quit()
+        
+        print(f"[EMAIL] ✅ Reset code sent to {email}")
+        return True
+        
+    except Exception as e:
+        print(f"[EMAIL] ❌ Failed to send email: {e}")
+        return False
 
 # Print all registered routes at startup (for debugging Render)
 def print_routes():
@@ -217,6 +289,7 @@ class User(db.Model):
     bonus_points = db.Column(db.Integer, default=0)
     reset_token = db.Column(db.String(255), nullable=True)
     reset_token_expires = db.Column(db.DateTime, nullable=True)
+    email_verified = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)  # Hesap kapalı/açık
     is_deleted = db.Column(db.Boolean, default=False)  # Hesap silindi mi?
     account_type = db.Column(db.String(20), default='owner')  # 'owner' (hesap açan) or 'member' (invite edilen)
@@ -794,11 +867,16 @@ def phone_pin_login():
             token = generate_token(user.id)
             print(f"[AUTH] User logged in with phone: {phone}")
             
+            # Check if user needs to add email
+            needs_email = not user.email or user.email.endswith('@hesappaylas.local')
+            
             return jsonify({
                 'message': 'Login successful',
                 'user': user.to_dict(),
                 'token': token,
-                'is_new_user': False
+                'is_new_user': False,
+                'needs_email': needs_email,
+                'email_hint': 'Please add your email for password recovery'
             }), 200
     
     except Exception as e:
@@ -850,7 +928,7 @@ def reset_pin():
 
 @app.route('/api/auth/request-pin-reset', methods=['POST'])
 def request_pin_reset():
-    """Request PIN reset - send SMS code"""
+    """Request PIN reset - send code via EMAIL"""
     try:
         print("[DEBUG] request_pin_reset called")
         data = request.get_json()
@@ -875,6 +953,10 @@ def request_pin_reset():
         if not user:
             return jsonify({'error': 'User not found with this phone number'}), 404
         
+        # Check if user has email set
+        if not user.email:
+            return jsonify({'error': 'No email on file. Please add your email first.'}), 400
+        
         # Generate 6-digit reset code
         reset_code = f"{random.randint(0, 999999):06d}"
         print(f"[DEBUG] Generated code: {reset_code}")
@@ -896,45 +978,15 @@ def request_pin_reset():
             print(f"[ERROR] Failed to save OTP record: {str(db_error)}")
             return jsonify({'error': 'Failed to save reset code', 'debug': str(db_error)}), 500
         
-        # Send SMS via Twilio
-        sms_sent = False
-        sms_error_msg = None
-        
-        try:
-            from twilio.rest import Client
-            account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-            auth_token = os.getenv('TWILIO_AUTH_TOKEN')
-            twilio_phone = os.getenv('TWILIO_PHONE_NUMBER')
-            
-            print(f"[DEBUG] Twilio - SID exists: {bool(account_sid)}, Token exists: {bool(auth_token)}, Phone: {twilio_phone}")
-            
-            if account_sid and auth_token and twilio_phone:
-                try:
-                    client = Client(account_sid, auth_token)
-                    message = client.messages.create(
-                        body=f"PIN sıfırlama kodunuz: {reset_code}\n\nBu kodu paylaşmayınız!",
-                        from_=twilio_phone,
-                        to=phone
-                    )
-                    print(f"[SMS] ✅ Reset code sent to {phone}: {message.sid}")
-                    sms_sent = True
-                except Exception as twilio_error:
-                    sms_error_msg = str(twilio_error)
-                    print(f"[SMS] ❌ Twilio error: {sms_error_msg}")
-            else:
-                sms_error_msg = "Twilio not configured (missing credentials)"
-                print("[SMS] ⚠️  Twilio credentials missing")
-                # Still allow reset with code stored in DB
-        except Exception as sms_error:
-            sms_error_msg = str(sms_error)
-            print(f"[SMS] ⚠️  Import/Setup error: {sms_error_msg}")
+        # Send code via EMAIL
+        email_sent = send_reset_email(user.email, reset_code, user.first_name)
         
         # Always return success since code is stored in DB
-        # In production, ensure SMS was sent, but for now we allow code-based reset
         response = {
-            'message': 'Reset code sent to your phone' if sms_sent else 'Reset code generated (SMS failed, but code saved)',
+            'message': 'Reset code sent to your email' if email_sent else 'Reset code generated (check email)',
             'phone': phone,
-            'code_sent': sms_sent,
+            'email_hint': user.email[:2] + '...' + user.email.split('@')[0][-2:] + '@' + user.email.split('@')[1],
+            'code_sent': email_sent,
             'code_stored': True
         }
         
@@ -1178,6 +1230,47 @@ def update_profile():
         db.session.rollback()
         print(f"[ERROR] Profile update failed: {str(e)}")
         return jsonify({'error': 'Profile update failed. Please try again.'}), 500
+
+@app.route('/api/user/add-email', methods=['POST'])
+@token_required
+def add_email():
+    """Add or update user email"""
+    try:
+        user = User.query.get(request.user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        data = request.get_json()
+        if not data or 'email' not in data:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        email = data['email'].strip().lower()
+        
+        # Validate email format
+        if '@' not in email or '.' not in email.split('@')[1]:
+            return jsonify({'error': 'Invalid email format'}), 400
+        
+        # Check if email already exists for another user
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user and existing_user.id != user.id:
+            return jsonify({'error': 'Email already registered'}), 409
+        
+        # Update user email
+        user.email = email
+        user.email_verified = True  # Auto-verify (we'll send verification later if needed)
+        db.session.commit()
+        
+        print(f"[EMAIL] Added email for user {user.id}: {email}")
+        return jsonify({
+            'message': 'Email saved successfully',
+            'email': email,
+            'user': user.to_dict()
+        }), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Add email failed: {str(e)}")
+        return jsonify({'error': 'Failed to save email'}), 500
 
 @app.route('/api/user/change-password', methods=['POST'])
 @token_required

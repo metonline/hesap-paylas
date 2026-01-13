@@ -445,19 +445,6 @@
                 </div>
 
                 <div class="form-group" style="opacity: 1; animation: none;">
-                    <div style="margin-bottom: 15px;">
-                        <label style="display: block; margin-bottom: 8px; color: #333; font-weight: 600; font-size: 14px;">Telefon Numaranız</label>
-                        <input 
-                            type="text" 
-                            id="wrongPinPhone" 
-                            placeholder="5323133277"
-                            readonly
-                            style="width: 100%; border: 2px solid #ddd; border-radius: 10px; padding: 12px; font-size: 16px; background: #f9f9f9; color: #666;"
-                        >
-                    </div>
-                </div>
-
-                <div class="form-group" style="opacity: 1; animation: none;">
                     <button onclick="showResetPinModal()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
                         Şifremi Unuttum
                     </button>
@@ -540,6 +527,51 @@
                     <span id="savePinBtnText">PIN'i Kaydet</span>
                 </button>
             </div>
+        </div>
+    </div>
+
+    <!-- Add Email Modal -->
+    <div id="addEmailModal" class="modal hidden" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 20px; padding: 30px; max-width: 380px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <!-- Close button -->
+            <button class="modal-close" onclick="skipAddEmail()" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 28px; cursor: pointer; color: #667eea;">
+                ✕
+            </button>
+
+            <!-- Logo header -->
+            <div style="text-align: center; margin-bottom: 30px;">
+                <div style="color: #667eea; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                    <span>🥄</span>
+                    <span>Hesap</span>
+                </div>
+                <div style="color: #764ba2; font-size: 28px; font-weight: 700;">Paylaş</div>
+            </div>
+
+            <!-- Title -->
+            <h2 style="color: #333; font-size: 20px; margin-bottom: 10px; text-align: center;">E-mail Adresiniz</h2>
+            <p style="color: #666; font-size: 14px; margin-bottom: 30px; text-align: center; line-height: 1.6;">
+                Şifre sıfırlama için e-mail adresiniz gereklidir. Daha sonra da ekleyebilirsiniz.
+            </p>
+
+            <!-- Email input -->
+            <div class="form-group" style="opacity: 1; animation: none;">
+                <input 
+                    type="email" 
+                    id="emailInput" 
+                    placeholder="örn: john@example.com"
+                    style="width: 100%; border: 2px solid #ddd; border-radius: 10px; padding: 12px; font-size: 15px; font-family: inherit;"
+                >
+            </div>
+
+            <!-- Add button -->
+            <button onclick="saveEmail()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
+                <span id="emailBtnText">E-mail Kaydet</span>
+            </button>
+
+            <!-- Skip button -->
+            <button onclick="skipAddEmail()" style="width: 100%; padding: 14px; background: white; color: #667eea; border: 2px solid #667eea; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                Sonra Eklerim
+            </button>
         </div>
     </div>
 
@@ -656,15 +688,14 @@
         }
 
         function showResetPinModal() {
-            // Get current phone from input or from wrongPinPhone display
+            // Get current phone from input or from stored variable
             let phone = '';
             const phoneInput = document.getElementById('phone');
-            const wrongPinPhone = document.getElementById('wrongPinPhone');
             
             if (phoneInput && phoneInput.value.length === 10) {
                 phone = phoneInput.value;
-            } else if (wrongPinPhone && wrongPinPhone.value.length === 10) {
-                phone = wrongPinPhone.value;
+            } else if (currentResetPhone && currentResetPhone.length === 10) {
+                phone = currentResetPhone;
             }
             
             if (phone.length === 10) {
@@ -934,13 +965,21 @@
                     localStorage.setItem('hesapPaylas_token', data.token);
                     localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
                     
-                    setTimeout(() => {
-                        if (groupCode) {
-                            window.location.href = `index.html?joinGroup=${groupCode}`;
-                        } else {
-                            window.location.href = 'index.html';
-                        }
-                    }, 1500);
+                    // Check if user needs to add email
+                    if (data.needs_email) {
+                        setTimeout(() => {
+                            document.getElementById('addEmailModal').classList.remove('hidden');
+                            document.getElementById('emailInput').focus();
+                        }, 1500);
+                    } else {
+                        setTimeout(() => {
+                            if (groupCode) {
+                                window.location.href = `index.html?joinGroup=${groupCode}`;
+                            } else {
+                                window.location.href = 'index.html';
+                            }
+                        }, 1500);
+                    }
                 } else if (response.status === 404 && data.error === 'user_not_found') {
                     // New user - show name form
                     tempPhone = phone;
@@ -952,7 +991,8 @@
                     // Show wrong PIN screen
                     document.getElementById('passwordSection').classList.add('hidden');
                     document.getElementById('wrongPinSection').classList.remove('hidden');
-                    document.getElementById('wrongPinPhone').value = phone;
+                    // Store phone for password reset
+                    currentResetPhone = phone;
                     btn.disabled = false;
                     btn.innerHTML = '<span id="authBtnText">Gruba Katıl</span>';
                 }
@@ -1040,6 +1080,69 @@
             // Setup reset PIN inputs
             setupResetPinInputs();
         });
-    </script>
-</body>
-</html>
+
+        // Email functions
+        async function saveEmail() {
+            const email = document.getElementById('emailInput').value.trim();
+            const token = localStorage.getItem('hesapPaylas_token');
+
+            // Validate email
+            if (!email || !email.includes('@')) {
+                showMessage('Lütfen geçerli bir e-mail adresi girin', 'error');
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="saveEmail()"]');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Kaydediliyor...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/user/add-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('✅ E-mail başarıyla kaydedildi!', 'success');
+                    
+                    // Update local storage
+                    const user = JSON.parse(localStorage.getItem('hesapPaylas_user'));
+                    user.email = email;
+                    localStorage.setItem('hesapPaylas_user', JSON.stringify(user));
+                    
+                    setTimeout(() => {
+                        document.getElementById('addEmailModal').classList.add('hidden');
+                        if (groupCode) {
+                            window.location.href = `index.html?joinGroup=${groupCode}`;
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1000);
+                } else {
+                    showMessage(data.error || 'E-mail kaydedilemedi', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<span id="emailBtnText">E-mail Kaydet</span>';
+                }
+            } catch (error) {
+                console.error('Email Save Error:', error);
+                showMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<span id="emailBtnText">E-mail Kaydet</span>';
+            }
+        }
+
+        function skipAddEmail() {
+            document.getElementById('addEmailModal').classList.add('hidden');
+            if (groupCode) {
+                window.location.href = `index.html?joinGroup=${groupCode}`;
+            } else {
+                window.location.href = 'index.html';
+            }
+        }
+
