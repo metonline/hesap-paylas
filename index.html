@@ -1027,9 +1027,9 @@ Konaklama
         </div>
     </div>
 
-    <!-- QR Code Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.1.48/html5-qrcode.min.js" onload="window.html5QrcodeLoaded=true;" onerror="console.error('[QR] Failed to load html5-qrcode from cdnjs'); setTimeout(() => { if(typeof Html5Qrcode==='undefined') console.warn('[QR] Html5Qrcode still not available'); }, 1000);"></script>
+    <!-- QR Code Libraries - With fallback -->
+    <script src="qr-scanner.js?ver=1.0.8"></script>
     
-    <script src="script.js?ver=1.0.7"></script>
+    <script src="script.js?ver=1.0.8"></script>
 </body>
 </html>
