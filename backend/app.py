@@ -95,24 +95,50 @@ def init_db():
 
 # Config
 # ABSOLUTE path for database - avoid path conflicts
+database_url = None
+db_type = None
+
+# Try to use DATABASE_URL if available and valid
 if os.getenv('DATABASE_URL'):
-    database_url = os.getenv('DATABASE_URL')
-    # Heroku PostgreSQL fix for SQLAlchemy 2.0
-    if database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    db_type = '📦 PostgreSQL (Render)'
-elif os.getenv('RENDER_DATABASE_URL'):
-    database_url = os.getenv('RENDER_DATABASE_URL')
-    if database_url.startswith('postgres://'):
-        database_url = database_url.replace('postgres://', 'postgresql://', 1)
-    db_type = '🌐 PostgreSQL (Render)'
-else:
-    # Local SQLite - use instance folder
+    test_url = os.getenv('DATABASE_URL')
+    # Check if we can actually use this database
+    if 'postgres' in test_url.lower():
+        # Try to import psycopg2 to check if PostgreSQL is available
+        try:
+            import psycopg2
+            database_url = test_url
+            if database_url.startswith('postgres://'):
+                database_url = database_url.replace('postgres://', 'postgresql://', 1)
+            db_type = 'PostgreSQL (Render)'
+        except ImportError:
+            # psycopg2 not installed - will fall back to SQLite below
+            print("[WARN] psycopg2 not installed - falling back to SQLite")
+            pass
+    elif 'mysql' in test_url.lower():
+        database_url = test_url
+        db_type = 'MySQL (cPanel)'
+
+if not database_url:
+    # Check RENDER_DATABASE_URL as backup
+    if os.getenv('RENDER_DATABASE_URL'):
+        test_url = os.getenv('RENDER_DATABASE_URL')
+        try:
+            import psycopg2
+            database_url = test_url
+            if database_url.startswith('postgres://'):
+                database_url = database_url.replace('postgres://', 'postgresql://', 1)
+            db_type = 'PostgreSQL (Render)'
+        except ImportError:
+            print("[WARN] psycopg2 not installed, RENDER_DATABASE_URL ignored")
+            pass
+
+if not database_url:
+    # Fall back to local SQLite
     instance_path = os.path.join(BASE_DIR, 'backend', 'instance')
     os.makedirs(instance_path, exist_ok=True)
     db_path = os.path.join(instance_path, 'hesap_paylas.db')
     database_url = f'sqlite:///{db_path}'
-    db_type = '📄 SQLite (Local)'
+    db_type = 'SQLite (Local)'
 
 # Log database selection
 print(f"\n{'='*60}")
@@ -613,6 +639,17 @@ def token_required(f):
 
 # ==================== User Routes ====================
 
+@app.route('/api/debug/token-test', methods=['GET'])
+@token_required
+def token_test():
+    """Debug endpoint to test token"""
+    print(f"[DEBUG] Token test - user_id: {request.user_id}", flush=True)
+    user = User.query.get(request.user_id)
+    return jsonify({
+        'user_id': request.user_id,
+        'user_email': user.email if user else 'NOT FOUND'
+    }), 200
+
 @app.route('/api/user/profile', methods=['GET'])
 @token_required
 def get_profile():
@@ -942,46 +979,37 @@ def join_group():
 @app.route('/api/user/groups', methods=['GET'])
 @token_required
 def get_user_groups():
-    """Get all groups for current user - using raw SQL for reliability"""
+    """Get all groups for current user - using ORM for reliability"""
     user = User.query.get(request.user_id)
     
-    print(f"[GROUPS] User ID: {request.user_id}")
-    print(f"[GROUPS] User found: {user is not None}")
+    print(f"[GROUPS] User ID: {request.user_id}", flush=True)
+    print(f"[GROUPS] User found: {user is not None}", flush=True)
     
     if not user:
+        print(f"[GROUPS] User not found, returning empty array", flush=True)
         return jsonify([]), 200
     
-    # Raw SQL: group_members tablosundan grup ID'lerini al
-    from sqlalchemy import text
-    sql = text("""
-        SELECT DISTINCT g.* FROM groups g
-        INNER JOIN group_members gm ON g.id = gm.group_id
-        WHERE gm.user_id = :user_id AND g.is_active = true
-        ORDER BY g.created_at DESC
-    """)
+    # Use ORM relationship instead of raw SQL to avoid tuple issues
+    groups = [g for g in user.groups if g.is_active]
     
-    groups = db.session.execute(sql, {"user_id": request.user_id}).fetchall()
-    
-    print(f"[GROUPS] Found {len(groups)} groups via SQL")
+    print(f"[GROUPS] Found {len(groups)} active groups")
     
     groups_data = []
-    for row in groups:
-        group = Group.query.get(row.id)
-        if group:
-            print(f"[GROUPS] Group: {group.id} - {group.name}")
-            groups_data.append({
-                'id': group.id,
-                'name': group.name,
-                'description': group.description,
-                'category': group.category,
-                'code': group.code,
-                'code_formatted': format_group_code(group.code),
-                'qr_code': group.qr_code,
-                'created_at': group.created_at.isoformat(),
-                'members_count': len(group.members),
-                'members': [{'id': m.id, 'first_name': m.first_name, 'last_name': m.last_name} for m in group.members],
-                'status': 'active' if group.is_active else 'closed'
-            })
+    for group in groups:
+        print(f"[GROUPS] Group: {group.id} - {group.name}")
+        groups_data.append({
+            'id': group.id,
+            'name': group.name,
+            'description': group.description,
+            'category': group.category,
+            'code': group.code,
+            'code_formatted': format_group_code(group.code),
+            'qr_code': group.qr_code,
+            'created_at': group.created_at.isoformat(),
+            'members_count': len(group.members),
+            'members': [{'id': m.id, 'first_name': m.first_name, 'last_name': m.last_name} for m in group.members],
+            'status': 'active' if group.is_active else 'closed'
+        })
     
     print(f"[GROUPS] Returning {len(groups_data)} groups")
     
