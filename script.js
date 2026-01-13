@@ -137,26 +137,13 @@ function getAppURL() {
 
 // ==================== Library Availability Check ====================
 
-// Ensure Html5Qrcode library is available
-let html5QrcodeLibraryReady = false;
+// Html5Qrcode library loading flag (set by HTML script tag onload)
+let html5QrcodeLoaded = false;
 
-function waitForHtml5QrcodeLibrary(callback, maxAttempts = 10, attempt = 0) {
-    if (typeof Html5Qrcode !== 'undefined') {
-        html5QrcodeLibraryReady = true;
-        console.log('[LIBRARY] Html5Qrcode library is ready');
-        if (callback) callback();
-    } else if (attempt < maxAttempts) {
-        console.log('[LIBRARY] Waiting for Html5Qrcode library... (attempt ' + (attempt + 1) + '/' + maxAttempts + ')');
-        setTimeout(() => waitForHtml5QrcodeLibrary(callback, maxAttempts, attempt + 1), 100);
-    } else {
-        console.error('[LIBRARY] Html5Qrcode library failed to load after ' + maxAttempts + ' attempts');
-    }
+// Simple function to check if Html5Qrcode is available
+function isHtml5QrcodeReady() {
+    return typeof Html5Qrcode !== 'undefined' || window.html5QrcodeLoaded === true;
 }
-
-// Check library on page load
-window.addEventListener('load', () => {
-    waitForHtml5QrcodeLibrary();
-});
 
 // ==================== Sidebar Menu Functions ====================
 
@@ -2836,23 +2823,20 @@ function closeJoinGroupModal() {
 
 // New unified function for QR scanning and joining
 function startQRScannerForJoin() {
-    // Check if Html5Qrcode is available
-    if (typeof Html5Qrcode === 'undefined') {
-        console.error('[QR] Html5Qrcode library not loaded yet');
-        const resultsDiv = document.getElementById('qr-reader-results');
-        resultsDiv.innerHTML = '❌ Kütüphane yükleniyor, lütfen bekleyin...';
-        resultsDiv.style.color = '#e74c3c';
-        // Retry after 1 second
-        setTimeout(startQRScannerForJoin, 1000);
-        return;
-    }
-    
     const qrReader = document.getElementById('qr-reader');
     const startBtn = document.getElementById('startScanBtn');
     const stopBtn = document.getElementById('stopScanBtn');
     const joinBtn = document.getElementById('joinGroupBtn');
     const input = document.getElementById('groupCodeInput');
     const resultsDiv = document.getElementById('qr-reader-results');
+    
+    // Check if Html5Qrcode library is available
+    if (typeof Html5Qrcode === 'undefined') {
+        console.error('[QR] Html5Qrcode library not available');
+        resultsDiv.innerHTML = '❌ QR tarayıcı yüklenemedi. Lütfen sayfayı yenileyin.';
+        resultsDiv.style.color = '#e74c3c';
+        return;
+    }
     
     // Clear any existing scanner first
     if (html5QrcodeScanner) {
