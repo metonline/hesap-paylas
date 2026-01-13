@@ -2879,8 +2879,17 @@ function startQRScannerForJoin() {
             console.log('[QR] Error:', error);
         };
         
+        // Proper constraints format for getUserMedia
+        const constraints = {
+            video: {
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
+        };
+        
         html5QrcodeScanner.start(
-            { facingMode: "environment" },
+            constraints,
             config,
             qrCodeSuccessCallback,
             errorCallback
