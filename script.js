@@ -665,8 +665,8 @@ function handleManualSignup(event) {
             // Formu temizle
             document.getElementById('manualSignupForm').reset();
             
-            // Ana sayfaya git
-            showPage('homePage');
+            // Complete signup (checks for pending group code and joins if needed)
+            completeSignup(response.user);
             updateHomePageProfile();
         })
         .catch(error => {
