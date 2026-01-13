@@ -3510,22 +3510,25 @@ function showGroupMembersModal(groupId) {
         memberModalTitle.textContent = 'Hızlı İşlemler';
         membersList.innerHTML = '';
         
-        // Grup adı ve açıklaması tek satırda - MASK: Grup adı maskelenmiş gösterilir
+        // Grup adı ve açıklaması - MASK: Grup adı maskelenmiş gösterilir
         const groupInfoSection = document.createElement('div');
         groupInfoSection.style.cssText = `
             background: #f0f8ff;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 15px;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
             border-left: 4px solid #2196F3;
             cursor: pointer;
         `;
         // Grup adını maskeleyerek göster (ilk harfi + nokta + son harfi)
         const groupName = group.name || 'İsimsiz Grup';
         const maskedGroupName = groupName.length > 2 ? `${groupName.charAt(0)}${'.'.repeat(Math.max(1, groupName.length - 2))}${groupName.charAt(groupName.length - 1)}` : groupName;
-        const groupDisplay = `${maskedGroupName} (${group.code || '---'}) ${group.description || 'Açıklama yok'}`;
+        const groupCode = group.code || '---';
+        const groupDesc = group.description || 'Açıklama yok';
         groupInfoSection.innerHTML = `
-            <div style="font-size: 0.9em; color: #1976D2; font-weight: 600; word-break: break-word; line-height: 1.4;" title="${groupName}">${groupDisplay}</div>
+            <div style="font-size: 0.95em; color: #1976D2; font-weight: 700; margin-bottom: 8px;" title="${groupName}">📌 ${maskedGroupName}</div>
+            <div style="font-size: 0.85em; color: #666; margin-bottom: 8px;"><strong>Kod:</strong> ${groupCode}</div>
+            <div style="font-size: 0.9em; color: #333; font-weight: 500; word-wrap: break-word; white-space: normal; line-height: 1.5; max-width: 100%;" title="${groupDesc}"><strong>Açıklama:</strong> ${groupDesc}</div>
         `;
         groupInfoSection.onclick = () => showUserAccountDetails(group.created_by);
         membersList.appendChild(groupInfoSection);
