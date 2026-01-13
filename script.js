@@ -2380,11 +2380,25 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     })
     .then(group => {
         console.log('[GROUP-DETAILS] Fetch successful, group data:', group);
+        console.log('[GROUP-DETAILS] code_formatted:', group.code_formatted);
+        console.log('[GROUP-DETAILS] category:', group.category);
+        
         // Grup adını doğru göster
         document.getElementById('detailGroupName').textContent = group.name || groupName || 'İsimsiz Grup';
         // Grup kodunu göster (code_formatted varsa formatlanmış hali, yoksa raw code)
-        document.getElementById('detailGroupCode').textContent = group.code_formatted || group.code || '---';
-        document.getElementById('detailGroupCategory').textContent = group.category || 'Genel Yaşam';
+        const codeElement = document.getElementById('detailGroupCode');
+        if (codeElement) {
+            codeElement.textContent = group.code_formatted || group.code || '---';
+            console.log('[GROUP-DETAILS] Set code to:', codeElement.textContent);
+        }
+        
+        // Kategoriyi göster
+        const categoryElement = document.getElementById('detailGroupCategory');
+        if (categoryElement) {
+            categoryElement.textContent = group.category || 'Genel Yaşam';
+            console.log('[GROUP-DETAILS] Set category to:', categoryElement.textContent);
+        }
+        
         document.getElementById('detailGroupDate').textContent = new Date(group.created_at).toLocaleDateString('tr-TR');
         
         // Üye sayısını parantez içinde göster
