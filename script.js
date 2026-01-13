@@ -2823,7 +2823,7 @@ function startQRScannerForJoin() {
     startBtn.style.display = 'none';
     stopBtn.style.display = 'block';
     joinBtn.style.display = 'none';
-    input.style.display = 'none';
+    input.style.display = 'block';
     
     html5QrcodeScanner = new Html5Qrcode("qr-reader");
     
@@ -2906,15 +2906,20 @@ function stopQRScanner() {
     
     const startBtn = document.getElementById('startScanBtn');
     const stopBtn = document.getElementById('stopScanBtn');
+    const qrReader = document.getElementById('qr-reader');
+    const input = document.getElementById('groupCodeInput');
     
     startBtn.style.display = 'block';
     stopBtn.style.display = 'none';
+    qrReader.style.display = 'none';
+    input.style.display = 'block';
 }
 
 
 function handleManualCodeInput(input) {
     const qrReader = document.getElementById('qr-reader');
     const startBtn = document.getElementById('startScanBtn');
+    const stopBtn = document.getElementById('stopScanBtn');
     const joinBtn = document.getElementById('joinGroupBtn');
     
     // Sadece rakamları kabul et
@@ -2936,7 +2941,13 @@ function handleManualCodeInput(input) {
     if (value.length === 6) {
         qrReader.style.display = 'none';
         startBtn.style.display = 'none';
+        stopBtn.style.display = 'none';
         joinBtn.style.display = 'block';
+    } else {
+        qrReader.style.display = 'none';
+        startBtn.style.display = 'block';
+        stopBtn.style.display = 'none';
+        joinBtn.style.display = 'none';
     }
 }
 
