@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gruba Katıl - Hesap Paylaş</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: #999;
+            font-size: 14px;
+        }
+
+        .form-section {
+            margin-bottom: 25px;
+        }
+
+        .form-section.hidden {
+            display: none;
+        }
+
+        .form-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #555;
+            margin-bottom: 6px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input::placeholder {
+            color: #999;
+        }
+
+        .phone-input-wrapper {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .country-code {
+            width: 60px;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            background: #f5f5f5;
+            text-align: center;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .phone-number-input {
+            flex: 1;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: inherit;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status-message {
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .status-message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            display: block;
+        }
+
+        .status-message.error {
+            background: #ffebee;
+            color: #c62828;
+            display: block;
+        }
+
+        .status-message.info {
+            background: #e3f2fd;
+            color: #1565c0;
+            display: block;
+        }
+
+        .password-strength {
+            margin-top: 6px;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s ease;
+            background: #f44336;
+        }
+
+        .password-strength-bar.medium {
+            width: 50%;
+            background: #ff9800;
+        }
+
+        .password-strength-bar.strong {
+            width: 100%;
+            background: #4caf50;
+        }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #999;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+
+        .requirement {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .requirement.met {
+            color: #4caf50;
+        }
+
+        .requirement::before {
+            content: '✓';
+            font-weight: bold;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+            color: #999;
+            font-size: 13px;
+        }
+
+        .divider::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+
+        .divider span {
+            background: white;
+            padding: 0 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-link a {
+            color: #999;
+            text-decoration: none;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .back-link a:hover {
+            color: #667eea;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: blink 1.3s infinite;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+            margin-left: 4px;
+            animation: blink 1.3s infinite 0.2s;
+        }
+
+        .loading::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: currentColor;
+            margin-right: 4px;
+            animation: blink 1.3s infinite 0.4s;
+        }
+
+        @keyframes blink {
+            0%, 60%, 100% { opacity: 0.3; }
+            30% { opacity: 1; }
+        }
+
+        .existing-user-section {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .existing-user-section p {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .toggle-section {
+            text-align: center;
+            margin-top: 15px;
+        }
+
+        .toggle-section a {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .toggle-section a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Logo -->
+        <div class="logo">
+            <h1>💰 Hesap Paylaş</h1>
+            <p id="pageSubtitle">Gruba Katıl</p>
+        </div>
+
+        <!-- Status Message -->
+        <div class="status-message" id="statusMessage"></div>
+
+        <!-- Login Section (Existing Users) -->
+        <div class="form-section" id="loginSection">
+            <div class="form-title">Giriş Yap</div>
+            <div class="form-group">
+                <label for="loginPhone">Telefon Numarası</label>
+                <div class="phone-input-wrapper">
+                    <div class="country-code">+90</div>
+                    <input 
+                        type="tel" 
+                        id="loginPhone" 
+                        class="phone-number-input"
+                        placeholder="5323133277"
+                        inputmode="numeric"
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="loginPassword">Şifre</label>
+                <input 
+                    type="password" 
+                    id="loginPassword" 
+                    placeholder="Şifrenizi girin"
+                    autocomplete="current-password"
+                >
+            </div>
+
+            <button onclick="loginUser()">
+                <span id="loginBtnText">Gruba Katıl</span>
+            </button>
+
+            <div class="toggle-section">
+                Hesabın yok mu? <a href="#" onclick="switchToSignup(); return false;">Üye Ol</a>
+            </div>
+
+            <div class="back-link">
+                <a href="index.html">← Ana Sayfaya Dön</a>
+            </div>
+        </div>
+
+        <!-- Signup Section (New Users) -->
+        <div class="form-section hidden" id="signupSection">
+            <div class="form-title">Hesap Oluştur</div>
+            
+            <div class="form-group">
+                <label for="signupPhone">Telefon Numarası</label>
+                <div class="phone-input-wrapper">
+                    <div class="country-code">+90</div>
+                    <input 
+                        type="tel" 
+                        id="signupPhone" 
+                        class="phone-number-input"
+                        placeholder="5323133277"
+                        inputmode="numeric"
+                    >
+                </div>
+                <small style="color: #999; margin-top: 5px; display: block;">10 haneli numaranızı girin (ilk 0 olmadan)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="signupPassword">Şifre</label>
+                <input 
+                    type="password" 
+                    id="signupPassword" 
+                    placeholder="Şifre (en az 6 karakter)"
+                    autocomplete="new-password"
+                    oninput="checkPasswordStrength()"
+                >
+                <div class="password-strength">
+                    <div class="password-strength-bar" id="strengthBar"></div>
+                </div>
+                <div class="password-requirements">
+                    <div class="requirement" id="req-length">En az 6 karakter</div>
+                    <div class="requirement" id="req-uppercase">Büyük harf</div>
+                    <div class="requirement" id="req-number">Rakam</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Şifre Tekrar</label>
+                <input 
+                    type="password" 
+                    id="confirmPassword" 
+                    placeholder="Şifreyi tekrar girin"
+                    autocomplete="new-password"
+                >
+            </div>
+
+            <button onclick="signupUser()">
+                <span id="signupBtnText">Üye Ol ve Gruba Katıl</span>
+            </button>
+
+            <div class="toggle-section">
+                Zaten üye misin? <a href="#" onclick="switchToLogin(); return false;">Giriş Yap</a>
+            </div>
+
+            <div class="back-link">
+                <a href="index.html">← Ana Sayfaya Dön</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // API Base URL
+        const API_BASE = window.location.origin;
+
+        // Get group code from URL if available
+        const urlParams = new URLSearchParams(window.location.search);
+        const groupCode = urlParams.get('code');
+
+        function showMessage(message, type = 'info') {
+            const statusDiv = document.getElementById('statusMessage');
+            statusDiv.textContent = message;
+            statusDiv.className = `status-message ${type}`;
+            setTimeout(() => {
+                statusDiv.className = 'status-message';
+            }, 5000);
+        }
+
+        function switchToSignup() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('signupSection').classList.remove('hidden');
+            document.getElementById('pageSubtitle').textContent = 'Hesap Oluştur';
+        }
+
+        function switchToLogin() {
+            document.getElementById('signupSection').classList.add('hidden');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('pageSubtitle').textContent = 'Gruba Katıl';
+        }
+
+        function checkPasswordStrength() {
+            const password = document.getElementById('signupPassword').value;
+            const strengthBar = document.getElementById('strengthBar');
+            
+            let strength = 0;
+            const requirements = {
+                length: password.length >= 6,
+                uppercase: /[A-Z]/.test(password),
+                number: /[0-9]/.test(password)
+            };
+
+            // Update requirement indicators
+            document.getElementById('req-length').classList.toggle('met', requirements.length);
+            document.getElementById('req-uppercase').classList.toggle('met', requirements.uppercase);
+            document.getElementById('req-number').classList.toggle('met', requirements.number);
+
+            // Calculate strength
+            if (requirements.length) strength++;
+            if (requirements.uppercase) strength++;
+            if (requirements.number) strength++;
+
+            // Update strength bar
+            strengthBar.className = 'password-strength-bar';
+            if (strength === 1) strengthBar.classList.add('medium');
+            else if (strength >= 2) strengthBar.classList.add('strong');
+        }
+
+        async function loginUser() {
+            const phone = document.getElementById('loginPhone').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+
+            if (!phone || !password) {
+                showMessage('Lütfen tüm alanları doldurun', 'error');
+                return;
+            }
+
+            if (phone.length !== 10) {
+                showMessage('Telefon numarası 10 haneli olmalıdır', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Giriş yapılıyor...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/phone-password-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: phone,
+                        password: password,
+                        is_signup: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('✓ Başarıyla giriş yaptınız', 'success');
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    // Redirect with group code if available
+                    setTimeout(() => {
+                        if (groupCode) {
+                            window.location.href = `index.html?joinGroup=${groupCode}`;
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1500);
+                } else {
+                    showMessage(data.error || 'Giriş başarısız', 'error');
+                }
+            } catch (error) {
+                console.error('Login Error:', error);
+                showMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span id="loginBtnText">Gruba Katıl</span>';
+            }
+        }
+
+        async function signupUser() {
+            const phone = document.getElementById('signupPhone').value.trim();
+            const password = document.getElementById('signupPassword').value.trim();
+            const confirmPassword = document.getElementById('confirmPassword').value.trim();
+
+            if (!phone || !password || !confirmPassword) {
+                showMessage('Lütfen tüm alanları doldurun', 'error');
+                return;
+            }
+
+            if (phone.length !== 10) {
+                showMessage('Telefon numarası 10 haneli olmalıdır', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('Şifre en az 6 karakter olmalıdır', 'error');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                showMessage('Şifreler eşleşmiyor', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Hesap oluşturuluyor...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/phone-password-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: phone,
+                        password: password,
+                        confirm_password: confirmPassword,
+                        is_signup: true
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('✓ Hesap oluşturuldu, gruba katılıyorsunuz', 'success');
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    setTimeout(() => {
+                        if (groupCode) {
+                            window.location.href = `index.html?joinGroup=${groupCode}`;
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1500);
+                } else {
+                    showMessage(data.error || 'Hesap oluşturulamadı', 'error');
+                }
+            } catch (error) {
+                console.error('Signup Error:', error);
+                showMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span id="signupBtnText">Üye Ol ve Gruba Katıl</span>';
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('loginPhone').focus();
+        });
+    </script>
+</body>
+</html>

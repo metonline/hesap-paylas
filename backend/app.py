@@ -727,6 +727,87 @@ def verify_otp():
         print(f"[ERROR] Verify OTP failed: {str(e)}")
         return jsonify({'error': 'Verification failed. Please try again.'}), 500
 
+@app.route('/api/auth/phone-password-login', methods=['POST'])
+def phone_password_login():
+    """Phone + Password authentication (signup/login for group joining)"""
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ['phone', 'password']):
+            return jsonify({'error': 'Phone and password are required'}), 400
+        
+        phone = data['phone'].strip()
+        password = data['password'].strip()
+        is_signup = data.get('is_signup', False)  # True if new user
+        confirm_password = data.get('confirm_password')  # For signup validation
+        
+        # Validate phone format
+        if not phone.startswith('+'):
+            phone = '+90' + phone.lstrip('0')
+        
+        # Validate phone length (basic)
+        if len(phone) < 10:
+            return jsonify({'error': 'Invalid phone number'}), 400
+        
+        # Validate password strength (min 6 chars)
+        if len(password) < 6:
+            return jsonify({'error': 'Password must be at least 6 characters'}), 400
+        
+        # Check if user exists
+        user = User.query.filter_by(phone=phone).first()
+        
+        if not user:
+            # First-time signup
+            if not is_signup:
+                return jsonify({'error': 'user_not_found', 'message': 'This phone is not registered'}), 404
+            
+            # Validate confirm_password for signup
+            if password != confirm_password:
+                return jsonify({'error': 'Passwords do not match'}), 400
+            
+            print(f"[AUTH] Creating new user with phone {phone}")
+            
+            # Create new user
+            user = User(
+                first_name='User',
+                last_name='',
+                email=f"phone_{phone.replace('+', '').replace(' ', '')}@hesappaylas.local",
+                phone=phone
+            )
+            user.set_password(password)
+            db.session.add(user)
+            db.session.commit()
+            
+            token = generate_token(user.id)
+            print(f"[AUTH] New user created and logged in: {phone}")
+            
+            return jsonify({
+                'message': 'Account created successfully',
+                'user': user.to_dict(),
+                'token': token,
+                'is_new_user': True
+            }), 201
+        else:
+            # Existing user - verify password
+            if not user.check_password(password):
+                print(f"[AUTH] Password verification failed for {phone}")
+                return jsonify({'error': 'Invalid password'}), 401
+            
+            token = generate_token(user.id)
+            print(f"[AUTH] User logged in with phone: {phone}")
+            
+            return jsonify({
+                'message': 'Login successful',
+                'user': user.to_dict(),
+                'token': token,
+                'is_new_user': False
+            }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Phone-password login failed: {str(e)}")
+        return jsonify({'error': 'Authentication failed. Please try again.'}), 500
+
 # ==================== Helper Functions ====================
 
 def format_group_code(code):
