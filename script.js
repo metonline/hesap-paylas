@@ -2442,23 +2442,20 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
             document.getElementById('detailGroupMemberNames').innerHTML = '<span style="color: #999; font-size: 0.85em;">Üye yok</span>';
         }
         
-        // Siparişleri/Hesap Özeti göster
-        if (group.orders && group.orders.length > 0) {
-            const ordersList = group.orders.map(order => `
-                <div style="padding: 10px; background: white; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #3498db;">
-                    <div style="font-weight: 600; color: #333; margin-bottom: 4px; font-size: 0.9em;">🍽️ ${order.restaurant}</div>
-                    <div style="font-size: 0.85em; color: #666; margin-bottom: 3px;">Tarih: ${new Date(order.created_at).toLocaleDateString('tr-TR')}</div>
-                    <div style="font-size: 0.85em; color: #27ae60; font-weight: 600;">₺${order.total_amount.toFixed(2)}</div>
-                </div>
-            `).join('');
-            document.getElementById('detailGroupOrders').innerHTML = ordersList;
-        } else {
-            document.getElementById('detailGroupOrders').innerHTML = '';
-        }
+        // Siparişleri/Hesap Özeti göster (now in separate expenditure modal, not here)
+        // This was previously displayed inline - now it's fetched when user clicks "Harcama Detayları"
         
-        // Ödeme dengesi (orders total)
-        const totalBalance = group.orders ? group.orders.reduce((sum, order) => sum + order.total_amount, 0) : 0;
-        document.getElementById('detailGroupBalance').textContent = `₺${totalBalance.toFixed(2)}`;
+        // Don't display orders inline anymore - they're in the expenditure modal
+        // if (group.orders && group.orders.length > 0) {
+        //     const ordersList = group.orders.map(order => `...`).join('');
+        //     document.getElementById('detailGroupOrders').innerHTML = ordersList;
+        // } else {
+        //     document.getElementById('detailGroupOrders').innerHTML = '';
+        // }
+        
+        // Ödeme dengesi (orders total) - only show in expenditure modal
+        // const totalBalance = group.orders ? group.orders.reduce((sum, order) => sum + order.total_amount, 0) : 0;
+        // document.getElementById('detailGroupBalance').textContent = `₺${totalBalance.toFixed(2)}`;
         
         // Üyeleri global'e sakla (detay açılması için)
         window.currentGroupMembers = group.members || [];
