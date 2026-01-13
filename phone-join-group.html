@@ -345,15 +345,15 @@
         <!-- Status Message -->
         <div class="status-message" id="statusMessage"></div>
 
-        <!-- Step 1: Button to start -->
-        <div id="step1">
+        <!-- Step 1: Button to start (HIDDEN - skip directly to phone) -->
+        <div id="step1" class="hidden">
             <button onclick="showPhoneInput()" class="form-group" style="opacity: 1; animation: none; margin-bottom: 0;">
                 📱 Telefon ile Giriş
             </button>
         </div>
 
-        <!-- Step 2: Phone input -->
-        <div id="step2" class="hidden">
+        <!-- Step 2: Phone input (SHOWN IMMEDIATELY) -->
+        <div id="step2">
             <div class="form-group delay1">
                 <div class="phone-wrapper">
                     <div class="country-code">+90</div>
@@ -660,8 +660,8 @@
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Auto-focus button
-            document.querySelector('button[onclick="showPhoneInput()"]').focus();
+            // Skip the button step and show phone input directly
+            showPhoneInput();
         });
     </script>
 </body>
