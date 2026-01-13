@@ -3311,7 +3311,7 @@ function showGroupMembersModal(groupId) {
         membersList.appendChild(orderBtn);
         
         // Davet linkini WhatsApp'ta Paylaş - Yeşil Buton (EN ALTTA)
-        const participationLink = `${getAppURL()}?code=${group.code}`;
+        const participationLink = `${getAppURL()}/?code=${group.code}`;
         const whatsappBtn = document.createElement('button');
         whatsappBtn.style.cssText = `
             width: 100%;
