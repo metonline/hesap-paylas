@@ -2897,22 +2897,6 @@ function switchJoinTab(tab) {
     // This function is deprecated - tabs are removed
     return;
 }
-    
-    html5QrcodeScanner.start(
-        { facingMode: "environment" },
-        config,
-        qrCodeSuccessCallback,
-        (errorMessage) => {
-            // Hata yapma, sessiz tut
-        }
-    ).catch(err => {
-        console.error('Kamera açılamadı:', err);
-        document.getElementById('qr-reader-results').textContent = '❌ Kamera izni gerekli';
-        document.getElementById('qr-reader-results').style.color = '#e74c3c';
-        startBtn.style.display = 'block';
-        stopBtn.style.display = 'none';
-    });
-}
 
 function stopQRScanner() {
     if (html5QrcodeScanner) {
