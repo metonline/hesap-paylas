@@ -107,50 +107,17 @@
                 </div>
 
                 <div class="signup-section">
-                    <!-- Signup Form -->
-                    <div id="signupForm" class="auth-form login-card" style="display: none;">
-                        <div class="login-header">ÜYEOL</div>
-                        <form id="manualSignupForm" class="login-form" onsubmit="handleManualSignup(event)">
-                            <input type="text" id="signupFirstName" placeholder="Ad" required class="login-input">
-                            <input type="text" id="signupLastName" placeholder="Soyad" required class="login-input">
-                            <input type="tel" id="phone" placeholder="Telefon (0532 333 22 22)" value="0532 333 22 22" required class="login-input" oninput="handlePhoneInput(this)">
-                            <input type="email" id="email" placeholder="E-posta" required class="login-input">
-                            <input type="password" id="password" placeholder="Şifre" required class="login-input">
-                            <button type="submit" class="login-btn">KAYDOL</button>
-                        </form>
-                        <p class="signup-text" style="padding: 0 20px 20px 20px;">Kaydolarak <a href="#">Şartları</a> kabul etmiş olursunuz</p>
-                    </div>
-                    
-                    <!-- Login Form -->
+                    <!-- Phone PIN Login Form (Only Authentication Method) -->
                     <div id="loginForm" class="auth-form login-card">
-                        <div class="login-header">ÜYE GİRİŞİ</div>
-                        <form id="manualLoginForm" class="login-form" onsubmit="handleManualLogin(event)">
-                            <input type="email" id="loginEmail" placeholder="E-posta" required class="login-input" style="pointer-events: auto;">
-                            <input type="password" id="loginPassword" placeholder="Şifre" required class="login-input" style="pointer-events: auto;">
-                            <p class="forgot-link"><a href="#" onclick="showPasswordResetForm(); return false;">Şifreni mi unuttun?</a></p>
-                            <button type="submit" class="login-btn" style="pointer-events: auto;">ÜYE GİRİŞİ</button>
-                        </form>
-                        <div style="padding: 0 20px; margin: 15px 0; text-align: center; border-top: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0;">
-                            <p style="font-size: 0.85em; color: #999; margin: 10px 0;">VEYA</p>
-                        </div>
-                        <a href="phone-login.html" class="login-btn" style="text-decoration: none; display: block; text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); pointer-events: auto;">📱 TELEFON İLE GİRİŞ</a>
-                        <p class="signup-text">Hesabın yok mu? <a href="#" onclick="showAuthForm('signup'); return false;">ÜYE OL</a></p>
-                    </div>
-
-                    <!-- Şifre Sıfırlama Formu -->
-                    <div id="resetPasswordForm" class="auth-form login-card" style="display: none;">
-                        <div class="login-header">ŞİFRE SIFIRLA</div>
-                        <form id="resetForm" class="login-form" onsubmit="handlePasswordReset(event)">
-                            <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">E-posta adresinizi girin, size sıfırlama kodu göndereceğiz.</p>
-                            <input type="email" id="resetEmail" placeholder="E-posta" required class="login-input" style="pointer-events: auto;">
-                            <input type="hidden" id="resetToken">
-                            <div id="resetCodeSection" style="display: none;">
-                                <input type="text" id="resetCode" placeholder="Sıfırlama Kodu" class="login-input" style="pointer-events: auto;">
-                                <input type="password" id="newPassword" placeholder="Yeni Şifre" class="login-input" style="pointer-events: auto;">
-                            </div>
-                            <button type="submit" class="login-btn" id="resetSubmitBtn" style="pointer-events: auto;">KOD GÖNDER</button>
-                        </form>
-                        <p class="signup-text"><a href="#" onclick="showAuthForm('login'); return false;">Giriş Sayfasına Dön</a></p>
+                        <div class="login-header" style="margin-bottom: 30px;">HOŞ GELDİN</div>
+                        
+                        <button onclick="window.location.href='phone-join-group.html'" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 20px;">
+                            📱 TELEFON İLE GİRİŞ
+                        </button>
+                        
+                        <p class="signup-text" style="text-align: center; color: #999; font-size: 13px;">
+                            Telefon numarası ve 4 haneli PIN ile giriş yapın
+                        </p>
                     </div>
                 </div>
             </div>
