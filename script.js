@@ -2800,11 +2800,11 @@ function joinGroupWithCode(code) {
                 // Background join (signup flow) - refresh and show page
                 console.log('[SIGNUP] Group join successful, showing home page with updated groups');
                 loadUserGroups();
-                loadActiveGroups();
-                // Give loadActiveGroups a moment to complete before showing page
-                setTimeout(() => {
+                // Wait for loadActiveGroups to complete before showing page
+                Promise.resolve(loadActiveGroups()).then(() => {
+                    console.log('[SIGNUP] Groups loaded, showing home page');
                     showPage('homePage');
-                }, 300);
+                });
             }
         } else {
             if (isManualJoin) {
@@ -3106,10 +3106,10 @@ function toggleActiveGroupPanel() {
 function loadActiveGroups() {
     console.log('✅ loadActiveGroups çağrıldı');
     const token = localStorage.getItem('hesapPaylas_token');
-    if (!token) return;
+    if (!token) return Promise.resolve();
     
     const baseURL = getBaseURL();
-    fetch(`${baseURL}/api/user/groups`, {
+    return fetch(`${baseURL}/api/user/groups`, {
         headers: {
             'Authorization': `Bearer ${token}`
         }
