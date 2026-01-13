@@ -369,8 +369,16 @@
 
             <!-- Step 3: PIN input -->
             <div id="passwordSection" class="hidden">
-                <div class="form-group delay2">
-                    <label>4 Haneli PIN'iniz</label>
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <div style="color: #667eea; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>🥄</span>
+                        <span>Hesap</span>
+                    </div>
+                    <div style="color: #764ba2; font-size: 28px; font-weight: 700;">Paylaş</div>
+                </div>
+
+                <div class="form-group delay2" style="text-align: center;">
+                    <label style="font-size: 18px; font-weight: 600; color: #333;">4 Haneli PIN Kodunuzu Girin !</label>
                     <div class="pin-input-group" id="pinGroup">
                         <input type="text" class="pin-input" maxlength="1" inputmode="numeric">
                         <input type="text" class="pin-input" maxlength="1" inputmode="numeric">
@@ -380,7 +388,7 @@
                 </div>
 
                 <div class="form-group delay3" style="opacity: 1; animation: none;">
-                    <div class="info-box">
+                    <div class="info-box" style="font-size: 15px; line-height: 1.6; padding: 16px;">
                         📝 Daha önce belirlediğiniz 4 haneli PIN kodunuzu girin. İlk kez kullanıyorsanız girdiğiniz 4 haneli PIN kodu hesabınıza kaydolacaktır.
                     </div>
                     <div id="wrongPinLink" style="text-align: center; margin-top: 15px; display: none;">
@@ -423,22 +431,30 @@
             </div>
         </div>
 
-        <div class="back-link">
-            <a href="index.html">← Ana Sayfaya Dön</a>
-        </div>
     </div>
 
     <!-- Forgot PIN Modal -->
     <div id="resetPinModal" class="modal hidden">
         <div class="modal-content">
-            <button class="modal-close" onclick="hideResetPinModal()">✕</button>
-            <h2 style="margin-bottom: 20px;">PIN Sıfırla</h2>
+            <div style="position: relative; margin-bottom: 30px;">
+                <button class="modal-close" onclick="hideResetPinModal()" style="position: absolute; top: 0; right: 0; background: none; border: none; font-size: 28px; cursor: pointer; color: #667eea;">
+                    ✕
+                </button>
+                <div style="text-align: center;">
+                    <div style="color: #667eea; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span>🥄</span>
+                        <span>Hesap</span>
+                    </div>
+                    <div style="color: #764ba2; font-size: 28px; font-weight: 700;">Paylaş</div>
+                </div>
+            </div>
+            <h2 style="text-align: center; margin-bottom: 20px; font-size: 18px;">PIN Sıfırla</h2>
             
             <div class="status-message" id="resetStatusMessage"></div>
             
             <!-- Step 1: Confirmation -->
             <div id="resetStep1" style="display: block;">
-                <div class="info-box" style="margin-bottom: 20px;">
+                <div class="info-box" style="margin-bottom: 20px; font-size: 15px; line-height: 1.6; padding: 16px;">
                     📱 Sıfırlama kodunu <strong id="confirmPhone"></strong> numarasına SMS ile göndereceğiz.
                 </div>
                 
@@ -451,7 +467,7 @@
             <!-- Step 2: Enter verification code -->
             <div id="resetStep2" class="hidden">
                 <div class="form-group">
-                    <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">SMS'te Aldığınız Kodu Girin</label>
+                    <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600; font-size: 15px;">SMS'te Aldığınız Kodu Girin</label>
                     <input 
                         type="text" 
                         id="verificationCodeInput" 
@@ -471,7 +487,7 @@
             <!-- Step 3: Set new PIN -->
             <div id="resetStep3" class="hidden">
                 <div class="form-group">
-                    <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">Yeni 4 Haneli PIN</label>
+                    <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600; font-size: 15px;">Yeni 4 Haneli PIN</label>
                     <div class="pin-input-group" id="resetPinGroup">
                         <input type="text" class="pin-input reset-pin-input" maxlength="1" inputmode="numeric">
                         <input type="text" class="pin-input reset-pin-input" maxlength="1" inputmode="numeric">

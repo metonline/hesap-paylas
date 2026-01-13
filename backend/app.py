@@ -883,6 +883,7 @@ def request_pin_reset():
         try:
             otp_record = OTPVerification(
                 phone=phone,
+                otp_code=reset_code,  # Also set otp_code for backward compatibility
                 code=reset_code,
                 purpose='pin_reset',
                 expires_at=datetime.utcnow() + timedelta(minutes=10)
