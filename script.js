@@ -77,8 +77,13 @@ function handleDeepLink() {
             // Clean URL to avoid re-processing
             window.history.replaceState({}, document.title, window.location.pathname);
         } else {
-            // Login değilse, group code'u localStorage'e kaydet (sessionStorage daha güvenilir olmadığı için)
-            localStorage.setItem('pendingGroupCode', groupCode);
+            // Login değilse, try to use localStorage (may be blocked by browser)
+            // But also keep code in URL as fallback
+            try {
+                localStorage.setItem('pendingGroupCode', groupCode);
+            } catch (e) {
+                console.log('[WARN] localStorage blocked by browser - will rely on URL parameter');
+            }
         }
     }
 }
@@ -738,11 +743,25 @@ function completeSignup(userData) {
     
     console.log("Kullanıcı kaydı tamamlandı:", userData);
     
-    // Check if there's a pending group code to join (from deep link)
-    const pendingCode = localStorage.getItem('pendingGroupCode');
+    // Check for pending group code - first try localStorage, then check URL
+    let pendingCode = null;
+    try {
+        pendingCode = localStorage.getItem('pendingGroupCode');
+    } catch (e) {
+        console.log('[WARN] localStorage blocked - checking URL instead');
+    }
+    
+    // Fallback to URL parameter if localStorage is blocked
+    if (!pendingCode) {
+        const params = new URLSearchParams(window.location.search);
+        pendingCode = params.get('code') || params.get('groupCode');
+    }
+    
     if (pendingCode) {
         console.log('Processing pending group code after signup:', pendingCode);
-        localStorage.removeItem('pendingGroupCode');
+        try {
+            localStorage.removeItem('pendingGroupCode');
+        } catch (e) {}
         // Clear URL to avoid re-processing
         window.history.replaceState({}, document.title, window.location.pathname);
         setTimeout(() => {
@@ -843,11 +862,25 @@ function handleManualLogin(event) {
                 // loadActiveGroups() will show/hide button based on groups
                 loadActiveGroups();
                 
-                // Check if there's a pending group code to join (from deep link)
-                const pendingCode = localStorage.getItem('pendingGroupCode');
+                // Check if there's a pending group code to join - first try localStorage, then URL
+                let pendingCode = null;
+                try {
+                    pendingCode = localStorage.getItem('pendingGroupCode');
+                } catch (e) {
+                    console.log('[WARN] localStorage blocked - checking URL instead');
+                }
+                
+                // Fallback to URL parameter if localStorage is blocked
+                if (!pendingCode) {
+                    const params = new URLSearchParams(window.location.search);
+                    pendingCode = params.get('code') || params.get('groupCode');
+                }
+                
                 if (pendingCode) {
                     console.log('Processing pending group code from deep link:', pendingCode);
-                    localStorage.removeItem('pendingGroupCode');
+                    try {
+                        localStorage.removeItem('pendingGroupCode');
+                    } catch (e) {}
                     // Clear URL to avoid re-processing
                     window.history.replaceState({}, document.title, window.location.pathname);
                     setTimeout(() => {
