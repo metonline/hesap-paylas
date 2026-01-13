@@ -305,9 +305,12 @@ class OTPVerification(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     phone = db.Column(db.String(20), nullable=False, index=True)
-    otp_code = db.Column(db.String(6), nullable=False)
+    otp_code = db.Column(db.String(6), nullable=True)  # For Twilio verification
+    code = db.Column(db.String(6), nullable=True)  # Generic code field (for PIN reset)
+    purpose = db.Column(db.String(20), default='verification')  # 'verification' or 'pin_reset'
     twilio_sid = db.Column(db.String(255), nullable=True)  # Twilio verification SID
     is_verified = db.Column(db.Boolean, default=False)
+    used = db.Column(db.Boolean, default=False)  # For PIN reset tracking
     attempts = db.Column(db.Integer, default=0)
     max_attempts = db.Column(db.Integer, default=3)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
