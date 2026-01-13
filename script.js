@@ -2798,12 +2798,18 @@ function joinGroupWithCode(code) {
                 }, 1500);
             } else {
                 // Background join (signup flow) - refresh and show page
-                console.log('[SIGNUP] Group join successful, showing home page with updated groups');
+                console.log('[SIGNUP] Group join successful, waiting for groups to load...');
                 loadUserGroups();
                 // Wait for loadActiveGroups to complete before showing page
                 Promise.resolve(loadActiveGroups()).then(() => {
-                    console.log('[SIGNUP] Groups loaded, showing home page');
-                    showPage('homePage');
+                    console.log('[SIGNUP] Groups loaded, checking if any groups found...');
+                    const listContainer = document.getElementById('activeGroupsFloatingList');
+                    const itemCount = listContainer.children.length;
+                    console.log('[SIGNUP] Active groups list has', itemCount, 'items');
+                    setTimeout(() => {
+                        console.log('[SIGNUP] Now showing home page');
+                        showPage('homePage');
+                    }, 200);
                 });
             }
         } else {
@@ -3116,6 +3122,7 @@ function loadActiveGroups() {
     })
     .then(response => response.json())
     .then(groups => {
+        console.log('[GROUPS] API returned:', groups.length, 'groups', groups);
         const listContainer = document.getElementById('activeGroupsFloatingList');
         const activeGroupButton = document.getElementById('activeGroupButton');
         
