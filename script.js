@@ -55,8 +55,8 @@ function handleDeepLink() {
             // Clean URL to avoid re-processing
             window.history.replaceState({}, document.title, window.location.pathname);
         } else {
-            // Login değilse, group code'u sessionStorage'e kaydet ve login sayfasına yönlendir
-            sessionStorage.setItem('pendingGroupCode', groupCode);
+            // Login değilse, group code'u localStorage'e kaydet (sessionStorage daha güvenilir olmadığı için)
+            localStorage.setItem('pendingGroupCode', groupCode);
         }
     }
 }
@@ -245,10 +245,10 @@ function handleGoogleResponse(response) {
             app.currentUser = response.user;
 
             // Check for pending group code after Google login
-            const pendingCode = sessionStorage.getItem('pendingGroupCode');
+            const pendingCode = localStorage.getItem('pendingGroupCode');
             if (pendingCode) {
                 console.log('Processing pending group code after Google login:', pendingCode);
-                sessionStorage.removeItem('pendingGroupCode');
+                localStorage.removeItem('pendingGroupCode');
                 // Clear URL to avoid re-processing
                 window.history.replaceState({}, document.title, window.location.pathname);
                 setTimeout(() => {
@@ -717,10 +717,10 @@ function completeSignup(userData) {
     console.log("Kullanıcı kaydı tamamlandı:", userData);
     
     // Check if there's a pending group code to join (from deep link)
-    const pendingCode = sessionStorage.getItem('pendingGroupCode');
+    const pendingCode = localStorage.getItem('pendingGroupCode');
     if (pendingCode) {
         console.log('Processing pending group code after signup:', pendingCode);
-        sessionStorage.removeItem('pendingGroupCode');
+        localStorage.removeItem('pendingGroupCode');
         // Clear URL to avoid re-processing
         window.history.replaceState({}, document.title, window.location.pathname);
         setTimeout(() => {
@@ -822,10 +822,10 @@ function handleManualLogin(event) {
                 loadActiveGroups();
                 
                 // Check if there's a pending group code to join (from deep link)
-                const pendingCode = sessionStorage.getItem('pendingGroupCode');
+                const pendingCode = localStorage.getItem('pendingGroupCode');
                 if (pendingCode) {
                     console.log('Processing pending group code from deep link:', pendingCode);
-                    sessionStorage.removeItem('pendingGroupCode');
+                    localStorage.removeItem('pendingGroupCode');
                     // Clear URL to avoid re-processing
                     window.history.replaceState({}, document.title, window.location.pathname);
                     setTimeout(() => {
