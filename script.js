@@ -1760,14 +1760,14 @@ function smartShareGroup() {
 
 // URL parametresi ile WhatsApp paylaşımı
 function shareViaWhatsAppWithUrl() {
-    const appUrl = getAppURL() + '/?groupCode=' + app.currentGroupCode;
+    const appUrl = getAppURL() + '/?code=' + app.currentGroupCode;
     const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl:\n\n${appUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
 }
 
 function shareViaWhatsApp() {
     // Uygulama URL'sine grup kodu parametresi ile beraber
-    const appUrl = getAppURL() + '/?groupCode=' + app.currentGroupCode;
+    const appUrl = getAppURL() + '/?code=' + app.currentGroupCode;
     const message = `Merhaba! ${app.currentGroupName} isimli gruba katıl:\n\n${appUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
     closeShareModal();
@@ -2958,7 +2958,9 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, rawCode, format
     // Katılım linkini oluştur ve göster (dynamic URL kullan)
     const baseURL = getAppURL();
     const participationLink = `${baseURL}?code=${formattedCode}`;
-    document.getElementById('successParticipationLink').textContent = participationLink;
+    const linkElement = document.getElementById('successParticipationLink');
+    linkElement.textContent = participationLink;
+    linkElement.href = participationLink;
     
     // WhatsApp share button'ında formatted grup kodunu sakla
     document.getElementById('whatsappShareBtn').setAttribute('data-group-code', formattedCode);
