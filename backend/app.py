@@ -727,19 +727,18 @@ def verify_otp():
         print(f"[ERROR] Verify OTP failed: {str(e)}")
         return jsonify({'error': 'Verification failed. Please try again.'}), 500
 
-@app.route('/api/auth/phone-password-login', methods=['POST'])
-def phone_password_login():
-    """Phone + Password authentication (signup/login for group joining)"""
+@app.route('/api/auth/phone-pin-login', methods=['POST'])
+def phone_pin_login():
+    """Phone + PIN authentication (signup/login for group joining)"""
     try:
         data = request.get_json()
         
-        if not data or not all(k in data for k in ['phone', 'password']):
-            return jsonify({'error': 'Phone and password are required'}), 400
+        if not data or not all(k in data for k in ['phone', 'pin']):
+            return jsonify({'error': 'Phone and PIN are required'}), 400
         
         phone = data['phone'].strip()
-        password = data['password'].strip()
+        pin = data['pin'].strip()
         is_signup = data.get('is_signup', False)  # True if new user
-        confirm_password = data.get('confirm_password')  # For signup validation
         
         # Validate phone format
         if not phone.startswith('+'):
@@ -749,9 +748,9 @@ def phone_password_login():
         if len(phone) < 10:
             return jsonify({'error': 'Invalid phone number'}), 400
         
-        # Validate password strength (min 6 chars)
-        if len(password) < 6:
-            return jsonify({'error': 'Password must be at least 6 characters'}), 400
+        # Validate PIN - must be exactly 4 digits
+        if not pin.isdigit() or len(pin) != 4:
+            return jsonify({'error': 'PIN must be 4 digits'}), 400
         
         # Check if user exists
         user = User.query.filter_by(phone=phone).first()
@@ -760,10 +759,6 @@ def phone_password_login():
             # First-time signup
             if not is_signup:
                 return jsonify({'error': 'user_not_found', 'message': 'This phone is not registered'}), 404
-            
-            # Validate confirm_password for signup
-            if password != confirm_password:
-                return jsonify({'error': 'Passwords do not match'}), 400
             
             print(f"[AUTH] Creating new user with phone {phone}")
             
@@ -774,7 +769,7 @@ def phone_password_login():
                 email=f"phone_{phone.replace('+', '').replace(' ', '')}@hesappaylas.local",
                 phone=phone
             )
-            user.set_password(password)
+            user.set_password(pin)  # Store PIN as password hash
             db.session.add(user)
             db.session.commit()
             
@@ -788,10 +783,10 @@ def phone_password_login():
                 'is_new_user': True
             }), 201
         else:
-            # Existing user - verify password
-            if not user.check_password(password):
-                print(f"[AUTH] Password verification failed for {phone}")
-                return jsonify({'error': 'Invalid password'}), 401
+            # Existing user - verify PIN
+            if not user.check_password(pin):
+                print(f"[AUTH] PIN verification failed for {phone}")
+                return jsonify({'error': 'Invalid PIN'}), 401
             
             token = generate_token(user.id)
             print(f"[AUTH] User logged in with phone: {phone}")
@@ -805,7 +800,7 @@ def phone_password_login():
     
     except Exception as e:
         db.session.rollback()
-        print(f"[ERROR] Phone-password login failed: {str(e)}")
+        print(f"[ERROR] Phone-PIN login failed: {str(e)}")
         return jsonify({'error': 'Authentication failed. Please try again.'}), 500
 
 # ==================== Helper Functions ====================
