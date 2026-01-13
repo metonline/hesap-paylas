@@ -2774,7 +2774,7 @@ function joinGroupWithCode(code) {
             'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-            qr_code: code
+            code: code
         })
     })
     .then(response => response.json())
