@@ -2927,30 +2927,6 @@ function stopQRScanner() {
     stopBtn.style.display = 'none';
 }
 
-function onQRCodeScanned(decodedText) {
-    // Kodu temizle (sadece rakamları al)
-    const cleanCode = decodedText.replace(/[^\d]/g, '');
-    
-    if (cleanCode.length === 6) {
-        // Kodu xxx-xxx formatına çevir
-        const formattedCode = cleanCode.slice(0, 3) + '-' + cleanCode.slice(3);
-        
-        // Sonucu göster
-        document.getElementById('qr-reader-results').textContent = `✅ Kod okundu: ${formattedCode}`;
-        document.getElementById('qr-reader-results').style.color = '#27ae60';
-        
-        // Kamerayı kapat
-        stopQRScanner();
-        
-        // 1.5 saniye sonra gruba katıl
-        setTimeout(() => {
-            joinGroupWithCode(cleanCode);
-        }, 1500);
-    } else {
-        document.getElementById('qr-reader-results').textContent = '⚠️ Geçersiz QR kod';
-        document.getElementById('qr-reader-results').style.color = '#f39c12';
-    }
-}
 
 function handleManualCodeInput(input) {
     const qrReader = document.getElementById('qr-reader');
