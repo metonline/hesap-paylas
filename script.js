@@ -3014,15 +3014,9 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, rawCode, format
     // Grup kodunu göster (formatted: "123-456")
     document.getElementById('successGroupCode').textContent = formattedCode;
     
-    // Katılım linkini oluştur ve göster (dynamic URL kullan)
-    const baseURL = getAppURL();
-    const participationLink = `${baseURL}?code=${rawCode}`;
-    const linkElement = document.getElementById('successParticipationLink');
-    linkElement.textContent = participationLink;
-    linkElement.href = participationLink;
-    
     // WhatsApp share button'ında formatted grup kodunu sakla
     document.getElementById('whatsappShareBtn').setAttribute('data-group-code', formattedCode);
+    document.getElementById('whatsappShareBtn').setAttribute('data-raw-code', rawCode);
     
     // Aktif grupları yenile ve floating button'ı göster
     loadActiveGroups();
@@ -3031,7 +3025,8 @@ function showGroupSuccessScreen(groupName, colorName, colorCode, rawCode, format
 // WhatsApp'ta paylaş
 function shareGroupOnWhatsapp() {
     const groupCode = document.getElementById('whatsappShareBtn').getAttribute('data-group-code');
-    const participationLink = document.getElementById('successParticipationLink').textContent;
+    const rawCode = document.getElementById('whatsappShareBtn').getAttribute('data-raw-code');
+    const participationLink = `${getAppURL()}?code=${rawCode}`;
     const message = `Grup Kodu: ${groupCode}\n\nKatılmak için: ${participationLink}`;
     const encodedMessage = encodeURIComponent(message);
     
@@ -3039,14 +3034,9 @@ function shareGroupOnWhatsapp() {
     window.open(`https://wa.me/?text=${encodedMessage}`, '_blank');
 }
 
-// Katılım linkini kopyala
+// Katılım linkini kopyala (kept for compatibility, but not used anymore)
 function copyParticipationLink() {
-    const linkText = document.getElementById('successParticipationLink').textContent;
-    navigator.clipboard.writeText(linkText).then(() => {
-        showNotification('✅ Link kopyalandı!', 'success');
-    }).catch(err => {
-        showNotification('❌ Kopyalanamadı', 'error');
-    });
+    showNotification('Link kopyalama artık kullanılmıyor', 'info');
 }
 
 // Aktif Grupları Yönetme
