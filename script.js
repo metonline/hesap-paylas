@@ -1033,13 +1033,13 @@ function goToProfile() {
     app.currentUser = user;
     
     // Profil bilgilerini doldur
-    const profileName = document.getElementById('profileName');
-    const profileEmail = document.getElementById('profileEmail');
+    const profileNameEdit = document.getElementById('profileNameEdit');
+    const profileEmailEdit = document.getElementById('profileEmailEdit');
     const profilePhone = document.getElementById('profilePhone');
     const profileEmailInfo = document.getElementById('profileEmailInfo');
     
-    if (profileName) profileName.textContent = `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Kullanıcı';
-    if (profileEmail) profileEmail.textContent = user.email || '';
+    if (profileNameEdit) profileNameEdit.value = `${user.firstName || ''} ${user.lastName || ''}`.trim() || '';
+    if (profileEmailEdit) profileEmailEdit.value = user.email || '';
     // Telefonu mask formatı ile göster
     if (profilePhone) profilePhone.textContent = formatPhoneDisplay(user.phone || '-');
     if (profileEmailInfo) profileEmailInfo.textContent = user.email || '';
@@ -1142,14 +1142,46 @@ function updateLevelDisplay(status) {
     }
 }
 
-// Profil Düzenle
-function editProfile() {
-    const newPhone = prompt('Yeni telefon numarası girin:', app.currentUser.phone);
-    if (newPhone && newPhone.trim()) {
-        app.currentUser.phone = newPhone;
+// Profil Bilgilerini Kaydet
+function saveProfile() {
+    const nameInput = document.getElementById('profileNameEdit');
+    const emailInput = document.getElementById('profileEmailEdit');
+    
+    const fullName = (nameInput.value || '').trim();
+    const email = (emailInput.value || '').trim();
+    
+    if (!fullName) {
+        alert('Lütfen adınızı girin!');
+        return;
+    }
+    
+    if (!email) {
+        alert('Lütfen e-posta adresinizi girin!');
+        return;
+    }
+    
+    // E-posta formatı kontrolü
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Geçerli bir e-posta adresi girin!');
+        return;
+    }
+    
+    // Adı ve soyadı ayır
+    const nameParts = fullName.split(' ');
+    const firstName = nameParts[0];
+    const lastName = nameParts.slice(1).join(' ');
+    
+    // Kullanıcı bilgisini güncelle
+    if (app.currentUser) {
+        app.currentUser.firstName = firstName;
+        app.currentUser.lastName = lastName;
+        app.currentUser.email = email;
+        
         localStorage.setItem('hesapPaylas_user', JSON.stringify(app.currentUser));
-        goToProfile();
-        alert('Telefon numarası güncellendi!');
+        
+        alert('✅ Profil bilgileriniz kaydedildi!');
+        closeProfileModal();
     }
 }
 

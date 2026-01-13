@@ -597,15 +597,15 @@
             
             <div style="background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; border: 1px solid #e0e0e0;">
                 <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
                         <span style="color: #666; font-size: 0.9em;">Ad Soyad</span>
-                        <span id="profileName" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
+                        <input type="text" id="profileNameEdit" placeholder="Adınız" style="border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 0.9em; width: 150px; font-weight: 600;">
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
                         <span style="color: #666; font-size: 0.9em;">📧 E-posta</span>
-                        <span id="profileEmail" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
+                        <input type="email" id="profileEmailEdit" placeholder="E-posta" style="border: 1px solid #ddd; border-radius: 6px; padding: 6px 10px; font-size: 0.9em; width: 150px; font-weight: 600;">
                     </div>
-                    <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
                         <span style="color: #666; font-size: 0.9em;">📱 Telefon</span>
                         <span id="profilePhone" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
                     </div>
@@ -613,8 +613,8 @@
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-                <button onclick="editProfile()" style="padding: 12px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
-                    ✏️ Düzenle
+                <button onclick="saveProfile()" style="padding: 12px; background: #27ae60; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
+                    💾 Kaydet
                 </button>
                 <button onclick="changePassword()" style="padding: 12px; background: #f5576c; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
                     🔐 Şifre
