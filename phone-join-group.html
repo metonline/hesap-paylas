@@ -608,12 +608,18 @@
         let currentResetPhone = '';
         let currentResetCode = '';
 
+        function formatPhoneDisplay(phone) {
+            // Format: 5323133277 -> +90 (532) 313 32 77
+            if (!phone || phone.length !== 10) return phone;
+            return `+90 (${phone.substring(0, 3)}) ${phone.substring(3, 6)} ${phone.substring(6, 8)} ${phone.substring(8)}`;
+        }
+
         function showResetPinModal() {
             // Get current phone from input or from step2 if visible
             const phoneInput = document.getElementById('phone');
             if (phoneInput && phoneInput.value.length === 10) {
                 currentResetPhone = phoneInput.value;
-                document.getElementById('confirmPhone').textContent = `+90${currentResetPhone}`;
+                document.getElementById('confirmPhone').textContent = formatPhoneDisplay(currentResetPhone);
                 document.getElementById('resetPinModal').classList.remove('hidden');
                 document.getElementById('resetStep1').style.display = 'block';
                 document.getElementById('resetStep2').style.display = 'none';
