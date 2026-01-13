@@ -1155,16 +1155,13 @@ function saveProfile() {
         return;
     }
     
-    if (!email) {
-        alert('Lütfen e-posta adresinizi girin!');
-        return;
-    }
-    
-    // E-posta formatı kontrolü
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        alert('Geçerli bir e-posta adresi girin!');
-        return;
+    // Email validation - only if email is filled
+    if (email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            alert('Geçerli bir e-posta adresi girin!');
+            return;
+        }
     }
     
     // Adı ve soyadı ayır
@@ -1176,7 +1173,7 @@ function saveProfile() {
     if (app.currentUser) {
         app.currentUser.firstName = firstName;
         app.currentUser.lastName = lastName;
-        app.currentUser.email = email;
+        app.currentUser.email = email; // Can be empty
         
         localStorage.setItem('hesapPaylas_user', JSON.stringify(app.currentUser));
         
