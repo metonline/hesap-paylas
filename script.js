@@ -1238,7 +1238,34 @@ function changePassword() {
         return;
     }
     
-    alert('Şifreniz başarıyla değiştirildi! 🔐');
+    // Send password change request to backend
+    const token = localStorage.getItem('hesapPaylas_token');
+    const baseURL = getBaseURL();
+    
+    fetch(`${baseURL}/user/change-password`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            oldPassword: oldPassword,
+            newPassword: newPassword
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            alert('✅ Şifreniz başarıyla değiştirildi! 🔐');
+            closeProfileModal();
+        } else {
+            alert(`❌ ${data.error || 'Şifre değişimi başarısız'}`);
+        }
+    })
+    .catch(error => {
+        console.error('Password change error:', error);
+        alert('❌ Bir hata oluştu. Tekrar deneyin.');
+    });
 }
 
 // Profile Modal Functions

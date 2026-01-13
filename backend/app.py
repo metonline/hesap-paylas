@@ -675,6 +675,34 @@ def update_profile():
         print(f"[ERROR] Profile update failed: {str(e)}")
         return jsonify({'error': 'Profile update failed. Please try again.'}), 500
 
+@app.route('/api/user/change-password', methods=['POST'])
+@token_required
+def change_password():
+    """Change user password"""
+    try:
+        user = User.query.get(request.user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        data = request.get_json()
+        if not data or not all(k in data for k in ['oldPassword', 'newPassword']):
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        # Verify old password
+        if not user.check_password(data['oldPassword']):
+            return jsonify({'error': 'Old password is incorrect'}), 401
+        
+        # Set new password
+        user.set_password(data['newPassword'])
+        db.session.commit()
+        
+        print(f"[PROFILE] Password changed for user {user.id}")
+        return jsonify({'message': 'Password changed successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Password change failed: {str(e)}")
+        return jsonify({'error': 'Password change failed. Please try again.'}), 500
+
 @app.route('/api/user/close-account', methods=['POST'])
 @token_required
 def close_account():
