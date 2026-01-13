@@ -383,17 +383,37 @@
                     <div class="info-box">
                         📝 Daha önce belirlediğiniz 4 haneli PIN kodunuzu girin. İlk kez kullanıyorsanız girdiğiniz 4 haneli PIN kodu hesabınıza kaydolacaktır.
                     </div>
-                    <div style="text-align: center;">
-                        <a href="#" onclick="showForgotPIN(); return false;" style="color: #667eea; text-decoration: none; font-size: 13px; font-weight: 600;">
-                            PIN kodumu unuttum
-                        </a>
-                    </div>
                 </div>
 
                 <div class="form-group delay4" style="opacity: 1; animation: none;">
                     <button onclick="authenticate()">
                         <span id="authBtnText">Gruba Katıl</span>
                     </button>
+                </div>
+            </div>
+
+            <!-- Step 4: Name input (for new users only) -->
+            <div id="nameSection" class="hidden">
+                <div class="form-group delay1">
+                    <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">Adınız</label>
+                    <input 
+                        type="text" 
+                        id="userNameInput" 
+                        placeholder="Örnek: Ahmet"
+                        maxlength="50"
+                    >
+                </div>
+
+                <div class="form-group delay2" style="opacity: 1; animation: none;">
+                    <button onclick="submitNameAndContinue()">
+                        <span id="nameBtnText">Devam Et</span>
+                    </button>
+                </div>
+
+                <div class="back-link" style="margin-top: 15px;">
+                    <a href="#" onclick="goBackToPhone(); return false;" style="color: #667eea; text-decoration: none; font-size: 13px;">
+                        ← Geri Dön
+                    </a>
                 </div>
             </div>
         </div>
@@ -403,40 +423,17 @@
         </div>
     </div>
 
-    <!-- Forgot PIN Modal -->
-    <div id="forgotPinModal" class="modal hidden">
-        <div class="modal-content">
-            <button class="modal-close" onclick="hideForgotPIN()">✕</button>
-            <h2 style="margin-bottom: 20px;">PIN Sıfırla</h2>
-            
-            <div class="status-message" id="resetStatusMessage"></div>
-            
-            <div class="form-group">
-                <label style="display: block; margin-bottom: 10px;">Telefon Numarası</label>
-                <div class="phone-wrapper" style="margin-bottom: 15px;">
-                    <div class="country-code">+90</div>
-                    <input 
-                        type="tel" 
-                        id="resetPhone" 
-                        placeholder="5323133277"
-                        inputmode="numeric"
-                        maxlength="10"
-                    >
-                </div>
-            </div>
-
-            <button onclick="sendPINReset()" style="margin-bottom: 10px;">
-                <span id="resetBtnText">Sıfırlama Kodu Gönder</span>
-            </button>
-            <button onclick="hideForgotPIN()" class="btn-secondary" style="background: white; color: #667eea; border: 2px solid #667eea;">Vazgeç</button>
-        </div>
-    </div>
+    <!-- Forgot PIN Modal - REMOVED -->
 
     <script>
         // API Base URL
         const API_BASE = window.location.origin;
         const urlParams = new URLSearchParams(window.location.search);
         const groupCode = urlParams.get('code');
+        
+        // Store temp credentials for new user flow
+        let tempPhone = '';
+        let tempPin = '';
 
         function showMessage(message, type = 'info') {
             const statusDiv = document.getElementById('statusMessage');
@@ -520,72 +517,13 @@
             pinInputs[0].focus();
         }
 
-        function showForgotPIN() {
-            document.getElementById('forgotPinModal').classList.remove('hidden');
+        function goBackToPhone() {
+            document.getElementById('nameSection').classList.add('hidden');
+            document.getElementById('passwordSection').classList.remove('hidden');
+            clearPINInputs();
             setTimeout(() => {
-                document.getElementById('resetPhone').focus();
+                document.querySelector('.pin-input').focus();
             }, 100);
-        }
-
-        function hideForgotPIN() {
-            document.getElementById('forgotPinModal').classList.add('hidden');
-            document.getElementById('resetPhone').value = '';
-            document.getElementById('resetStatusMessage').className = 'status-message';
-        }
-
-        function showResetMessage(message, type = 'info') {
-            const statusDiv = document.getElementById('resetStatusMessage');
-            statusDiv.textContent = message;
-            statusDiv.className = `status-message ${type}`;
-            setTimeout(() => {
-                statusDiv.className = 'status-message';
-            }, 5000);
-        }
-
-        document.getElementById('resetPhone').addEventListener('input', function(e) {
-            e.target.value = e.target.value.replace(/[^0-9]/g, '');
-        });
-
-        async function sendPINReset() {
-            const phone = document.getElementById('resetPhone').value.trim();
-
-            if (phone.length !== 10) {
-                showResetMessage('Telefon numarası 10 haneli olmalıdır', 'error');
-                return;
-            }
-
-            const btn = document.querySelector('.modal-content button[onclick="sendPINReset()"]');
-            btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> Gönderiliyor...';
-
-            try {
-                // Call password reset endpoint (will work with email too, can extend for phone SMS)
-                const response = await fetch(`${API_BASE}/api/auth/request-password-reset`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        // You may need to send phone instead of email
-                        email: `phone_${phone.replace('+90', '')}@hesappaylas.local`
-                    })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    showResetMessage('✓ Sıfırlama talimatları gönderildi', 'success');
-                    setTimeout(() => {
-                        hideForgotPIN();
-                    }, 2000);
-                } else {
-                    showResetMessage(data.error || 'Sıfırlama gönderilemedi', 'error');
-                }
-            } catch (error) {
-                console.error('Reset Error:', error);
-                showResetMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<span id="resetBtnText">Sıfırlama Kodu Gönder</span>';
-            }
         }
 
         async function authenticate() {
@@ -620,9 +558,10 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Existing user - direct login
                     showMessage('✓ Başarıyla giriş yaptınız', 'success');
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                    localStorage.setItem('hesapPaylas_token', data.token);
+                    localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
                     
                     setTimeout(() => {
                         if (groupCode) {
@@ -632,8 +571,10 @@
                         }
                     }, 1500);
                 } else if (response.status === 404 && data.error === 'user_not_found') {
-                    // New user - create account
-                    createNewUser(phone, pin);
+                    // New user - show name form
+                    tempPhone = phone;
+                    tempPin = pin;
+                    showNameForm();
                 } else {
                     showMessage(data.message || 'Giriş başarısız', 'error');
                     clearPINInputs();
@@ -649,27 +590,53 @@
             }
         }
 
-        async function createNewUser(phone, pin) {
-            const btn = document.querySelector('button[onclick="authenticate()"]');
+        function showNameForm() {
+            document.getElementById('passwordSection').classList.add('hidden');
+            document.getElementById('nameSection').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('userNameInput').focus();
+            }, 100);
+        }
+
+        async function submitNameAndContinue() {
+            const userName = document.getElementById('userNameInput').value.trim();
+
+            if (userName.length < 2) {
+                showMessage('Adınız en az 2 karakter olmalıdır', 'error');
+                return;
+            }
+
+            if (tempPhone.length !== 10 || tempPin.length !== 4) {
+                showMessage('Hata: Telefon veya PIN eksik', 'error');
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="submitNameAndContinue()"]');
+            btn.disabled = true;
             btn.innerHTML = '<span class="loading"></span> Hesap oluşturuluyor...';
 
             try {
-                const response = await fetch(`${API_BASE}/api/auth/phone-pin-login`, {
+                // First, create account with signup flag
+                const signupResponse = await fetch(`${API_BASE}/api/auth/phone-pin-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        phone: phone,
-                        pin: pin,
+                        phone: tempPhone,
+                        pin: tempPin,
                         is_signup: true
                     })
                 });
 
-                const data = await response.json();
+                const signupData = await signupResponse.json();
 
-                if (response.ok) {
-                    showMessage('✓ Hesap oluşturuldu, gruba katılıyorsunuz', 'success');
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('user', JSON.stringify(data.user));
+                if (signupResponse.ok) {
+                    // Account created
+                    showMessage('✓ Hesap oluşturuldu, hoşgeldiniz!', 'success');
+                    localStorage.setItem('hesapPaylas_token', signupData.token);
+                    
+                    // Update user with name
+                    const updatedUser = { ...signupData.user, first_name: userName, firstName: userName };
+                    localStorage.setItem('hesapPaylas_user', JSON.stringify(updatedUser));
                     
                     setTimeout(() => {
                         if (groupCode) {
@@ -679,17 +646,15 @@
                         }
                     }, 1500);
                 } else {
-                    showMessage(data.error || 'Hesap oluşturulamadı', 'error');
-                    clearPINInputs();
+                    showMessage(signupData.error || 'Hesap oluşturulamadı', 'error');
                     btn.disabled = false;
-                    btn.innerHTML = '<span id="authBtnText">Gruba Katıl</span>';
+                    btn.innerHTML = '<span id="nameBtnText">Devam Et</span>';
                 }
             } catch (error) {
                 console.error('Signup Error:', error);
                 showMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-                clearPINInputs();
                 btn.disabled = false;
-                btn.innerHTML = '<span id="authBtnText">Gruba Katıl</span>';
+                btn.innerHTML = '<span id="nameBtnText">Devam Et</span>';
             }
         }
 

@@ -277,6 +277,7 @@ function updateHomePageProfile() {
     const welcomeMessage = document.getElementById('homeWelcomeMessage');
     const userName = document.getElementById('homeUserName');
     const userMenu = document.getElementById('homeUserMenu');
+    const loginHeaderHos = document.getElementById('loginHeaderHos');
     
     if (user) {
         try {
@@ -293,6 +294,11 @@ function updateHomePageProfile() {
             // User menu göster
             if (userMenu) userMenu.style.display = 'block';
             
+            // HOŞ GELDİN başlığını göster (sadece login page'de ve user varken)
+            if (loginHeaderHos && document.getElementById('onboardingPage').style.display !== 'none') {
+                loginHeaderHos.style.display = 'block';
+            }
+            
         } catch (e) {
             console.error('User data parse error:', e);
         }
@@ -301,6 +307,9 @@ function updateHomePageProfile() {
         if (profileBtn) profileBtn.style.display = 'none';
         if (welcomeMessage) welcomeMessage.style.display = 'none';
         if (userMenu) userMenu.style.display = 'none';
+        
+        // HOŞ GELDİN başlığını gizle
+        if (loginHeaderHos) loginHeaderHos.style.display = 'none';
     }
 }
 
