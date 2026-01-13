@@ -845,6 +845,169 @@ def reset_pin():
         print(f"[ERROR] PIN reset failed: {str(e)}")
         return jsonify({'error': 'PIN reset failed. Please try again.'}), 500
 
+@app.route('/api/auth/request-pin-reset', methods=['POST'])
+def request_pin_reset():
+    """Request PIN reset - send SMS code"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'phone' not in data:
+            return jsonify({'error': 'Phone is required'}), 400
+        
+        phone = data['phone'].strip()
+        
+        # Validate phone format
+        if not phone.startswith('+'):
+            phone = '+90' + phone.lstrip('0')
+        
+        # Check if user exists
+        user = User.query.filter_by(phone=phone).first()
+        if not user:
+            return jsonify({'error': 'User not found with this phone number'}), 404
+        
+        # Generate 6-digit reset code
+        reset_code = f"{random.randint(0, 999999):06d}"
+        
+        # Store in OTPVerification table with 10 minute expiry
+        otp_record = OTPVerification(
+            phone=phone,
+            code=reset_code,
+            purpose='pin_reset',
+            expires_at=datetime.utcnow() + timedelta(minutes=10)
+        )
+        db.session.add(otp_record)
+        db.session.commit()
+        
+        # Send SMS via Twilio
+        try:
+            from twilio.rest import Client
+            account_sid = os.getenv('TWILIO_ACCOUNT_SID')
+            auth_token = os.getenv('TWILIO_AUTH_TOKEN')
+            twilio_phone = os.getenv('TWILIO_PHONE_NUMBER')
+            
+            if account_sid and auth_token and twilio_phone:
+                client = Client(account_sid, auth_token)
+                message = client.messages.create(
+                    body=f"PIN sıfırlama kodunuz: {reset_code}\n\nBu kodu paylaşmayınız!",
+                    from_=twilio_phone,
+                    to=phone
+                )
+                print(f"[SMS] Reset code sent to {phone}: {message.sid}")
+            else:
+                print("[WARNING] Twilio credentials not configured")
+                # For testing, you can still use the code
+        except Exception as sms_error:
+            print(f"[WARNING] SMS send failed: {str(sms_error)}")
+            # Continue anyway - user can still reset
+        
+        return jsonify({
+            'message': 'Reset code sent to your phone',
+            'phone': phone
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] PIN reset request failed: {str(e)}")
+        return jsonify({'error': 'Failed to send reset code'}), 500
+
+@app.route('/api/auth/verify-pin-reset', methods=['POST'])
+def verify_pin_reset():
+    """Verify PIN reset code"""
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ['phone', 'code']):
+            return jsonify({'error': 'Phone and code are required'}), 400
+        
+        phone = data['phone'].strip()
+        code = data['code'].strip()
+        
+        # Validate phone format
+        if not phone.startswith('+'):
+            phone = '+90' + phone.lstrip('0')
+        
+        # Find valid OTP record
+        otp_record = OTPVerification.query.filter_by(
+            phone=phone,
+            code=code,
+            purpose='pin_reset',
+            used=False
+        ).first()
+        
+        if not otp_record:
+            return jsonify({'error': 'Invalid or expired code'}), 400
+        
+        # Check expiry
+        if otp_record.expires_at < datetime.utcnow():
+            return jsonify({'error': 'Code expired'}), 400
+        
+        # Mark as used
+        otp_record.used = True
+        db.session.commit()
+        
+        print(f"[AUTH] PIN reset code verified for phone: {phone}")
+        
+        return jsonify({
+            'message': 'Code verified successfully'
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] PIN reset verification failed: {str(e)}")
+        return jsonify({'error': 'Verification failed'}), 500
+
+@app.route('/api/auth/confirm-pin-reset', methods=['POST'])
+def confirm_pin_reset():
+    """Confirm PIN reset with new PIN"""
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ['phone', 'code', 'new_pin']):
+            return jsonify({'error': 'Phone, code, and new PIN are required'}), 400
+        
+        phone = data['phone'].strip()
+        code = data['code'].strip()
+        new_pin = data['new_pin'].strip()
+        
+        # Validate phone format
+        if not phone.startswith('+'):
+            phone = '+90' + phone.lstrip('0')
+        
+        # Validate PIN - must be exactly 4 digits
+        if not new_pin.isdigit() or len(new_pin) != 4:
+            return jsonify({'error': 'PIN must be 4 digits'}), 400
+        
+        # Verify OTP record was actually used
+        otp_record = OTPVerification.query.filter_by(
+            phone=phone,
+            code=code,
+            purpose='pin_reset',
+            used=True
+        ).first()
+        
+        if not otp_record:
+            return jsonify({'error': 'Invalid reset session'}), 400
+        
+        # Find user
+        user = User.query.filter_by(phone=phone).first()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Update PIN
+        user.set_password(new_pin)
+        db.session.commit()
+        
+        print(f"[AUTH] PIN successfully reset for phone: {phone}")
+        
+        return jsonify({
+            'message': 'PIN reset successfully'
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] PIN reset confirmation failed: {str(e)}")
+        return jsonify({'error': 'PIN reset failed'}), 500
+
 # ==================== Helper Functions ====================
 
 def format_group_code(code):

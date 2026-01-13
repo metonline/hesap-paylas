@@ -436,34 +436,54 @@
             
             <div class="status-message" id="resetStatusMessage"></div>
             
-            <div class="form-group">
-                <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">Telefon Numarası</label>
-                <div class="phone-wrapper" style="margin-bottom: 15px;">
-                    <div class="country-code">+90</div>
+            <!-- Step 1: Confirmation -->
+            <div id="resetStep1" style="display: block;">
+                <div class="info-box" style="margin-bottom: 20px;">
+                    📱 Sıfırlama kodunu <strong id="confirmPhone"></strong> numarasına SMS ile göndereceğiz.
+                </div>
+                
+                <button onclick="sendResetCode()" style="margin-bottom: 10px; width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    <span id="sendCodeBtnText">SMS Gönder</span>
+                </button>
+                <button onclick="hideResetPinModal()" class="btn-secondary" style="background: white; color: #667eea; border: 2px solid #667eea; width: 100%; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 600;">Vazgeç</button>
+            </div>
+
+            <!-- Step 2: Enter verification code -->
+            <div id="resetStep2" class="hidden">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">SMS'te Aldığınız Kodu Girin</label>
                     <input 
-                        type="tel" 
-                        id="resetPhoneInput" 
-                        placeholder="5323133277"
+                        type="text" 
+                        id="verificationCodeInput" 
+                        placeholder="6 haneli kod"
                         inputmode="numeric"
-                        maxlength="10"
+                        maxlength="6"
+                        style="width: 100%; border: 2px solid #ddd; border-radius: 10px; padding: 12px; font-size: 16px; text-align: center; letter-spacing: 2px; font-weight: 600;"
                     >
                 </div>
+
+                <button onclick="verifyResetCode()" style="margin-bottom: 10px; width: 100%; padding: 14px; background: #27ae60; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    <span id="verifySmsBtnText">Kodu Doğrula</span>
+                </button>
+                <button onclick="goBackToCodeEntry()" style="background: white; color: #667eea; border: 2px solid #667eea; width: 100%; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 600;">← Geri</button>
             </div>
 
-            <div class="form-group">
-                <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">Yeni 4 Haneli PIN</label>
-                <div class="pin-input-group" id="resetPinGroup">
-                    <input type="text" class="pin-input reset-pin-input" maxlength="1" inputmode="numeric">
-                    <input type="text" class="pin-input reset-pin-input" maxlength="1" inputmode="numeric">
-                    <input type="text" class="pin-input reset-pin-input" maxlength="1" inputmode="numeric">
-                    <input type="text" class="pin-input reset-pin-input" maxlength="1" inputmode="numeric">
+            <!-- Step 3: Set new PIN -->
+            <div id="resetStep3" class="hidden">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">Yeni 4 Haneli PIN</label>
+                    <div class="pin-input-group" id="resetPinGroup">
+                        <input type="text" class="pin-input reset-pin-input" maxlength="1" inputmode="numeric">
+                        <input type="text" class="pin-input reset-pin-input" maxlength="1" inputmode="numeric">
+                        <input type="text" class="pin-input reset-pin-input" maxlength="1" inputmode="numeric">
+                        <input type="text" class="pin-input reset-pin-input" maxlength="1" inputmode="numeric">
+                    </div>
                 </div>
-            </div>
 
-            <button onclick="submitPinReset()" style="margin-bottom: 10px; width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
-                <span id="resetPinBtnText">PIN'i Sıfırla</span>
-            </button>
-            <button onclick="hideResetPinModal()" class="btn-secondary" style="background: white; color: #667eea; border: 2px solid #667eea; width: 100%; padding: 14px; border-radius: 10px; cursor: pointer; font-weight: 600;">Vazgeç</button>
+                <button onclick="saveNewPin()" style="margin-bottom: 10px; width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    <span id="savePinBtnText">PIN'i Kaydet</span>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -568,21 +588,35 @@
             }, 100);
         }
 
+        // Store current phone for PIN reset
+        let currentResetPhone = '';
+        let currentResetCode = '';
+
         function showResetPinModal() {
-            document.getElementById('resetPinModal').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('resetPhoneInput').focus();
-            }, 100);
+            // Get current phone from input or from step2 if visible
+            const phoneInput = document.getElementById('phone');
+            if (phoneInput && phoneInput.value.length === 10) {
+                currentResetPhone = phoneInput.value;
+                document.getElementById('confirmPhone').textContent = `+90${currentResetPhone}`;
+                document.getElementById('resetPinModal').classList.remove('hidden');
+                document.getElementById('resetStep1').style.display = 'block';
+                document.getElementById('resetStep2').style.display = 'none';
+                document.getElementById('resetStep3').style.display = 'none';
+            } else {
+                showMessage('Lütfen önce telefon numarasını girin', 'error');
+            }
         }
 
         function hideResetPinModal() {
             document.getElementById('resetPinModal').classList.add('hidden');
-            document.getElementById('resetPhoneInput').value = '';
+            document.getElementById('verificationCodeInput').value = '';
             document.querySelectorAll('.reset-pin-input').forEach(input => {
                 input.value = '';
                 input.classList.remove('filled');
             });
             document.getElementById('resetStatusMessage').className = 'status-message';
+            currentResetPhone = '';
+            currentResetCode = '';
         }
 
         function showResetStatusMessage(message, type = 'info') {
@@ -594,8 +628,8 @@
             }, 5000);
         }
 
-        document.getElementById('resetPhoneInput').addEventListener('input', function(e) {
-            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        document.getElementById('verificationCodeInput').addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
         });
 
         // Setup reset PIN inputs
@@ -629,30 +663,115 @@
             return Array.from(pinInputs).map(input => input.value).join('');
         }
 
-        async function submitPinReset() {
-            const phone = document.getElementById('resetPhoneInput').value.trim();
-            const newPin = getResetPin();
+        async function sendResetCode() {
+            const btn = document.querySelector('button[onclick="sendResetCode()"]');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> SMS Gönderiliyor...';
 
-            if (phone.length !== 10) {
-                showResetStatusMessage('Telefon numarası 10 haneli olmalıdır', 'error');
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/request-pin-reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: currentResetPhone
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResetStatusMessage('✅ SMS gönderildi!', 'success');
+                    // Move to step 2
+                    setTimeout(() => {
+                        document.getElementById('resetStep1').style.display = 'none';
+                        document.getElementById('resetStep2').style.display = 'block';
+                        document.getElementById('verificationCodeInput').focus();
+                    }, 500);
+                } else {
+                    showResetStatusMessage(data.error || 'SMS gönderilemedi', 'error');
+                }
+            } catch (error) {
+                console.error('SMS Error:', error);
+                showResetStatusMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span id="sendCodeBtnText">SMS Gönder</span>';
+            }
+        }
+
+        function goBackToCodeEntry() {
+            document.getElementById('resetStep2').style.display = 'none';
+            document.getElementById('resetStep1').style.display = 'block';
+            document.getElementById('verificationCodeInput').value = '';
+        }
+
+        async function verifyResetCode() {
+            const code = document.getElementById('verificationCodeInput').value.trim();
+
+            if (code.length !== 6) {
+                showResetStatusMessage('Lütfen 6 haneli kodu girin', 'error');
                 return;
             }
+
+            const btn = document.querySelector('button[onclick="verifyResetCode()"]');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Doğrulanıyor...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/verify-pin-reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: currentResetPhone,
+                        code: code
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    currentResetCode = code;
+                    showResetStatusMessage('✅ Kod doğrulandı!', 'success');
+                    // Move to step 3
+                    setTimeout(() => {
+                        document.getElementById('resetStep2').style.display = 'none';
+                        document.getElementById('resetStep3').style.display = 'block';
+                        setupResetPinInputs();
+                        setTimeout(() => {
+                            document.querySelector('.reset-pin-input').focus();
+                        }, 100);
+                    }, 500);
+                } else {
+                    showResetStatusMessage(data.error || 'Kod doğrulanamamadı', 'error');
+                }
+            } catch (error) {
+                console.error('Verify Error:', error);
+                showResetStatusMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<span id="verifySmsBtnText">Kodu Doğrula</span>';
+            }
+        }
+
+        async function saveNewPin() {
+            const newPin = getResetPin();
 
             if (newPin.length !== 4) {
                 showResetStatusMessage('PIN 4 haneli olmalıdır', 'error');
                 return;
             }
 
-            const btn = document.querySelector('button[onclick="submitPinReset()"]');
+            const btn = document.querySelector('button[onclick="saveNewPin()"]');
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> İşleniyor...';
+            btn.innerHTML = '<span class="loading"></span> Kaydediliyor...';
 
             try {
-                const response = await fetch(`${API_BASE}/api/auth/reset-pin`, {
+                const response = await fetch(`${API_BASE}/api/auth/confirm-pin-reset`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        phone: phone,
+                        phone: currentResetPhone,
+                        code: currentResetCode,
                         new_pin: newPin
                     })
                 });
@@ -660,26 +779,25 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    showResetStatusMessage('✅ PIN başarıyla sıfırlandı!', 'success');
+                    showResetStatusMessage('✅ PIN başarıyla değiştirildi!', 'success');
                     setTimeout(() => {
                         hideResetPinModal();
-                        // Clear the wrong PIN attempt
-                        document.getElementById('phone').value = phone;
+                        // Clear PIN section and go back to ask for PIN
+                        document.getElementById('phone').value = currentResetPhone;
                         clearPINInputs();
                         document.getElementById('passwordSection').classList.remove('hidden');
-                        setTimeout(() => {
-                            document.querySelector('.pin-input').focus();
-                        }, 100);
+                        document.getElementById('wrongPinLink').style.display = 'none';
+                        showMessage('Yeni PIN ile giriş yapabilirsiniz', 'success');
                     }, 1500);
                 } else {
-                    showResetStatusMessage(data.error || 'PIN sıfırlanamadı', 'error');
+                    showResetStatusMessage(data.error || 'PIN kaydedilemedi', 'error');
                 }
             } catch (error) {
-                console.error('Reset Error:', error);
+                console.error('Save Error:', error);
                 showResetStatusMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<span id="resetPinBtnText">PIN\'i Sıfırla</span>';
+                btn.innerHTML = '<span id="savePinBtnText">PIN\'i Kaydet</span>';
             }
         }
 
