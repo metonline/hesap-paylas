@@ -66,13 +66,13 @@ function handleDeepLink() {
     let groupCode = params.get('code') || params.get('groupCode');
     
     if (groupCode && (/^\d{3}-\d{3}$/.test(groupCode) || /^\d{6}$/.test(groupCode) || /^\d{3}-\d{3}-\d{3}$/.test(groupCode))) {
-        console.log('Deep link detected with code:', groupCode);
+        console.log('[DEEPLINK] Deep link detected with code:', groupCode);
         
         // Eğer user login'se direkt gruba katıl
         const token = localStorage.getItem('hesapPaylas_token');
         if (token) {
             // User varsa, gruba direkt katıl
-            console.log('User logged in, joining group with code:', groupCode);
+            console.log('[DEEPLINK] User logged in, joining group with code:', groupCode);
             joinGroupWithCode(groupCode);
             // Clean URL to avoid re-processing
             window.history.replaceState({}, document.title, window.location.pathname);
@@ -81,10 +81,13 @@ function handleDeepLink() {
             // But also keep code in URL as fallback
             try {
                 localStorage.setItem('pendingGroupCode', groupCode);
+                console.log('[DEEPLINK] Saved pending code to localStorage:', groupCode);
             } catch (e) {
                 console.log('[WARN] localStorage blocked by browser - will rely on URL parameter');
             }
         }
+    } else {
+        console.log('[DEEPLINK] No valid group code in URL');
     }
 }
 
@@ -690,6 +693,7 @@ function completeSignup(userData) {
     let pendingCode = null;
     try {
         pendingCode = localStorage.getItem('pendingGroupCode');
+        console.log('[SIGNUP] Checked localStorage for pendingGroupCode:', pendingCode);
     } catch (e) {
         console.log('[WARN] localStorage blocked - checking URL instead');
     }
@@ -698,10 +702,11 @@ function completeSignup(userData) {
     if (!pendingCode) {
         const params = new URLSearchParams(window.location.search);
         pendingCode = params.get('code') || params.get('groupCode');
+        console.log('[SIGNUP] Checked URL for code parameter:', pendingCode);
     }
     
     if (pendingCode) {
-        console.log('Processing pending group code after signup:', pendingCode);
+        console.log('[SIGNUP] Processing pending group code after signup:', pendingCode);
         try {
             localStorage.removeItem('pendingGroupCode');
         } catch (e) {}
@@ -709,9 +714,11 @@ function completeSignup(userData) {
         window.history.replaceState({}, document.title, window.location.pathname);
         // DON'T show page yet - wait for joinGroupWithCode to complete
         setTimeout(() => {
+            console.log('[SIGNUP] Calling joinGroupWithCode with code:', pendingCode);
             joinGroupWithCode(pendingCode);
         }, 500);
     } else {
+        console.log('[SIGNUP] No pending code found, showing home page');
         showPage('homePage');
     }
 }
