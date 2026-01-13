@@ -37,6 +37,28 @@ window.addEventListener('load', () => {
     handleDeepLink();
 });
 
+// Also handle deep links when URL changes (without page reload)
+window.addEventListener('popstate', () => {
+    console.log('[APP] URL changed - checking for deep links');
+    handleDeepLink();
+});
+
+// Monitor for URL changes via history API
+const originalPushState = window.history.pushState;
+const originalReplaceState = window.history.replaceState;
+
+window.history.pushState = function(...args) {
+    originalPushState.apply(this, args);
+    console.log('[APP] History pushed - checking for deep links');
+    handleDeepLink();
+};
+
+window.history.replaceState = function(...args) {
+    originalReplaceState.apply(this, args);
+    console.log('[APP] History replaced - checking for deep links');
+    handleDeepLink();
+};
+
 // Deep Link Handler - URL parametrelerini kontrol et
 function handleDeepLink() {
     const params = new URLSearchParams(window.location.search);
