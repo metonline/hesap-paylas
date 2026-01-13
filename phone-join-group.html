@@ -430,12 +430,17 @@
 
             <!-- Wrong PIN Section -->
             <div id="wrongPinSection" class="hidden">
-                <div style="text-align: center; margin-bottom: 30px;">
-                    <div style="color: #667eea; font-size: 28px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <span>🥄</span>
-                        <span>Hesap</span>
+                <!-- PIN Entry for retry -->
+                <div style="margin-bottom: 30px;">
+                    <label style="display: block; text-align: center; margin-bottom: 15px; color: #333; font-weight: 600; font-size: 16px;">
+                        Tekrar Deneyiniz
+                    </label>
+                    <div class="pin-input-group" id="retryPinGroup" style="display: flex; gap: 10px; justify-content: center; margin-bottom: 20px;">
+                        <input type="text" class="pin-input retry-pin-input" maxlength="1" inputmode="numeric" style="width: 50px; height: 50px; font-size: 24px; border: 2px solid #ddd; border-radius: 10px; text-align: center; font-weight: 600;">
+                        <input type="text" class="pin-input retry-pin-input" maxlength="1" inputmode="numeric" style="width: 50px; height: 50px; font-size: 24px; border: 2px solid #ddd; border-radius: 10px; text-align: center; font-weight: 600;">
+                        <input type="text" class="pin-input retry-pin-input" maxlength="1" inputmode="numeric" style="width: 50px; height: 50px; font-size: 24px; border: 2px solid #ddd; border-radius: 10px; text-align: center; font-weight: 600;">
+                        <input type="text" class="pin-input retry-pin-input" maxlength="1" inputmode="numeric" style="width: 50px; height: 50px; font-size: 24px; border: 2px solid #ddd; border-radius: 10px; text-align: center; font-weight: 600;">
                     </div>
-                    <div style="color: #764ba2; font-size: 28px; font-weight: 700;">Paylaş</div>
                 </div>
 
                 <div class="form-group" style="opacity: 1; animation: none;">
@@ -445,7 +450,13 @@
                 </div>
 
                 <div class="form-group" style="opacity: 1; animation: none;">
-                    <button onclick="showResetPinModal()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                    <button onclick="retryAuthenticate()" style="width: 100%; padding: 14px; background: #27ae60; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
+                        <span id="retryBtnText">Tekrar Dene</span>
+                    </button>
+                </div>
+
+                <div class="form-group" style="opacity: 1; animation: none;">
+                    <button onclick="showResetPinModal()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
                         Şifremi Unuttum
                     </button>
                 </div>
@@ -993,6 +1004,11 @@
                     document.getElementById('wrongPinSection').classList.remove('hidden');
                     // Store phone for password reset
                     currentResetPhone = phone;
+                    // Setup retry PIN inputs
+                    setTimeout(() => {
+                        setupRetryPinInputs();
+                        document.querySelector('.retry-pin-input').focus();
+                    }, 100);
                     btn.disabled = false;
                     btn.innerHTML = '<span id="authBtnText">Gruba Katıl</span>';
                 }
@@ -1080,6 +1096,108 @@
             // Setup reset PIN inputs
             setupResetPinInputs();
         });
+
+        // Retry PIN entry function
+        function setupRetryPinInputs() {
+            const inputs = document.querySelectorAll('.retry-pin-input');
+            inputs.forEach((input, index) => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && input.value === '' && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+                
+                input.addEventListener('input', (e) => {
+                    if (e.target.value && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                });
+                
+                input.addEventListener('paste', (e) => {
+                    e.preventDefault();
+                    const paste = (e.clipboardData || window.clipboardData).getData('text');
+                    const numbers = paste.replace(/\D/g, '').split('');
+                    numbers.forEach((num, i) => {
+                        if (i < inputs.length) {
+                            inputs[i].value = num;
+                        }
+                    });
+                    if (numbers.length > 0) {
+                        inputs[Math.min(numbers.length, inputs.length - 1)].focus();
+                    }
+                });
+            });
+        }
+
+        function getRetryPin() {
+            const inputs = document.querySelectorAll('.retry-pin-input');
+            return Array.from(inputs).map(input => input.value).join('');
+        }
+
+        async function retryAuthenticate() {
+            const phone = currentResetPhone;
+            const pin = getRetryPin();
+
+            if (pin.length !== 4) {
+                showMessage('PIN 4 haneli olmalıdır', 'error');
+                return;
+            }
+
+            const btn = document.querySelector('button[onclick="retryAuthenticate()"]');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> İşleniyor...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/phone-pin-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: phone,
+                        pin: pin,
+                        is_signup: false
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Success - login
+                    showMessage('✓ Başarıyla giriş yaptınız', 'success');
+                    localStorage.setItem('hesapPaylas_token', data.token);
+                    localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                    
+                    // Check if user needs to add email
+                    if (data.needs_email) {
+                        setTimeout(() => {
+                            document.getElementById('wrongPinSection').classList.add('hidden');
+                            document.getElementById('addEmailModal').classList.remove('hidden');
+                            document.getElementById('emailInput').focus();
+                        }, 1500);
+                    } else {
+                        setTimeout(() => {
+                            if (groupCode) {
+                                window.location.href = `index.html?joinGroup=${groupCode}`;
+                            } else {
+                                window.location.href = 'index.html';
+                            }
+                        }, 1500);
+                    }
+                } else {
+                    // Still wrong PIN
+                    showMessage('PIN hala yanlış', 'error');
+                    const retryInputs = document.querySelectorAll('.retry-pin-input');
+                    retryInputs.forEach(input => input.value = '');
+                    retryInputs[0].focus();
+                    btn.disabled = false;
+                    btn.innerHTML = '<span id="retryBtnText">Tekrar Dene</span>';
+                }
+            } catch (error) {
+                console.error('Retry Auth Error:', error);
+                showMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<span id="retryBtnText">Tekrar Dene</span>';
+            }
+        }
 
         // Email functions
         async function saveEmail() {
