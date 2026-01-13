@@ -849,34 +849,48 @@ def reset_pin():
 def request_pin_reset():
     """Request PIN reset - send SMS code"""
     try:
+        print("[DEBUG] request_pin_reset called")
         data = request.get_json()
+        print(f"[DEBUG] Request data: {data}")
         
         if not data or 'phone' not in data:
             return jsonify({'error': 'Phone is required'}), 400
         
         phone = data['phone'].strip()
+        print(f"[DEBUG] Processing phone: {phone}")
         
         # Validate phone format
         if not phone.startswith('+'):
             phone = '+90' + phone.lstrip('0')
         
+        print(f"[DEBUG] Formatted phone: {phone}")
+        
         # Check if user exists
         user = User.query.filter_by(phone=phone).first()
+        print(f"[DEBUG] User found: {user is not None}")
+        
         if not user:
             return jsonify({'error': 'User not found with this phone number'}), 404
         
         # Generate 6-digit reset code
         reset_code = f"{random.randint(0, 999999):06d}"
+        print(f"[DEBUG] Generated code: {reset_code}")
         
         # Store in OTPVerification table with 10 minute expiry
-        otp_record = OTPVerification(
-            phone=phone,
-            code=reset_code,
-            purpose='pin_reset',
-            expires_at=datetime.utcnow() + timedelta(minutes=10)
-        )
-        db.session.add(otp_record)
-        db.session.commit()
+        try:
+            otp_record = OTPVerification(
+                phone=phone,
+                code=reset_code,
+                purpose='pin_reset',
+                expires_at=datetime.utcnow() + timedelta(minutes=10)
+            )
+            db.session.add(otp_record)
+            db.session.commit()
+            print(f"[DEBUG] OTP record saved to DB")
+        except Exception as db_error:
+            db.session.rollback()
+            print(f"[ERROR] Failed to save OTP record: {str(db_error)}")
+            return jsonify({'error': 'Failed to save reset code', 'debug': str(db_error)}), 500
         
         # Send SMS via Twilio
         sms_sent = False
@@ -888,7 +902,7 @@ def request_pin_reset():
             auth_token = os.getenv('TWILIO_AUTH_TOKEN')
             twilio_phone = os.getenv('TWILIO_PHONE_NUMBER')
             
-            print(f"[DEBUG] Twilio config - SID: {account_sid[:10] if account_sid else 'NONE'}..., Phone: {twilio_phone}")
+            print(f"[DEBUG] Twilio - SID exists: {bool(account_sid)}, Token exists: {bool(auth_token)}, Phone: {twilio_phone}")
             
             if account_sid and auth_token and twilio_phone:
                 try:
@@ -905,30 +919,29 @@ def request_pin_reset():
                     print(f"[SMS] ❌ Twilio error: {sms_error_msg}")
             else:
                 sms_error_msg = "Twilio not configured (missing credentials)"
-                print("[SMS] ⚠️  Twilio credentials not configured")
+                print("[SMS] ⚠️  Twilio credentials missing")
                 # Still allow reset with code stored in DB
         except Exception as sms_error:
             sms_error_msg = str(sms_error)
-            print(f"[SMS] ⚠️  Import error: {sms_error_msg}")
+            print(f"[SMS] ⚠️  Import/Setup error: {sms_error_msg}")
         
-        # Return response
+        # Always return success since code is stored in DB
+        # In production, ensure SMS was sent, but for now we allow code-based reset
         response = {
-            'message': 'Reset code generated and stored',
+            'message': 'Reset code sent to your phone' if sms_sent else 'Reset code generated (SMS failed, but code saved)',
             'phone': phone,
-            'code_sent': sms_sent
+            'code_sent': sms_sent,
+            'code_stored': True
         }
         
-        # In development/test mode, include the code for debugging
-        if not sms_sent and not os.getenv('PRODUCTION'):
-            response['debug_code'] = reset_code
-            response['debug_error'] = sms_error_msg
-        
+        print(f"[DEBUG] Returning response: {response}")
         return jsonify(response), 200
     
     except Exception as e:
-        db.session.rollback()
         print(f"[ERROR] PIN reset request failed: {str(e)}")
-        return jsonify({'error': 'Failed to send reset code'}), 500
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        return jsonify({'error': 'Failed to send reset code', 'debug': str(e)}), 500
 
 @app.route('/api/auth/verify-pin-reset', methods=['POST'])
 def verify_pin_reset():
