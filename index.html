@@ -1028,8 +1028,8 @@ Konaklama
     </div>
 
     <!-- QR Code Libraries -->
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.1.48/dist/html5-qrcode.min.js" onload="window.html5QrcodeLoaded=true;" onerror="console.error('[QR] Failed to load html5-qrcode from jsDelivr')"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.1.48/html5-qrcode.min.js" onload="window.html5QrcodeLoaded=true;" onerror="console.error('[QR] Failed to load html5-qrcode from cdnjs'); setTimeout(() => { if(typeof Html5Qrcode==='undefined') console.warn('[QR] Html5Qrcode still not available'); }, 1000);"></script>
     
-    <script src="script.js?ver=1.0.6"></script>
+    <script src="script.js?ver=1.0.7"></script>
 </body>
 </html>
