@@ -803,6 +803,48 @@ def phone_pin_login():
         print(f"[ERROR] Phone-PIN login failed: {str(e)}")
         return jsonify({'error': 'Authentication failed. Please try again.'}), 500
 
+@app.route('/api/auth/reset-pin', methods=['POST'])
+def reset_pin():
+    """Reset PIN for existing user"""
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ['phone', 'new_pin']):
+            return jsonify({'error': 'Phone and new PIN are required'}), 400
+        
+        phone = data['phone'].strip()
+        new_pin = data['new_pin'].strip()
+        
+        # Validate phone format
+        if not phone.startswith('+'):
+            phone = '+90' + phone.lstrip('0')
+        
+        # Validate PIN - must be exactly 4 digits
+        if not new_pin.isdigit() or len(new_pin) != 4:
+            return jsonify({'error': 'PIN must be 4 digits'}), 400
+        
+        # Find user by phone
+        user = User.query.filter_by(phone=phone).first()
+        
+        if not user:
+            return jsonify({'error': 'User not found with this phone number'}), 404
+        
+        # Update PIN (stored as password hash)
+        user.set_password(new_pin)
+        db.session.commit()
+        
+        print(f"[AUTH] PIN reset successfully for phone: {phone}")
+        
+        return jsonify({
+            'message': 'PIN reset successfully',
+            'phone': phone
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] PIN reset failed: {str(e)}")
+        return jsonify({'error': 'PIN reset failed. Please try again.'}), 500
+
 # ==================== Helper Functions ====================
 
 def format_group_code(code):
