@@ -2446,16 +2446,16 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
         // This was previously displayed inline - now it's fetched when user clicks "Harcama Detayları"
         
         // Don't display orders inline anymore - they're in the expenditure modal
-        // if (group.orders && group.orders.length > 0) {
-        //     const ordersList = group.orders.map(order => `...`).join('');
-        //     document.getElementById('detailGroupOrders').innerHTML = ordersList;
-        // } else {
-        //     document.getElementById('detailGroupOrders').innerHTML = '';
-        // }
+        const ordersElement = document.getElementById('detailGroupOrders');
+        if (ordersElement) {
+            ordersElement.innerHTML = '';
+        }
         
-        // Ödeme dengesi (orders total) - only show in expenditure modal
-        // const totalBalance = group.orders ? group.orders.reduce((sum, order) => sum + order.total_amount, 0) : 0;
-        // document.getElementById('detailGroupBalance').textContent = `₺${totalBalance.toFixed(2)}`;
+        const balanceElement = document.getElementById('detailGroupBalance');
+        if (balanceElement) {
+            const totalBalance = group.orders ? group.orders.reduce((sum, order) => sum + order.total_amount, 0) : 0;
+            balanceElement.textContent = `₺${totalBalance.toFixed(2)}`;
+        }
         
         // Üyeleri global'e sakla (detay açılması için)
         window.currentGroupMembers = group.members || [];
