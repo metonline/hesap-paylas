@@ -2365,7 +2365,7 @@ function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     
     // Backend'den detaylı grup bilgisini çek
     const token = localStorage.getItem('hesapPaylas_token');
-    const endpoint = `${API_BASE_URL}/api/groups/${groupId}`;
+    const endpoint = `${API_BASE_URL}/groups/${groupId}`;
     console.log('[GROUP-DETAILS] Fetching group details from:', endpoint);
     console.log('[GROUP-DETAILS] Token:', token ? 'present' : 'MISSING');
     
