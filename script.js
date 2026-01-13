@@ -764,8 +764,7 @@ function completeSignup(userData) {
         } catch (e) {}
         // Clear URL to avoid re-processing
         window.history.replaceState({}, document.title, window.location.pathname);
-        // Show page first, then join group
-        showPage('homePage');
+        // DON'T show page yet - wait for joinGroupWithCode to complete
         setTimeout(() => {
             joinGroupWithCode(pendingCode);
         }, 500);
@@ -2798,10 +2797,14 @@ function joinGroupWithCode(code) {
                     loadActiveGroups(); // Balonu güncelle
                 }, 1500);
             } else {
-                // Background join (signup flow) - just refresh immediately
+                // Background join (signup flow) - refresh and show page
+                console.log('[SIGNUP] Group join successful, showing home page with updated groups');
                 loadUserGroups();
                 loadActiveGroups();
-                showPage('homePage');
+                // Give loadActiveGroups a moment to complete before showing page
+                setTimeout(() => {
+                    showPage('homePage');
+                }, 300);
             }
         } else {
             if (isManualJoin) {
