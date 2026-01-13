@@ -88,63 +88,6 @@ function handleDeepLink() {
     }
 }
 
-// Grup kodunu kullanarak gruba katıl
-function joinGroupWithCode(groupCode) {
-    const token = localStorage.getItem('hesapPaylas_token');
-    if (!token) {
-        showNotification('Lütfen önce giriş yapınız');
-        return;
-    }
-    
-    const baseURL = getBaseURL();
-    fetch(`${baseURL}/api/groups/join`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ code: groupCode })
-    })
-    .then(response => {
-        const contentType = response.headers.get('content-type');
-        if (contentType && contentType.includes('application/json')) {
-            return response.json().then(data => ({
-                ok: response.ok,
-                status: response.status,
-                data: data
-            }));
-        } else {
-            return {
-                ok: response.ok,
-                status: response.status,
-                data: { error: 'Invalid response format' }
-            };
-        }
-    })
-    .then(result => {
-        if (result.ok && result.data) {
-            showNotification(`✅ "${result.data.name}" grubuna başarıyla katıldınız!`);
-            setTimeout(() => {
-                loadActiveGroups();
-                showPage('homePage');
-            }, 1500);
-        } else if (result.data && result.data.message) {
-            // Already member or other success
-            showNotification(`✅ "${result.data.name}" grubundasınız!`);
-            setTimeout(() => {
-                loadActiveGroups();
-                showPage('homePage');
-            }, 1500);
-        } else {
-            showNotification(result.data?.error || 'Gruba katılım başarısız');
-        }
-    })
-    .catch(error => {
-        console.error('Grup katılım hatası:', error);
-        showNotification('Gruba katılım başarısız');
-    });
-}
-
 // ===== API CONFIGURATION =====
 
 // Detect environment and set API base URL
@@ -2756,6 +2699,7 @@ function joinGroupWithManualCode() {
 }
 
 function joinGroupWithCode(code) {
+    console.log('[JOIN_GROUP] joinGroupWithCode called with code:', code);
     const token = localStorage.getItem('hesapPaylas_token');
     const baseURL = getBaseURL();
     
