@@ -1226,21 +1226,35 @@ function addPaymentMethod() {
 
 // Şifre Değiştir
 function changePassword() {
+    console.log('[PASSWORD] Change password function called');
     const oldPassword = prompt('Eski şifrenizi girin:');
-    if (!oldPassword) return;
+    if (!oldPassword) {
+        console.log('[PASSWORD] Old password not provided');
+        return;
+    }
     
     const newPassword = prompt('Yeni şifrenizi girin:');
-    if (!newPassword) return;
+    if (!newPassword) {
+        console.log('[PASSWORD] New password not provided');
+        return;
+    }
     
     const confirmPassword = prompt('Yeni şifrenizi doğrulayın:');
     if (newPassword !== confirmPassword) {
         alert('Şifreler eşleşmiyor!');
+        console.log('[PASSWORD] Passwords do not match');
         return;
     }
+    
+    console.log('[PASSWORD] Passwords match, sending to backend');
     
     // Send password change request to backend
     const token = localStorage.getItem('hesapPaylas_token');
     const baseURL = getBaseURL();
+    
+    console.log('[PASSWORD] Token exists:', !!token);
+    console.log('[PASSWORD] Base URL:', baseURL);
+    console.log('[PASSWORD] Full URL:', `${baseURL}/user/change-password`);
     
     fetch(`${baseURL}/user/change-password`, {
         method: 'POST',
@@ -1253,8 +1267,12 @@ function changePassword() {
             newPassword: newPassword
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('[PASSWORD] Response status:', response.status);
+        return response.json();
+    })
     .then(data => {
+        console.log('[PASSWORD] Response data:', data);
         if (data.message) {
             alert('✅ Şifreniz başarıyla değiştirildi! 🔐');
             closeProfileModal();
@@ -1263,7 +1281,7 @@ function changePassword() {
         }
     })
     .catch(error => {
-        console.error('Password change error:', error);
+        console.error('[PASSWORD] Error:', error);
         alert('❌ Bir hata oluştu. Tekrar deneyin.');
     });
 }
