@@ -1250,7 +1250,7 @@ function changePassword() {
     
     // Send password change request to backend
     const token = localStorage.getItem('hesapPaylas_token');
-    const baseURL = getBaseURL();
+    const baseURL = API_BASE_URL; // Use API_BASE_URL, not getBaseURL()
     
     console.log('[PASSWORD] Token exists:', !!token);
     console.log('[PASSWORD] Base URL:', baseURL);
