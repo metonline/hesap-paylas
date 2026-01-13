@@ -831,7 +831,7 @@
             
             <div style="text-align: center; margin-bottom: 20px;">
                 <h2 style="margin: 0 0 10px 0; color: #333;">Gruba Katıl</h2>
-                <p style="color: #666; margin: 0;">QR kodu taratmak için kamerayı çalıştır !</p>
+                <p style="color: #666; margin: 0;">Katılmak için Grup kodunu manuel olarak giriniz veya kameranızla QR kodunu taratınız !</p>
             </div>
 
             <!-- QR Tarama Alanı -->
@@ -850,7 +850,7 @@
 
             <!-- Aksiyon Düğmeleri -->
             <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <button class="btn btn-primary" id="startScanBtn" onclick="startQRScannerForJoin()" style="flex: 1;">📱 Kamerayı Aç</button>
+                <button class="btn btn-primary" id="startScanBtn" onclick="startQRScannerForJoin()" style="flex: 1;">📱 QR kodunu taratmak için tıklayın</button>
                 <button class="btn btn-primary" id="joinGroupBtn" onclick="joinGroupWithManualCode()" style="flex: 1; display: none;">Gruba Katıl</button>
             </div>
             <button class="btn btn-secondary" id="stopScanBtn" onclick="stopQRScanner()" style="width: 100%; display: none;">🛑 Kamerayı Kapat</button>
@@ -1030,6 +1030,6 @@ Konaklama
     <!-- QR Code Libraries -->
     <script src="https://unpkg.com/html5-qrcode@2.1.48/dist/html5-qrcode.min.js"></script>
     
-    <script src="script.js?ver=1.0.2"></script>
+    <script src="script.js?ver=1.0.3"></script>
 </body>
 </html>
