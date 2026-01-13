@@ -764,6 +764,8 @@ function completeSignup(userData) {
         } catch (e) {}
         // Clear URL to avoid re-processing
         window.history.replaceState({}, document.title, window.location.pathname);
+        // Show page first, then join group
+        showPage('homePage');
         setTimeout(() => {
             joinGroupWithCode(pendingCode);
         }, 500);
@@ -2764,8 +2766,14 @@ function joinGroupWithCode(code) {
         return;
     }
     
-    document.getElementById('joinGroupMessage').textContent = '⏳ Gruba katılınıyor...';
-    document.getElementById('joinGroupMessage').style.color = '#3498db';
+    // Check if modal is open (manual join) or just background auto-join (signup)
+    const messageDiv = document.getElementById('joinGroupMessage');
+    const isManualJoin = messageDiv && messageDiv.parentElement.offsetParent !== null;
+    
+    if (isManualJoin) {
+        messageDiv.textContent = '⏳ Gruba katılınıyor...';
+        messageDiv.style.color = '#3498db';
+    }
     
     fetch(`${baseURL}/api/groups/join`, {
         method: 'POST',
@@ -2780,23 +2788,40 @@ function joinGroupWithCode(code) {
     .then(response => response.json())
     .then(data => {
         if (data.success || data.id) {
-            document.getElementById('joinGroupMessage').textContent = '✅ Gruba başarıyla katıldınız!';
-            document.getElementById('joinGroupMessage').style.color = '#27ae60';
-            
-            setTimeout(() => {
-                closeJoinGroupModal();
-                loadUserGroups(); // Grupları yenile
-                loadActiveGroups(); // Balonu güncelle
-            }, 1500);
+            if (isManualJoin) {
+                messageDiv.textContent = '✅ Gruba başarıyla katıldınız!';
+                messageDiv.style.color = '#27ae60';
+                
+                setTimeout(() => {
+                    closeJoinGroupModal();
+                    loadUserGroups(); // Grupları yenile
+                    loadActiveGroups(); // Balonu güncelle
+                }, 1500);
+            } else {
+                // Background join (signup flow) - just refresh immediately
+                loadUserGroups();
+                loadActiveGroups();
+                showPage('homePage');
+            }
         } else {
-            document.getElementById('joinGroupMessage').textContent = `❌ ${data.message || 'Grup bulunamadı'}`;
-            document.getElementById('joinGroupMessage').style.color = '#e74c3c';
+            if (isManualJoin) {
+                messageDiv.textContent = `❌ ${data.message || 'Grup bulunamadı'}`;
+                messageDiv.style.color = '#e74c3c';
+            } else {
+                console.error('Auto-join failed:', data.message);
+                showPage('homePage');
+            }
         }
     })
     .catch(error => {
         console.error('Hata:', error);
-        document.getElementById('joinGroupMessage').textContent = '❌ Bir hata oluştu. Tekrar deneyin.';
-        document.getElementById('joinGroupMessage').style.color = '#e74c3c';
+        if (isManualJoin) {
+            messageDiv.textContent = '❌ Bir hata oluştu. Tekrar deneyin.';
+            messageDiv.style.color = '#e74c3c';
+        } else {
+            console.error('Auto-join error:', error);
+            showPage('homePage');
+        }
     });
 }
 
