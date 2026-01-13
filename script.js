@@ -1039,7 +1039,8 @@ function goToProfile() {
     const profileEmailInfo = document.getElementById('profileEmailInfo');
     
     if (profileNameEdit) profileNameEdit.value = `${user.firstName || ''} ${user.lastName || ''}`.trim() || '';
-    if (profileEmailEdit) profileEmailEdit.value = user.email || '';
+    // Leave email field empty - user fills it in when they want
+    if (profileEmailEdit) profileEmailEdit.value = '';
     // Telefonu mask formatı ile göster
     if (profilePhone) profilePhone.textContent = formatPhoneDisplay(user.phone || '-');
     if (profileEmailInfo) profileEmailInfo.textContent = user.email || '';
