@@ -1005,6 +1005,25 @@ function handlePhoneInput(input) {
     input.value = formatPhoneInput(input.value);
 }
 
+// Format phone number for profile input with +90 prefix
+function formatPhoneForProfile(value) {
+    const digits = value.replace(/\D/g, '');
+    if (digits.length === 0) return '';
+    if (digits.length <= 3) return `+90 (${digits}`;
+    if (digits.length <= 6) return `+90 (${digits.slice(0, 3)}) ${digits.slice(3)}`;
+    return `+90 (${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
+}
+
+// Attach phone formatting listener for profile
+document.addEventListener('DOMContentLoaded', () => {
+    const profilePhoneInput = document.getElementById('profilePhoneEdit');
+    if (profilePhoneInput) {
+        profilePhoneInput.addEventListener('input', (e) => {
+            e.target.value = formatPhoneForProfile(e.target.value);
+        });
+    }
+});
+
 function goToProfile() {
     console.log('goToProfile called');
     
@@ -1035,13 +1054,21 @@ function goToProfile() {
     // Profil bilgilerini doldur
     const profileNameEdit = document.getElementById('profileNameEdit');
     const profileEmailEdit = document.getElementById('profileEmailEdit');
-    const profilePhone = document.getElementById('profilePhone');
+    const profilePhoneEdit = document.getElementById('profilePhoneEdit');
     
     if (profileNameEdit) profileNameEdit.value = `${user.firstName || ''} ${user.lastName || ''}`.trim() || '';
     // Show email from user data if available
     if (profileEmailEdit) profileEmailEdit.value = user.email || '';
-    // Telefonu mask formatı ile göster
-    if (profilePhone) profilePhone.textContent = formatPhoneDisplay(user.phone || '-');
+    // Display phone with +90 format
+    if (profilePhoneEdit) {
+        if (user.phone) {
+            const digits = user.phone.replace(/\D/g, '');
+            const formattedPhone = `+90 (${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
+            profilePhoneEdit.value = formattedPhone;
+        } else {
+            profilePhoneEdit.value = '';
+        }
+    }
 
     
     console.log('Opening profile modal');
@@ -1145,9 +1172,11 @@ function updateLevelDisplay(status) {
 function saveProfile() {
     const nameInput = document.getElementById('profileNameEdit');
     const emailInput = document.getElementById('profileEmailEdit');
+    const phoneInput = document.getElementById('profilePhoneEdit');
     
     const fullName = (nameInput.value || '').trim();
     const email = (emailInput.value || '').trim();
+    const phone = (phoneInput.value || '').trim();
     
     if (!fullName) {
         alert('Lütfen adınızı girin!');
@@ -1168,6 +1197,9 @@ function saveProfile() {
     const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(' ');
     
+    // Extract phone digits if provided
+    const phoneDigits = phone ? phone.replace(/\D/g, '') : '';
+    
     // Send to backend API
     const token = localStorage.getItem('hesapPaylas_token');
     
@@ -1175,6 +1207,11 @@ function saveProfile() {
         firstName: firstName,
         lastName: lastName
     };
+    
+    // Add phone if provided
+    if (phoneDigits.length === 10) {
+        updateData.phone = phoneDigits;
+    }
     
     // If email is provided, send it too (to add-email endpoint)
     if (email) {
