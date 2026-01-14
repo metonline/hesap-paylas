@@ -207,6 +207,25 @@
         .footer a:hover {
             text-decoration: underline;
         }
+
+        .section-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+        }
+
+        .section-description {
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
@@ -218,6 +237,9 @@
         </div>
 
         <div id="message" class="message"></div>
+
+        <div class="section-header">📱 TELEFON İLE GİRİŞ</div>
+        <div class="section-description">Telefon numarası ve 4 haneli PIN ile giriş yapın</div>
 
         <form onsubmit="submitLogin(event)">
             <div class="form-group">
