@@ -293,7 +293,25 @@
                 </div>
             </div>
 
-            <!-- Name input (for new users only) -->
+            <!-- Wrong PIN Section -->
+            <div id="wrongPinSection" class="hidden">
+                <div class="form-group" style="opacity: 1; animation: none;">
+                    <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ffc107; color: #856404;">
+                        ⚠️ PIN kodunuz hatalı. Tekrar deneyiniz veya şifrenizi sıfırlamak için aşağıdaki düğmeyi kullanın.
+                    </div>
+                </div>
+
+                <div class="form-group" style="opacity: 1; animation: none;">
+                    <button onclick="retryPin()" style="background: #27ae60;">
+                        <span id="retryBtnText">Tekrar Dene</span>
+                    </button>
+                </div>
+
+                <div class="form-group" style="opacity: 1; animation: none;">
+                    <button onclick="resetPin()">
+                        <span id="resetBtnText">Şifremi Unuttum</span>
+                    </button>
+                </div>
             <div id="nameSection" class="hidden">
                 <div class="form-group delay1">
                     <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">Adınız</label>
@@ -401,8 +419,24 @@
 
         function goBackToPhone() {
             document.getElementById('nameSection').classList.add('hidden');
+            document.getElementById('wrongPinSection').classList.add('hidden');
             document.getElementById('passwordSection').classList.add('hidden');
             document.getElementById('phone').focus();
+        }
+
+        function retryPin() {
+            document.getElementById('wrongPinSection').classList.add('hidden');
+            document.getElementById('passwordSection').classList.remove('hidden');
+            clearPINInputs();
+        }
+
+        function resetPin() {
+            if (tempPhone.length !== 10) {
+                showMessage('Telefon numarası gerekli', 'error');
+                return;
+            }
+            showMessage('PIN sıfırlama bağlantısı e-mail adresinize gönderilecektir. Lütfen e-mail adresinizi girin.', 'info');
+            // Simple placeholder for now - in real app this would send email
         }
 
         function showNameForm() {
@@ -462,8 +496,12 @@
                     tempPin = pin;
                     showNameForm();
                 } else {
-                    showMessage(data.message || 'Giriş başarısız', 'error');
+                    // Wrong PIN - show retry/reset buttons
+                    showMessage('Giriş başarısız', 'error');
+                    tempPhone = phone;
                     clearPINInputs();
+                    document.getElementById('passwordSection').classList.add('hidden');
+                    document.getElementById('wrongPinSection').classList.remove('hidden');
                     btn.disabled = false;
                     btn.innerHTML = '<span id="authBtnText">Giriş Yap</span>';
                 }
@@ -530,6 +568,21 @@
                 btn.disabled = false;
                 btn.innerHTML = '<span id="nameBtnText">Devam Et</span>';
             }
+        }
+
+        function retryPin() {
+            document.getElementById('wrongPinSection').classList.add('hidden');
+            document.getElementById('passwordSection').classList.remove('hidden');
+            clearPINInputs();
+        }
+
+        function resetPin() {
+            if (tempPhone.length !== 10) {
+                showMessage('Telefon numarası gerekli', 'error');
+                return;
+            }
+            showMessage('PIN sıfırlama e-postası ' + tempPhone + ' numarasıyla ilişkili e-posta adresine gönderilecektir.', 'info');
+            // In a real implementation, this would send an email with reset link
         }
 
         document.addEventListener('DOMContentLoaded', () => {
