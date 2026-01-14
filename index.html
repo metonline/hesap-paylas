@@ -1197,7 +1197,9 @@ Konaklama
                     return;
                 }
 
-                registerNewUser(phone, pin, name, email);
+                // Ensure phone is just 10 digits (remove leading 90 if present)
+                const cleanPhone = phone.length > 10 ? phone.slice(-10) : phone;
+                registerNewUser(cleanPhone, pin, name, email);
             } else {
                 loginExistingUser(phone, pin);
             }

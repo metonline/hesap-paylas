@@ -1062,7 +1062,9 @@ function goToProfile() {
     // Display phone with +90 format
     if (profilePhoneEdit) {
         if (user.phone) {
-            const digits = user.phone.replace(/\D/g, '');
+            // Ensure we have exactly 10 digits (take last 10 if more than 10)
+            const allDigits = user.phone.replace(/\D/g, '');
+            const digits = allDigits.length > 10 ? allDigits.slice(-10) : allDigits;
             const formattedPhone = `+90 (${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
             profilePhoneEdit.value = formattedPhone;
         } else {
@@ -1197,8 +1199,10 @@ function saveProfile() {
     const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(' ');
     
-    // Extract phone digits if provided
-    const phoneDigits = phone ? phone.replace(/\D/g, '') : '';
+    // Extract phone digits if provided - remove all non-digits, then take last 10 digits
+    const allDigits = phone ? phone.replace(/\D/g, '') : '';
+    // Take last 10 digits to remove leading "90" if present
+    const phoneDigits = allDigits.length >= 10 ? allDigits.slice(-10) : allDigits;
     
     // Send to backend API
     const token = localStorage.getItem('hesapPaylas_token');
