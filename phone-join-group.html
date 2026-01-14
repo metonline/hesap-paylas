@@ -669,6 +669,8 @@
             const pinInputs = document.querySelectorAll('#newUserPinInputs input');
             const pin = Array.from(pinInputs).map(input => input.value).join('').trim();
 
+            console.log('Form data:', { name, email, pin_length: pin.length, currentPhone });
+
             if (!name || name.length < 2) {
                 showMessage('newUserMessage', '⚠️ Adınız en az 2 karakter olmalıdır', 'error');
                 return;
@@ -688,21 +690,28 @@
             btn.disabled = true;
             btn.textContent = 'Oluşturuluyor...';
 
+            const requestBody = {
+                phone: currentPhone,
+                pin: pin,
+                is_signup: true,
+                first_name: name.split(' ')[0],
+                last_name: name.includes(' ') ? name.split(' ').slice(1).join(' ') : '',
+                email: email
+            };
+            
+            console.log('Request body:', requestBody);
+
             try {
                 const response = await fetch(`${API_BASE_URL}/auth/phone-pin-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phone: currentPhone,
-                        pin: pin,
-                        is_signup: true,
-                        first_name: name.split(' ')[0],
-                        last_name: name.includes(' ') ? name.split(' ').slice(1).join(' ') : '',
-                        email: email
-                    })
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
+                
+                console.log('Response status:', response.status);
+                console.log('Response data:', data);
 
                 if (response.ok) {
                     showMessage('newUserMessage', '✅ Hesap oluşturuldu! Yönlendiriliyor...', 'success');
@@ -718,7 +727,9 @@
                         }
                     }, 1500);
                 } else {
-                    showMessage('newUserMessage', '❌ ' + (data.error || 'Hesap oluşturulamadı'), 'error');
+                    const errorMsg = data.error || data.message || 'Hesap oluşturulamadı';
+                    console.error('API error:', errorMsg, data);
+                    showMessage('newUserMessage', '❌ ' + errorMsg, 'error');
                     btn.disabled = false;
                     btn.textContent = 'Hesap Oluştur';
                 }

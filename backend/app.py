@@ -838,32 +838,43 @@ def check_phone():
             return jsonify({'error': 'Phone is required'}), 400
         
         phone = data['phone'].strip()
-        print(f"[DEBUG] check_phone: Raw input: {phone}")
+        print(f"[CHECK-PHONE] Raw input: {phone}, Length: {len(phone)}")
+        
+        # Remove any formatting
+        clean_phone = phone.replace(' ', '').replace('(', '').replace(')', '').replace('-', '')
+        print(f"[CHECK-PHONE] Cleaned: {clean_phone}")
         
         # Format phone - handle both formats
         # If it's 10 digits, prepend country code
-        if len(phone) == 10 and not phone.startswith('0'):
-            formatted_phone = '+90' + phone
-        elif len(phone) == 10 and phone.startswith('0'):
-            formatted_phone = '+90' + phone[1:]
-        elif phone.startswith('+'):
-            formatted_phone = phone
+        if len(clean_phone) == 10 and not clean_phone.startswith('0'):
+            formatted_phone = '+90' + clean_phone
+        elif len(clean_phone) == 10 and clean_phone.startswith('0'):
+            formatted_phone = '+90' + clean_phone[1:]
+        elif clean_phone.startswith('+'):
+            formatted_phone = clean_phone
         else:
-            formatted_phone = '+90' + phone.lstrip('0')
+            formatted_phone = '+90' + clean_phone.lstrip('0')
         
-        print(f"[DEBUG] check_phone: Formatted phone: {formatted_phone}")
+        print(f"[CHECK-PHONE] Formatted: {formatted_phone}")
         
         # Check if user exists
         user = User.query.filter_by(phone=formatted_phone).first()
-        print(f"[DEBUG] check_phone: User found: {user is not None}")
+        exists = user is not None
+        print(f"[CHECK-PHONE] Searching DB for: {formatted_phone}")
+        print(f"[CHECK-PHONE] User found: {exists}")
         
         if user:
-            print(f"[DEBUG] check_phone: User exists - {user.phone}, Email: {user.email}")
+            print(f"[CHECK-PHONE] ✓ User exists - Phone: {user.phone}, Name: {user.first_name}")
+        else:
+            print(f"[CHECK-PHONE] ✗ User NOT found - will create new account")
+            # DEBUG: List all phones in database
+            all_users = User.query.all()
+            db_phones = [u.phone for u in all_users if u.phone]
+            print(f"[CHECK-PHONE] Available phones in DB: {db_phones}")
         
         return jsonify({
-            'exists': user is not None,
-            'phone': formatted_phone,
-            'debug': f'Checked phone: {formatted_phone}'
+            'exists': exists,
+            'phone': formatted_phone
         }), 200
     
     except Exception as e:
@@ -885,9 +896,13 @@ def phone_pin_login():
         pin = data['pin'].strip()
         is_signup = data.get('is_signup', False)  # True if new user
         
+        print(f"[AUTH] Request: phone={phone}, is_signup={is_signup}, pin_length={len(pin)}")
+        
         # Validate phone format
         if not phone.startswith('+'):
             phone = '+90' + phone.lstrip('0')
+        
+        print(f"[AUTH] Formatted phone: {phone}")
         
         # Validate phone length (basic)
         if len(phone) < 10:
@@ -899,10 +914,12 @@ def phone_pin_login():
         
         # Check if user exists
         user = User.query.filter_by(phone=phone).first()
+        print(f"[AUTH] User exists: {user is not None}")
         
         if not user:
             # First-time signup
             if not is_signup:
+                print(f"[AUTH] Phone {phone} not found and is_signup=False - returning 404")
                 return jsonify({'error': 'user_not_found', 'message': 'This phone is not registered'}), 404
             
             print(f"[AUTH] Creating new user with phone {phone}")
@@ -912,23 +929,34 @@ def phone_pin_login():
             last_name = data.get('last_name', '').strip()
             email = data.get('email', '').strip()
             
+            print(f"[AUTH] New user data: first_name={first_name}, email={email}")
+            
             # Validate email if provided
             if email and '@' not in email:
+                print(f"[AUTH] Invalid email format: {email}")
                 return jsonify({'error': 'Invalid email address'}), 400
             
             # Create new user
-            user = User(
-                first_name=first_name,
-                last_name=last_name,
-                email=email if email else f"phone_{phone.replace('+', '').replace(' ', '')}@hesappaylas.local",
-                phone=phone
-            )
-            user.set_password(pin)  # Store PIN as password hash
-            db.session.add(user)
-            db.session.commit()
+            try:
+                user = User(
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email if email else f"phone_{phone.replace('+', '').replace(' ', '')}@hesappaylas.local",
+                    phone=phone
+                )
+                user.set_password(pin)  # Store PIN as password hash
+                db.session.add(user)
+                db.session.commit()
+                print(f"[AUTH] ✓ New user created successfully: {phone}")
+            except Exception as e:
+                db.session.rollback()
+                print(f"[AUTH] ✗ Error creating user: {str(e)}")
+                import traceback
+                traceback.print_exc()
+                return jsonify({'error': 'Failed to create user', 'debug': str(e)}), 500
             
             token = generate_token(user.id)
-            print(f"[AUTH] New user created and logged in: {phone}")
+            print(f"[AUTH] Token generated for new user: {phone}")
             
             return jsonify({
                 'message': 'Account created successfully',
