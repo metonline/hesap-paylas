@@ -3493,11 +3493,20 @@ function toggleActiveGroupPanel() {
     }
 }
 
+let loadActiveGroupsInProgress = false;
+
 function loadActiveGroups() {
+    // Prevent duplicate simultaneous calls
+    if (loadActiveGroupsInProgress) {
+        console.log('⏳ loadActiveGroups already in progress, skipping duplicate call');
+        return Promise.resolve();
+    }
+    
     console.log('✅ loadActiveGroups çağrıldı');
     const token = localStorage.getItem('hesapPaylas_token');
     if (!token) return Promise.resolve();
     
+    loadActiveGroupsInProgress = true;
     const baseURL = getBaseURL();
     return fetch(`${baseURL}/api/user/groups`, {
         headers: {
@@ -3553,9 +3562,12 @@ function loadActiveGroups() {
                 listContainer.appendChild(groupItem);
             });
         }
+        loadActiveGroupsInProgress = false;
+        return groups;
     })
     .catch(error => {
         console.error('Gruplar yüklenemedi:', error);
+        loadActiveGroupsInProgress = false;
         // Hata durumunda floating button'ı gizle
         const activeGroupButton = document.getElementById('activeGroupButton');
         if (activeGroupButton) {
@@ -3983,11 +3995,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     loadFromLocalStorage();
     checkExistingUser();
-    // Kullanıcı giriş yaparsa aktif grupları yükle
-    setTimeout(() => {
-        if (localStorage.getItem('hesapPaylas_token')) {
-            loadActiveGroups();
-        }
-    }, 1000);
+    // Grupları yükle eğer kullanıcı giriş yapmışsa (hemen, setTimeout olmadan)
+    if (localStorage.getItem('hesapPaylas_token')) {
+        loadActiveGroups();
+    }
 });
 
