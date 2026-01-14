@@ -500,6 +500,49 @@ body {
     margin-top: 8px;
 }
 
+/* Status Message Styling */
+.status-message {
+    padding: 12px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 20px;
+    display: none;
+    animation: slideDown 0.3s ease-out;
+}
+
+.status-message.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    display: block;
+    border-left: 4px solid #2e7d32;
+}
+
+.status-message.error {
+    background: #ffebee;
+    color: #c62828;
+    display: block;
+    border-left: 4px solid #c62828;
+}
+
+.status-message.info {
+    background: #fff3e0;
+    color: #e65100;
+    display: block;
+    border-left: 4px solid #e65100;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+}
+
 .terms-text a {
     color: #FF6B6B;
     text-decoration: none;
