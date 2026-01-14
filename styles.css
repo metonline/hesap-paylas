@@ -1049,12 +1049,12 @@ body {
 }
 
 .hesap {
-    color: #4A90E2;
+    color: white;
     font-weight: 900;
 }
 
 .percent-sign {
-    color: #27ae60;
+    color: white;
     font-weight: 400;
     font-size: 1.2em;
     line-height: 1;
@@ -1063,14 +1063,14 @@ body {
 }
 
 .slash {
-    color: #999;
+    color: white;
     font-weight: 400;
     font-size: 1.2em;
     margin: 0 4px;
 }
 
 .paylas {
-    color: #9B59B6;
+    color: white;
     font-weight: 900;
 }
 
