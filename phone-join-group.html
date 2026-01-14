@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <!-- Cache buster v2.1 -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giriş - Hesap Paylaş</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Giriş - Hesap Paylaş v2.3</title>
     <style>
         * {
             margin: 0;
@@ -48,6 +50,20 @@
             margin-bottom: 40px;
         }
 
+        .logo h1 {
+            font-size: 28px;
+            color: #667eea;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .logo p {
+            font-size: 20px;
+            color: #764ba2;
+            font-weight: 600;
+            margin: 5px 0 0 0;
+        }
+
         .status-message {
             padding: 12px;
             border-radius: 10px;
@@ -68,27 +84,23 @@
             display: block;
         }
 
+        .status-message.info {
+            background: #fff3e0;
+            color: #e65100;
+            display: block;
+        }
+
         .form-group {
             margin-bottom: 20px;
-            opacity: 0;
-            animation: fadeIn 0.4s ease-out forwards;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
         }
-
-        .form-group.delay1 { animation-delay: 0s; }
-        .form-group.delay2 { animation-delay: 0.1s; }
-        .form-group.delay3 { animation-delay: 0.2s; }
-        .form-group.delay4 { animation-delay: 0.3s; }
 
         .phone-wrapper {
             display: flex;
@@ -100,27 +112,26 @@
             border: 2px solid #ddd;
             border-radius: 10px;
             padding: 12px;
-            min-width: 60px;
-            text-align: center;
+            width: 70px;
             font-weight: 600;
             color: #333;
-            font-size: 14px;
         }
 
-        input {
-            flex: 1;
+        input[type="text"],
+        input[type="email"],
+        input[type="number"],
+        input[type="password"] {
+            width: 100%;
             padding: 12px;
             border: 2px solid #ddd;
             border-radius: 10px;
-            font-size: 15px;
-            font-family: inherit;
-            transition: border-color 0.2s;
+            font-size: 16px;
+            transition: border-color 0.3s;
         }
 
         input:focus {
             outline: none;
             border-color: #667eea;
-            background: #f8f9fa;
         }
 
         button {
@@ -133,236 +144,332 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         button:hover:not(:disabled) {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
         }
 
         button:disabled {
-            opacity: 0.7;
+            opacity: 0.6;
             cursor: not-allowed;
         }
 
-        .pin-input-group {
-            display: flex;
-            gap: 10px;
+        .secondary-btn {
+            background: #27ae60;
+            margin-top: 10px;
+        }
+
+        .secondary-btn:hover:not(:disabled) {
+            box-shadow: 0 10px 20px rgba(39, 174, 96, 0.3);
+        }
+
+        .tertiary-btn {
+            background: #3498db;
+            margin-top: 10px;
+        }
+
+        .tertiary-btn:hover:not(:disabled) {
+            box-shadow: 0 10px 20px rgba(52, 152, 219, 0.3);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
             justify-content: center;
-            margin: 20px 0;
+            z-index: 9999;
+            animation: fadeIn 0.3s ease-out;
         }
 
-        .pin-input {
-            width: 50px !important;
-            height: 50px !important;
-            font-size: 24px;
-            border: 2px solid #ddd !important;
-            text-align: center;
-            font-weight: 600 !important;
-            padding: 0 !important;
+        .modal.active {
+            display: flex !important;
         }
 
-        .pin-input:focus {
-            outline: none;
-            border-color: #667eea !important;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
 
-        .pin-input.filled {
-            border-color: #667eea !important;
-            background: #f0f3ff !important;
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+            position: relative;
         }
 
-        .info-box {
-            font-size: 15px;
-            line-height: 1.6;
-            padding: 16px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            color: #555;
+        .modal-title {
+            font-size: 20px;
+            color: #333;
+            font-weight: 700;
             margin-bottom: 20px;
+            text-align: center;
         }
 
         .hidden {
             display: none !important;
         }
 
-        .back-link {
+        .pin-inputs {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+        }
+
+        .pin-input {
+            width: 70px;
+            height: 70px;
+            border: 3px solid #ddd;
+            border-radius: 12px;
             text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            color: #667eea;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: white;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .pin-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2), 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: scale(1.05);
+            background: #f8faff;
+        }
+
+        .pin-input.filled {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .close-modal {
+            background: #e74c3c;
+            font-size: 14px;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
+        .close-modal:hover {
+            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .close-btn-top {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.2s;
+        }
+
+        .close-btn-top:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .text-center {
+            text-align: center;
+            font-size: 14px;
+            color: #666;
             margin-top: 15px;
         }
 
-        .back-link a {
+        .text-center a {
             color: #667eea;
             text-decoration: none;
-            font-size: 13px;
+            font-weight: 600;
         }
 
-        .back-link a:hover {
+        .text-center a:hover {
             text-decoration: underline;
-        }
-
-        .loading {
-            display: inline-block;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: currentColor;
-            animation: blink 1.3s infinite;
-        }
-
-        .loading::after {
-            content: '';
-            display: inline-block;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: currentColor;
-            margin-left: 4px;
-            animation: blink 1.3s infinite 0.2s;
-        }
-
-        .loading::before {
-            content: '';
-            display: inline-block;
-            width: 4px;
-            height: 4px;
-            border-radius: 50%;
-            background: currentColor;
-            margin-right: 4px;
-            animation: blink 1.3s infinite 0.4s;
-        }
-
-        @keyframes blink {
-            0%, 60%, 100% { opacity: 0.3; }
-            30% { opacity: 1; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Logo -->
-        <div class="logo" style="margin-bottom: 40px;">
-            <div style="color: #667eea; font-size: 32px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px;">
-                <span>🥄</span>
-                <span>Hesap</span>
-            </div>
-            <div style="color: #764ba2; font-size: 32px; font-weight: 700; text-align: center; margin-bottom: 12px;">Paylaş</div>
-        </div>
+        <div id="statusMessage" class="status-message"></div>
 
-        <!-- Status Message -->
-        <div class="status-message" id="statusMessage"></div>
-
-        <!-- Phone input (SHOWN IMMEDIATELY) -->
+        <!-- Step 1: Phone Entry -->
         <div id="phoneSection">
-            <div class="form-group delay1">
+            <div class="logo" style="background: linear-gradient(135deg, #e8f0ff 0%, #f5e8ff 100%); padding: 12px 15px; border-radius: 0; margin: -40px -40px 20px -40px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;">
+                <h1 style="font-size: 1.5em; margin: 0 0 -10px 0; letter-spacing: 0.5px; line-height: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span style="color: #4A90E2; font-weight: 900;">Hesap</span>
+                    <span style="color: #27ae60; font-weight: 400; font-size: 1.2em;">%</span>
+                    <span style="color: #9B59B6; font-weight: 900;">Paylaş</span>
+                </h1>
+                <p style="font-size: 1.1em; color: #666; font-style: italic; margin: 8px 0 0 0; font-family: 'Pacifico', 'Brush Script MT', 'Great Vibes', cursive; font-weight: 400; letter-spacing: 0.5px;">tükettiğin kadar öde !</p>
+            </div>
+
+            <div class="form-group">
+                <label>Telefon Numaranız</label>
                 <div class="phone-wrapper">
                     <div class="country-code">+90</div>
                     <input 
-                        type="tel" 
+                        type="text" 
                         id="phone" 
                         placeholder="(532) 313 32 77"
-                        inputmode="numeric"
-                        maxlength="15"
-                    >
+                        autocomplete="off"
+                    />
                 </div>
             </div>
 
-            <!-- PIN input -->
-            <div id="passwordSection" class="hidden">
-                <div class="form-group delay2" style="text-align: center;">
-                    <label style="font-size: 18px; font-weight: 600; color: #333;">4 Haneli PIN Kodunuzu Girin !</label>
-                    <div class="pin-input-group" id="pinGroup">
-                        <input type="text" class="pin-input" maxlength="1" inputmode="numeric">
-                        <input type="text" class="pin-input" maxlength="1" inputmode="numeric">
-                        <input type="text" class="pin-input" maxlength="1" inputmode="numeric">
-                        <input type="text" class="pin-input" maxlength="1" inputmode="numeric">
-                    </div>
-                </div>
+            <button onclick="checkPhoneAndProceed()">İleri</button>
 
-                <div class="form-group delay3" style="opacity: 1; animation: none;">
-                    <div class="info-box">
-                        📝 Daha önce belirlediğiniz 4 haneli PIN kodunuzu girin. İlk kez kullanıyorsanız girdiğiniz 4 haneli PIN kodu hesabınıza kaydolacaktır.
-                    </div>
-                </div>
-
-                <div class="form-group delay4" style="opacity: 1; animation: none;">
-                    <button onclick="authenticate()">
-                        <span id="authBtnText">Giriş Yap</span>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Wrong PIN Section -->
-            <div id="wrongPinSection" class="hidden">
-                <div class="form-group" style="opacity: 1; animation: none;">
-                    <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ffc107; color: #856404;">
-                        ⚠️ PIN kodunuz hatalı. Tekrar deneyiniz veya şifrenizi sıfırlamak için aşağıdaki düğmeyi kullanın.
-                    </div>
-                </div>
-
-                <div class="form-group" style="opacity: 1; animation: none;">
-                    <button onclick="retryPin()" style="background: #27ae60;">
-                        <span id="retryBtnText">Tekrar Dene</span>
-                    </button>
-                </div>
-
-                <div class="form-group" style="opacity: 1; animation: none;">
-                    <button onclick="resetPin()">
-                        <span id="resetBtnText">Şifremi Unuttum</span>
-                    </button>
-                </div>
-            <div id="nameSection" class="hidden">
-                <div class="form-group delay1">
-                    <label style="display: block; margin-bottom: 10px; color: #333; font-weight: 600;">Adınız</label>
-                    <input 
-                        type="text" 
-                        id="userNameInput" 
-                        placeholder="Örnek: Ahmet"
-                        maxlength="50"
-                    >
-                </div>
-
-                <div class="form-group delay2" style="opacity: 1; animation: none;">
-                    <button onclick="submitNameAndContinue()">
-                        <span id="nameBtnText">Devam Et</span>
-                    </button>
-                </div>
-
-                <div class="back-link" style="margin-top: 15px;">
-                    <a href="#" onclick="goBackToPhone(); return false;">← Geri Dön</a>
-                </div>
+            <div class="text-center" style="margin-top: 20px;">
+                <p>Zaten hesabınız var mı? 👋</p>
             </div>
         </div>
     </div>
 
+    <!-- Modal for New User Registration -->
+    <div id="newUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-title">Yeni Hesap Oluştur</div>
+            <div id="newUserMessage" class="status-message"></div>
+
+            <div class="form-group">
+                <label>Adınız (ve Soyadınız)</label>
+                <input 
+                    type="text" 
+                    id="userName" 
+                    placeholder="Örn: Ahmet veya Ahmet Yılmaz"
+                    autocomplete="off"
+                />
+            </div>
+
+            <div class="form-group">
+                <label>E-posta Adresiniz</label>
+                <input 
+                    type="email" 
+                    id="userEmail" 
+                    placeholder="örnek@email.com"
+                    autocomplete="off"
+                />
+            </div>
+
+            <div class="form-group">
+                <label>İlk PIN Kodunuz (4 Rakam)</label>
+                <div class="pin-inputs" id="newUserPinInputs">
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                </div>
+            </div>
+
+            <button onclick="registerNewUser()">Hesap Oluştur</button>
+            <button class="close-modal" onclick="closeNewUserModal()">İptal</button>
+        </div>
+    </div>
+
+    <!-- Modal for Existing User Login -->
+    <div id="existingUserModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn-top" onclick="closeExistingUserModal()">×</button>
+            <div class="modal-title">PIN Kodunuzu Girin</div>
+            <div id="existingUserMessage" class="status-message"></div>
+
+            <div style="margin: 30px 0;">
+                <label style="text-align: center;">PIN Kodunuz (4 Rakam)</label>
+                <div class="pin-inputs" id="pinInputs">
+                    <input class="pin-input" type="password" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="password" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="password" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="password" maxlength="1" autocomplete="off" />
+                </div>
+            </div>
+
+            <button onclick="loginWithPin()">Giriş Yap</button>
+            <button class="tertiary-btn" onclick="sendResetPinEmail()">PIN kodumu unuttum</button>
+        </div>
+    </div>
+
+    <!-- Modal for PIN Reset -->
+    <div id="pinResetModal" class="modal">
+        <div class="modal-content">
+            <button class="close-btn-top" onclick="closePinResetModal()">×</button>
+            <div class="modal-title">Yeni PIN Kodunu Girin</div>
+            <div id="resetMessage" class="status-message"></div>
+
+            <div class="form-group" style="text-align: center; color: #666; font-size: 14px; margin-bottom: 20px;">
+                <p>E-postanıza gönderilen kodu ve yeni PIN kodunuzu giriniz</p>
+            </div>
+
+            <div class="form-group">
+                <label>Doğrulama Kodu (E-postadan)</label>
+                <input 
+                    type="text" 
+                    id="verificationCode" 
+                    placeholder="6 haneli kodu girin"
+                    autocomplete="off"
+                    maxlength="6"
+                />
+            </div>
+
+            <div class="form-group">
+                <label>Yeni PIN Kodunuz (4 Rakam)</label>
+                <div class="pin-inputs" id="newResetPinInputs">
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                </div>
+            </div>
+
+            <button onclick="submitNewPin()">PIN Sıfırla ve Giriş Yap</button>
+        </div>
+    </div>
+
     <script>
-        // API Base URL
+        // ==================== CONSTANTS ====================
         const API_BASE = window.location.origin;
         const API_BASE_URL = API_BASE + '/api';
         const urlParams = new URLSearchParams(window.location.search);
         const groupCode = urlParams.get('code');
-        let tempPhone = '';
-        let tempPin = '';
 
-        // Format phone for API (remove formatting only)
-        function formatPhoneForAPI(phone) {
-            // Just remove formatting, keep the 10 digits as-is
-            // Backend will add +90 prefix
-            return phone.replace(/\D/g, '');
+        // ==================== STATE ====================
+        let currentPhone = '';
+        let currentPin = '';
+        let isNewUser = false;
+
+        // ==================== UTILITIES ====================
+        function showMessage(elementId, message, type = 'info') {
+            const msgEl = document.getElementById(elementId);
+            msgEl.textContent = message;
+            msgEl.className = `status-message ${type}`;
         }
 
-        function showMessage(message, type = 'info') {
-            const statusDiv = document.getElementById('statusMessage');
-            statusDiv.textContent = message;
-            statusDiv.className = `status-message ${type}`;
-            setTimeout(() => {
-                statusDiv.className = 'status-message';
-            }, 5000);
-        }
-
-        // Phone input masking
         function formatPhoneInput(value) {
             const digits = value.replace(/\D/g, '');
             if (digits.length === 0) return '';
@@ -371,107 +478,376 @@
             return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
         }
 
-        document.getElementById('phone').addEventListener('input', function(e) {
-            const newValue = formatPhoneInput(e.target.value);
-            e.target.value = newValue;
-            const digits = newValue.replace(/\D/g, '');
-            
-            if (digits.length === 10) {
-                document.getElementById('passwordSection').classList.remove('hidden');
-                setTimeout(() => {
-                    document.querySelector('.pin-input').focus();
-                    setupPINInputs();
-                }, 100);
-            } else {
-                document.getElementById('passwordSection').classList.add('hidden');
-            }
+        function formatPhoneForAPI(phone) {
+            return phone.replace(/\D/g, '');
+        }
+
+        // ==================== PHONE ENTRY ====================
+        document.getElementById('phone').addEventListener('input', (e) => {
+            e.target.value = formatPhoneInput(e.target.value);
         });
 
-        function setupPINInputs() {
-            const pinInputs = document.querySelectorAll('.pin-input');
+        async function checkPhoneAndProceed() {
+            console.log('=== checkPhoneAndProceed STARTED ===');
+            
+            const phoneInput = document.getElementById('phone').value.trim();
+            const phone = formatPhoneForAPI(phoneInput);
+            const btn = document.querySelector('#phoneSection button');
+
+            console.log('Raw input:', phoneInput);
+            console.log('Formatted:', phone);
+
+            if (phone.length !== 10) {
+                showMessage('statusMessage', '⚠️ Telefon numarası 10 haneli olmalıdır', 'error');
+                return;
+            }
+
+            // Show loading state
+            btn.disabled = true;
+            btn.textContent = 'Kontrol ediliyor...';
+            
+            currentPhone = phone;
+
+            try {
+                const requestBody = { phone: phone };
+                console.log('Sending request:', requestBody);
+                console.log('API URL:', `${API_BASE_URL}/auth/check-phone`);
+                
+                // Add timeout
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+                
+                const response = await fetch(`${API_BASE_URL}/auth/check-phone`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeout);
+                console.log('Response status:', response.status);
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (!response.ok) {
+                    btn.disabled = false;
+                    btn.textContent = 'İleri';
+                    showMessage('statusMessage', '❌ Hata: ' + (data.error || 'Telefon kontrolü başarısız'), 'error');
+                    return;
+                }
+
+                // Decision logic
+                console.log('Phone exists:', data.exists);
+                console.log('typeof exists:', typeof data.exists);
+                console.log('exists === true:', data.exists === true);
+                console.log('exists === false:', data.exists === false);
+                
+                if (data.exists === true) {
+                    console.log('ACTION: Opening EXISTING USER modal (PIN only)');
+                    isNewUser = false;
+                    openExistingUserModal();
+                } else if (data.exists === false) {
+                    console.log('ACTION: Opening NEW USER modal (Name + Email + PIN)');
+                    isNewUser = true;
+                    openNewUserModal();
+                } else {
+                    console.error('Unexpected exists value:', data.exists);
+                    btn.disabled = false;
+                    btn.textContent = 'İleri';
+                    showMessage('statusMessage', '❌ Beklenmeyen cevap', 'error');
+                }
+            } catch (error) {
+                btn.disabled = false;
+                btn.textContent = 'İleri';
+                console.error('Fetch error:', error);
+                
+                if (error.name === 'AbortError') {
+                    showMessage('statusMessage', '❌ İstek zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edin.', 'error');
+                } else {
+                    showMessage('statusMessage', '❌ Bağlantı hatası: ' + error.message, 'error');
+                }
+            }
+            
+            console.log('=== checkPhoneAndProceed ENDED ===');
+        }
+
+        // ==================== NEW USER MODAL ====================
+        function openNewUserModal() {
+            console.log('Opening NEW USER modal...');
+            try {
+                // Close any other open modals first
+                document.getElementById('existingUserModal')?.classList.remove('active');
+                document.getElementById('pinResetModal')?.classList.remove('active');
+                
+                const modal = document.getElementById('newUserModal');
+                if (!modal) {
+                    console.error('Modal element not found: newUserModal');
+                    return;
+                }
+                modal.classList.add('active');
+                console.log('Modal classes:', modal.className);
+                
+                const nameInput = document.getElementById('userName');
+                if (nameInput) {
+                    setTimeout(() => nameInput.focus(), 100);
+                }
+                console.log('✅ New user modal opened');
+            } catch (e) {
+                console.error('Error opening new user modal:', e);
+            }
+        }
+
+        function closeNewUserModal() {
+            console.log('Closing NEW USER modal...');
+            try {
+                document.getElementById('newUserModal').classList.remove('active');
+                // Clear form fields
+                document.getElementById('userName').value = '';
+                document.getElementById('userEmail').value = '';
+                document.querySelectorAll('#newUserPinInputs input').forEach(input => {
+                    input.value = '';
+                    input.classList.remove('filled');
+                });
+                currentPhone = '';
+                currentPin = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('phone').focus();
+                console.log('✅ Modal closed');
+            } catch (e) {
+                console.error('Error closing modal:', e);
+            }
+        }
+
+        // ==================== EXISTING USER MODAL ====================
+        function openExistingUserModal() {
+            console.log('Opening EXISTING USER modal...');
+            try {
+                // Close any other open modals first
+                document.getElementById('newUserModal')?.classList.remove('active');
+                document.getElementById('pinResetModal')?.classList.remove('active');
+                
+                const modal = document.getElementById('existingUserModal');
+                if (!modal) {
+                    console.error('Modal element not found: existingUserModal');
+                    return;
+                }
+                modal.classList.add('active');
+                console.log('Modal classes:', modal.className);
+                
+                const firstPinInput = document.querySelector('#pinInputs input:first-child');
+                if (firstPinInput) {
+                    setTimeout(() => firstPinInput.focus(), 100);
+                }
+                console.log('✅ Existing user modal opened');
+            } catch (e) {
+                console.error('Error opening existing user modal:', e);
+            }
+        }
+
+        function closeExistingUserModal() {
+            console.log('Closing EXISTING USER modal...');
+            try {
+                document.getElementById('existingUserModal').classList.remove('active');
+                clearPinInputs();
+                currentPhone = '';
+                currentPin = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('phone').focus();
+                console.log('✅ Modal closed');
+            } catch (e) {
+                console.error('Error closing modal:', e);
+            }
+        }
+
+        async function registerNewUser() {
+            console.log('Registering new user...');
+            const name = document.getElementById('userName').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            
+            // Collect PIN from the 4 separate boxes
+            const pinInputs = document.querySelectorAll('#newUserPinInputs input');
+            const pin = Array.from(pinInputs).map(input => input.value).join('').trim();
+
+            if (!name || name.length < 2) {
+                showMessage('newUserMessage', '⚠️ Adınız en az 2 karakter olmalıdır', 'error');
+                return;
+            }
+
+            if (!email || !email.includes('@')) {
+                showMessage('newUserMessage', '⚠️ Geçerli bir e-posta adresi girin', 'error');
+                return;
+            }
+
+            if (pin.length !== 4 || !/^\d+$/.test(pin)) {
+                showMessage('newUserMessage', '⚠️ PIN 4 haneli rakam olmalıdır', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Oluşturuluyor...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/phone-pin-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: currentPhone,
+                        pin: pin,
+                        is_signup: true,
+                        first_name: name.split(' ')[0],
+                        last_name: name.includes(' ') ? name.split(' ').slice(1).join(' ') : '',
+                        email: email
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('newUserMessage', '✅ Hesap oluşturuldu! Yönlendiriliyor...', 'success');
+                    localStorage.setItem('hesapPaylas_token', data.token);
+                    localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                    localStorage.setItem('lastUsedLoginPage', 'v2');
+
+                    setTimeout(() => {
+                        if (groupCode) {
+                            window.location.href = `index.html?joinGroup=${groupCode}`;
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1500);
+                } else {
+                    showMessage('newUserMessage', '❌ ' + (data.error || 'Hesap oluşturulamadı'), 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'Hesap Oluştur';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('newUserMessage', '❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Hesap Oluştur';
+            }
+        }
+
+        // ==================== EXISTING USER MODAL ====================
+        function openExistingUserModal() {
+            document.getElementById('existingUserModal').classList.add('active');
+            document.querySelector('#pinInputs input:first-child').focus();
+        }
+
+        function closeExistingUserModal() {
+            document.getElementById('existingUserModal').classList.remove('active');
+            clearPinInputs();
+            currentPhone = '';
+            currentPin = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('phone').focus();
+        }
+
+        function clearPinInputs() {
+            document.querySelectorAll('#pinInputs input').forEach(input => {
+                input.value = '';
+                input.classList.remove('filled');
+            });
+            currentPin = '';
+        }
+
+        // PIN input auto-advance
+        document.addEventListener('DOMContentLoaded', () => {
+            const pinInputs = document.querySelectorAll('#pinInputs input');
             pinInputs.forEach((input, index) => {
                 input.addEventListener('input', (e) => {
-                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
                     if (e.target.value.length === 1) {
                         e.target.classList.add('filled');
                         if (index < pinInputs.length - 1) {
                             pinInputs[index + 1].focus();
-                        } else {
-                            setTimeout(() => authenticate(), 100);
                         }
-                    } else {
-                        e.target.classList.remove('filled');
                     }
                 });
 
                 input.addEventListener('keydown', (e) => {
-                    if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
                         pinInputs[index - 1].focus();
+                    }
+                    if (e.key === 'Enter') {
+                        loginWithPin();
                     }
                 });
             });
-        }
 
-        function getPIN() {
-            const pinInputs = document.querySelectorAll('.pin-input');
-            return Array.from(pinInputs).map(input => input.value).join('');
-        }
-
-        function clearPINInputs() {
-            const pinInputs = document.querySelectorAll('.pin-input');
-            pinInputs.forEach(input => {
-                input.value = '';
-                input.classList.remove('filled');
-            });
-            if (pinInputs.length > 0) pinInputs[0].focus();
-        }
-
-        function goBackToPhone() {
-            document.getElementById('nameSection').classList.add('hidden');
-            document.getElementById('wrongPinSection').classList.add('hidden');
-            document.getElementById('passwordSection').classList.add('hidden');
             document.getElementById('phone').focus();
-        }
 
-        function retryPin() {
-            document.getElementById('wrongPinSection').classList.add('hidden');
-            document.getElementById('passwordSection').classList.remove('hidden');
-            clearPINInputs();
-        }
+            // PIN input auto-advance for NEW USER registration
+            const newUserPinInputs = document.querySelectorAll('#newUserPinInputs input');
+            newUserPinInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    // Only allow digits
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
+                    if (e.target.value.length === 1) {
+                        e.target.classList.add('filled');
+                        if (index < newUserPinInputs.length - 1) {
+                            newUserPinInputs[index + 1].focus();
+                        }
+                    }
+                });
 
-        function showNameForm() {
-            document.getElementById('passwordSection').classList.add('hidden');
-            document.getElementById('nameSection').classList.remove('hidden');
-            setTimeout(() => {
-                document.getElementById('userNameInput').focus();
-            }, 100);
-        }
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        newUserPinInputs[index - 1].focus();
+                    }
+                    if (e.key === 'Enter') {
+                        registerNewUser();
+                    }
+                });
+            });
 
-        async function authenticate() {
-            const phoneInput = document.getElementById('phone').value.trim();
-            const pin = getPIN();
-            const phone = phoneInput.replace(/\D/g, '');
+            // PIN input auto-advance for PIN RESET
+            const newResetPinInputs = document.querySelectorAll('#newResetPinInputs input');
+            newResetPinInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    // Only allow digits
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
+                    if (e.target.value.length === 1) {
+                        e.target.classList.add('filled');
+                        if (index < newResetPinInputs.length - 1) {
+                            newResetPinInputs[index + 1].focus();
+                        }
+                    }
+                });
 
-            if (phone.length !== 10) {
-                showMessage('Telefon numarası 10 haneli olmalıdır', 'error');
-                return;
-            }
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        newResetPinInputs[index - 1].focus();
+                    }
+                    if (e.key === 'Enter') {
+                        submitNewPin();
+                    }
+                });
+            });
+        });
+
+        async function loginWithPin() {
+            const pinInputs = document.querySelectorAll('#pinInputs input');
+            const pin = Array.from(pinInputs).map(input => input.value).join('');
 
             if (pin.length !== 4) {
-                showMessage('PIN 4 haneli olmalıdır', 'error');
+                showMessage('existingUserMessage', '⚠️ PIN 4 haneli olmalıdır', 'error');
                 return;
             }
 
-            const btn = document.querySelector('button[onclick="authenticate()"]');
+            const btn = event.target;
             btn.disabled = true;
             btn.innerHTML = '<span class="loading"></span> İşleniyor...';
 
             try {
-                const response = await fetch(`${API_BASE}/api/auth/phone-pin-login`, {
+                const response = await fetch(`${API_BASE_URL}/auth/phone-pin-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        phone: phone,
+                        phone: currentPhone,
                         pin: pin,
                         is_signup: false
                     })
@@ -480,10 +856,11 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    showMessage('✓ Başarıyla giriş yaptınız', 'success');
+                    showMessage('existingUserMessage', '✅ Başarıyla giriş yaptınız', 'success');
                     localStorage.setItem('hesapPaylas_token', data.token);
                     localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
-                    
+                    localStorage.setItem('lastUsedLoginPage', 'v2');
+
                     setTimeout(() => {
                         if (groupCode) {
                             window.location.href = `index.html?joinGroup=${groupCode}`;
@@ -491,66 +868,138 @@
                             window.location.href = 'index.html';
                         }
                     }, 1500);
-                } else if (response.status === 404 && data.error === 'user_not_found') {
-                    tempPhone = phone;
-                    tempPin = pin;
-                    showNameForm();
                 } else {
-                    // Wrong PIN - show retry/reset buttons
-                    showMessage('Giriş başarısız', 'error');
-                    tempPhone = phone;
-                    clearPINInputs();
-                    document.getElementById('passwordSection').classList.add('hidden');
-                    document.getElementById('wrongPinSection').classList.remove('hidden');
+                    showMessage('existingUserMessage', '❌ PIN kodu yanlış', 'error');
+                    clearPinInputs();
                     btn.disabled = false;
-                    btn.innerHTML = '<span id="authBtnText">Giriş Yap</span>';
+                    btn.textContent = 'Giriş Yap';
                 }
             } catch (error) {
-                console.error('Auth Error:', error);
-                showMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
-                clearPINInputs();
+                console.error('Error:', error);
+                showMessage('existingUserMessage', '❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
                 btn.disabled = false;
-                btn.innerHTML = '<span id="authBtnText">Giriş Yap</span>';
+                btn.textContent = 'Giriş Yap';
             }
         }
 
-        async function submitNameAndContinue() {
-            const userName = document.getElementById('userNameInput').value.trim();
+        // ==================== PIN RESET ====================
+        function showPinReset() {
+            document.getElementById('existingUserModal').classList.remove('active');
+            document.getElementById('pinResetModal').classList.add('active');
+            document.getElementById('resetEmail').focus();
+        }
 
-            if (userName.length < 2) {
-                showMessage('Adınız en az 2 karakter olmalıdır', 'error');
+        async function sendResetPinEmail() {
+            if (!currentPhone) {
+                showMessage('existingUserMessage', '⚠️ Telefon numarasını girmek gerekiyor', 'error');
                 return;
             }
 
-            if (tempPhone.length !== 10 || tempPin.length !== 4) {
-                showMessage('Hata: Telefon veya PIN eksik', 'error');
-                return;
-            }
-
-            const btn = document.querySelector('button[onclick="submitNameAndContinue()"]');
+            const btn = event.target;
             btn.disabled = true;
-            btn.innerHTML = '<span class="loading"></span> Hesap oluşturuluyor...';
+            btn.textContent = 'Gönderiliyor...';
 
             try {
-                const signupResponse = await fetch(`${API_BASE}/api/auth/phone-pin-login`, {
+                const response = await fetch(`${API_BASE_URL}/auth/request-pin-reset`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        phone: tempPhone,
-                        pin: tempPin,
-                        is_signup: true
+                        phone: currentPhone
                     })
                 });
 
-                const signupData = await signupResponse.json();
+                const data = await response.json();
 
-                if (signupResponse.ok) {
-                    showMessage('✓ Hesap oluşturuldu, hoşgeldiniz!', 'success');
-                    localStorage.setItem('hesapPaylas_token', signupData.token);
-                    const updatedUser = { ...signupData.user, first_name: userName, firstName: userName };
-                    localStorage.setItem('hesapPaylas_user', JSON.stringify(updatedUser));
-                    
+                if (response.ok) {
+                    showMessage('existingUserMessage', '✅ PIN sıfırlama kodu e-postanıza gönderildi!', 'success');
                     setTimeout(() => {
+                        // Show PIN reset modal for user to enter new PIN
+                        document.getElementById('existingUserModal').classList.remove('active');
+                        document.getElementById('pinResetModal').classList.add('active');
+                        // Clear and focus on first PIN input box
+                        document.querySelectorAll('#newResetPinInputs input').forEach(input => {
+                            input.value = '';
+                            input.classList.remove('filled');
+                        });
+                        document.querySelector('#newResetPinInputs input:first-child').focus();
+                        document.getElementById('resetMessage').textContent = '';
+                    }, 1500);
+                } else {
+                    showMessage('existingUserMessage', '❌ ' + (data.error || data.message || 'E-posta gönderilemedi'), 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'PIN kodumu unuttum';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('existingUserMessage', '❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'PIN kodumu unuttum';
+            }
+        }
+
+        function closePinResetModal() {
+            document.getElementById('pinResetModal').classList.remove('active');
+            // Clear form fields
+            document.getElementById('verificationCode').value = '';
+            document.querySelectorAll('#newResetPinInputs input').forEach(input => {
+                input.value = '';
+                input.classList.remove('filled');
+            });
+            document.getElementById('resetMessage').textContent = '';
+            // Return to main login page
+            clearPinInputs();
+            currentPhone = '';
+            currentPin = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('phone').focus();
+        }
+
+        async function submitNewPin() {
+            // Collect verification code
+            const verificationCode = document.getElementById('verificationCode').value.trim();
+            
+            // Collect new PIN from the 4 separate boxes
+            const newPinInputs = document.querySelectorAll('#newResetPinInputs input');
+            const newPin = Array.from(newPinInputs).map(input => input.value).join('').trim();
+
+            if (!verificationCode || verificationCode.length !== 6) {
+                showMessage('resetMessage', '⚠️ Doğrulama kodu 6 haneli olmalıdır', 'error');
+                return;
+            }
+
+            if (newPin.length !== 4 || !/^\d+$/.test(newPin)) {
+                showMessage('resetMessage', '⚠️ PIN 4 haneli rakam olmalıdır', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Doğrulanıyor...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/reset-pin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: currentPhone,
+                        verification_code: verificationCode,
+                        new_pin: newPin
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('resetMessage', '✅ PIN başarıyla güncellendi! Giriş yapılıyor...', 'success');
+                    
+                    // Auto-login after PIN reset
+                    setTimeout(() => {
+                        // Store token and user data
+                        localStorage.setItem('hesapPaylas_token', data.token);
+                        localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                        localStorage.setItem('lastUsedLoginPage', 'v2');
+                        
+                        // Redirect to home page
                         if (groupCode) {
                             window.location.href = `index.html?joinGroup=${groupCode}`;
                         } else {
@@ -558,94 +1007,17 @@
                         }
                     }, 1500);
                 } else {
-                    showMessage(signupData.error || 'Hesap oluşturulamadı', 'error');
+                    showMessage('resetMessage', '❌ ' + (data.error || 'Doğrulama başarısız'), 'error');
                     btn.disabled = false;
-                    btn.innerHTML = '<span id="nameBtnText">Devam Et</span>';
+                    btn.textContent = 'PIN Sıfırla ve Giriş Yap';
                 }
             } catch (error) {
-                console.error('Signup Error:', error);
-                showMessage('Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                console.error('Error:', error);
+                showMessage('resetMessage', '❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
                 btn.disabled = false;
-                btn.innerHTML = '<span id="nameBtnText">Devam Et</span>';
+                btn.textContent = 'PIN Sıfırla ve Giriş Yap';
             }
         }
-
-        function retryPin() {
-            document.getElementById('wrongPinSection').classList.add('hidden');
-            document.getElementById('passwordSection').classList.remove('hidden');
-            clearPINInputs();
-        }
-
-        function resetPin() {
-            if (tempPhone.length !== 10) {
-                showMessage('Telefon numarası gerekli', 'error');
-                return;
-            }
-
-            // Show loading state
-            const resetBtn = document.querySelector('#resetBtnText');
-            const originalText = resetBtn.textContent;
-            resetBtn.textContent = 'Gönderiliyor...';
-
-            const formattedPhone = formatPhoneForAPI(tempPhone);
-            console.log('resetPin called', { tempPhone, formattedPhone, API_BASE_URL });
-
-            // Create abort controller for timeout
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
-
-            // Send password reset request to backend
-            const url = `${API_BASE_URL}/auth/request-pin-reset`;
-            console.log('Sending fetch to:', url);
-            
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ phone: formattedPhone }),
-                signal: controller.signal
-            })
-            .then(response => {
-                clearTimeout(timeoutId);
-                console.log('Response status:', response.status);
-                if (!response.ok) {
-                    return response.json().then(data => {
-                        const errorMsg = data.message || data.error || 'İstek başarısız';
-                        throw new Error(errorMsg);
-                    });
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Response data:', data);
-                resetBtn.textContent = originalText;
-                if (data.code_stored || data.message) {
-                    showMessage('✅ PIN sıfırlama kodu e-posta adresinize gönderildi. Lütfen e-postanızı kontrol edin.', 'success');
-                    // Hide wrong PIN section after a delay
-                    setTimeout(() => {
-                        document.getElementById('wrongPinSection').classList.add('hidden');
-                        clearPINInputs();
-                    }, 3000);
-                } else {
-                    showMessage('❌ ' + (data.error || 'PIN sıfırlama isteği gönderilemedi'), 'error');
-                }
-            })
-            .catch(error => {
-                clearTimeout(timeoutId);
-                resetBtn.textContent = originalText;
-                console.error('Reset error:', error);
-                if (error.name === 'AbortError') {
-                    showMessage('❌ İstek zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edin.', 'error');
-                } else {
-                    showMessage('❌ ' + (error.message || 'Bağlantı hatası. Lütfen tekrar deneyin.'), 'error');
-                }
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('phone').focus();
-        });
     </script>
 </body>
 </html>
