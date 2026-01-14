@@ -610,7 +610,8 @@
                 console.log('Response status:', response.status);
                 if (!response.ok) {
                     return response.json().then(data => {
-                        throw new Error(data.error || 'İstek başarısız');
+                        const errorMsg = data.message || data.error || 'İstek başarısız';
+                        throw new Error(errorMsg);
                     });
                 }
                 return response.json();

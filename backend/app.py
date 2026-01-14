@@ -971,8 +971,13 @@ def request_pin_reset():
             return jsonify({'error': 'User not found with this phone number'}), 404
         
         # Check if user has email set
-        if not user.email:
-            return jsonify({'error': 'No email on file. Please add your email first.'}), 400
+        if not user.email or user.email.endswith('@hesappaylas.local'):
+            print(f"[DEBUG] User has no real email: {user.email}")
+            return jsonify({
+                'error': 'No email on file. Please add your email first in the app profile settings.',
+                'code': 'NO_EMAIL',
+                'message': 'E-posta adresiniz kayıtlı değil. Lütfen uygulama profil ayarlarından e-posta adresinizi ekleyin.'
+            }), 400
         
         # Generate 6-digit reset code
         reset_code = f"{random.randint(0, 999999):06d}"
