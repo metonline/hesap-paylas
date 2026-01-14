@@ -820,6 +820,33 @@ def verify_otp():
         print(f"[ERROR] Verify OTP failed: {str(e)}")
         return jsonify({'error': 'Verification failed. Please try again.'}), 500
 
+@app.route('/api/auth/check-phone', methods=['POST'])
+def check_phone():
+    """Check if phone number exists in database"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'phone' not in data:
+            return jsonify({'error': 'Phone is required'}), 400
+        
+        phone = data['phone'].strip()
+        
+        # Format phone
+        if not phone.startswith('+'):
+            phone = '+90' + phone.lstrip('0')
+        
+        # Check if user exists
+        user = User.query.filter_by(phone=phone).first()
+        
+        return jsonify({
+            'exists': user is not None,
+            'phone': phone
+        }), 200
+    
+    except Exception as e:
+        print(f"[ERROR] check-phone failed: {str(e)}")
+        return jsonify({'error': 'Failed to check phone'}), 500
+
 @app.route('/api/auth/phone-pin-login', methods=['POST'])
 def phone_pin_login():
     """Phone + PIN authentication (signup/login for group joining)"""
@@ -855,11 +882,20 @@ def phone_pin_login():
             
             print(f"[AUTH] Creating new user with phone {phone}")
             
+            # Get email and name from request
+            first_name = data.get('first_name', 'User').strip()
+            last_name = data.get('last_name', '').strip()
+            email = data.get('email', '').strip()
+            
+            # Validate email if provided
+            if email and '@' not in email:
+                return jsonify({'error': 'Invalid email address'}), 400
+            
             # Create new user
             user = User(
-                first_name='User',
-                last_name='',
-                email=f"phone_{phone.replace('+', '').replace(' ', '')}@hesappaylas.local",
+                first_name=first_name,
+                last_name=last_name,
+                email=email if email else f"phone_{phone.replace('+', '').replace(' ', '')}@hesappaylas.local",
                 phone=phone
             )
             user.set_password(pin)  # Store PIN as password hash
@@ -1066,6 +1102,53 @@ def verify_pin_reset():
         db.session.rollback()
         print(f"[ERROR] PIN reset verification failed: {str(e)}")
         return jsonify({'error': 'Verification failed'}), 500
+
+@app.route('/api/auth/reset-pin', methods=['POST'])
+def reset_pin_direct():
+    """Direct PIN reset with email verification"""
+    try:
+        data = request.get_json()
+        
+        if not data or not all(k in data for k in ['phone', 'email', 'new_pin']):
+            return jsonify({'error': 'Phone, email and new PIN are required'}), 400
+        
+        phone = data['phone'].strip()
+        email = data['email'].strip()
+        new_pin = data['new_pin'].strip()
+        
+        # Validate phone format
+        if not phone.startswith('+'):
+            phone = '+90' + phone.lstrip('0')
+        
+        # Validate PIN
+        if not new_pin.isdigit() or len(new_pin) != 4:
+            return jsonify({'error': 'PIN must be 4 digits'}), 400
+        
+        # Find user
+        user = User.query.filter_by(phone=phone).first()
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Verify email matches (case-insensitive)
+        if not user.email or user.email.lower() != email.lower():
+            return jsonify({'error': 'Email does not match'}), 401
+        
+        # Update PIN
+        user.set_password(new_pin)
+        db.session.commit()
+        
+        print(f"[AUTH] PIN reset successfully for {phone}")
+        
+        return jsonify({
+            'message': 'PIN reset successfully',
+            'success': True
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] PIN reset failed: {str(e)}")
+        return jsonify({'error': 'PIN reset failed'}), 500
 
 @app.route('/api/auth/confirm-pin-reset', methods=['POST'])
 def confirm_pin_reset():
