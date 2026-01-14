@@ -1702,6 +1702,10 @@ body {
         min-width: 44px;
         padding: 12px 16px;
         font-size: 16px; /* Prevent zoom on iOS */
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+        display: flex;
     }
     
     input, textarea, select {
