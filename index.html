@@ -114,17 +114,14 @@
                         <div id="statusMessageHome" class="status-message" style="margin-bottom: 15px; margin-left: 20px; margin-right: 20px;"></div>
                         
                         <!-- Phone Input Section -->
-                        <div style="margin-bottom: 20px; padding: 0 20px; text-align: center;">
-                            <div style="display: inline-flex; gap: 8px; align-items: center; justify-content: center;">
-                                <div style="background: #f5f5f5; border: 2px solid #ddd; border-radius: 10px; padding: 12px; font-weight: 600; color: #333; display: flex; align-items: center; justify-content: center; height: 44px;">+90</div>
-                                <input 
-                                    type="text" 
-                                    id="phoneHome" 
-                                    placeholder="(5xx) 333 22 22"
-                                    style="padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; width: 200px;"
-                                    autocomplete="off"
-                                />
-                            </div>
+                        <div style="margin-bottom: 20px; padding: 0 20px;">
+                            <input 
+                                type="text" 
+                                id="phoneHome" 
+                                placeholder="+90 (536) 457 60 73"
+                                style="width: calc(100% - 24px); padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; text-align: left;"
+                                autocomplete="off"
+                            />
                         </div>
                         
                         <!-- PIN Input Section -->
@@ -144,7 +141,7 @@
                                 type="text" 
                                 id="userName" 
                                 placeholder="Adınız (ve Soyadınız)"
-                                style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px;"
+                                style="width: calc(100% - 24px); padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; text-align: left;"
                                 autocomplete="off"
                             />
                         </div>
@@ -155,7 +152,7 @@
                                 type="email" 
                                 id="userEmail" 
                                 placeholder="E-posta Adresiniz"
-                                style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px;"
+                                style="width: calc(100% - 24px); padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; text-align: left;"
                                 autocomplete="off"
                             />
                         </div>
@@ -1062,10 +1059,11 @@ Konaklama
         // Format phone number input
         function formatPhoneInputHome(value) {
             const digits = value.replace(/\D/g, '');
-            if (digits.length === 0) return '';
-            if (digits.length <= 3) return `(${digits})`;
-            if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
-            return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
+            if (digits.length === 0) return '+90 ';
+            if (digits.length <= 3) return `+90 (${digits})`;
+            if (digits.length <= 6) return `+90 (${digits.slice(0, 3)}) ${digits.slice(3)}`;
+            if (digits.length <= 8) return `+90 (${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6)}`;
+            return `+90 (${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
         }
 
         function formatPhoneForAPI(phone) {
