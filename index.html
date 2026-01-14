@@ -169,10 +169,16 @@
                             <span id="buttonText">Giriş Yap</span>
                         </button>
                         
-                        <!-- Signup Link -->
-                        <p class="signup-text" style="text-align: center; color: #666; font-size: 14px; margin: 15px 0 0 0; padding: 0 20px 20px 20px;">
-                            Hesabımız yok mu? <a href="phone-join-group.html" style="color: #667eea; text-decoration: none; font-weight: 600;">Kayıt Ol</a>
-                        </p>
+                        <!-- Signup Link - REMOVED, replaced with PIN reset buttons -->
+                        <!-- PIN Reset Quick Access Buttons -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; padding: 0 20px 20px 20px;">
+                            <button onclick="requestPinReset('email')" style="padding: 12px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                ✉️ E-mail ile yenile
+                            </button>
+                            <button onclick="requestPinReset('whatsapp')" style="padding: 12px; background: #25D366; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer; transition: all 0.3s;">
+                                💬 WhatsApp ile yenile
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
