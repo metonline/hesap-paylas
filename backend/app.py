@@ -315,6 +315,10 @@ class User(db.Model):
     bonus_points = db.Column(db.Integer, default=0)
     reset_token = db.Column(db.String(255), nullable=True)
     reset_token_expires = db.Column(db.DateTime, nullable=True)
+    # PIN Reset OTP fields
+    reset_otp = db.Column(db.String(10), nullable=True)
+    reset_otp_expiry = db.Column(db.DateTime, nullable=True)
+    reset_otp_verified = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)  # Hesap kapalı/açık
     is_deleted = db.Column(db.Boolean, default=False)  # Hesap silindi mi?
     account_type = db.Column(db.String(20), default='owner')  # 'owner' (hesap açan) or 'member' (invite edilen)
@@ -1097,7 +1101,7 @@ def reset_pin():
 
 @app.route('/api/auth/request-pin-reset', methods=['POST'])
 def request_pin_reset():
-    """Request PIN reset - send code via EMAIL"""
+    """Request PIN reset - send code via EMAIL or WhatsApp"""
     try:
         print("[DEBUG] request_pin_reset called")
         data = request.get_json()
@@ -1107,7 +1111,8 @@ def request_pin_reset():
             return jsonify({'error': 'Phone is required'}), 400
         
         phone = data['phone'].strip()
-        print(f"[DEBUG] Processing phone: {phone}")
+        method = data.get('method', 'email').strip().lower()  # 'email' or 'whatsapp'
+        print(f"[DEBUG] Processing phone: {phone}, method: {method}")
         
         # Validate phone format
         if not phone.startswith('+'):
@@ -1122,14 +1127,17 @@ def request_pin_reset():
         if not user:
             return jsonify({'error': 'User not found with this phone number'}), 404
         
-        # Check if user has email set
-        if not user.email or user.email.endswith('@hesappaylas.local'):
-            print(f"[DEBUG] User has no real email: {user.email}")
-            return jsonify({
-                'error': 'No email on file. Please add your email first in the app profile settings.',
-                'code': 'NO_EMAIL',
-                'message': 'E-posta adresiniz kayıtlı değil. Lütfen uygulama profil ayarlarından e-posta adresinizi ekleyin.'
-            }), 400
+        # For EMAIL: Check if user has email set
+        if method == 'email':
+            if not user.email or user.email.endswith('@hesappaylas.local'):
+                print(f"[DEBUG] User has no real email: {user.email}")
+                return jsonify({
+                    'error': 'No email on file. Please add your email first in the app profile settings.',
+                    'code': 'NO_EMAIL',
+                    'message': 'E-posta adresiniz kayıtlı değil. Lütfen uygulama profil ayarlarından e-posta adresinizi ekleyin.'
+                }), 400
+        
+        # For WHATSAPP: Just need the phone number (already have it)
         
         # Generate 6-digit reset code
         reset_code = f"{random.randint(0, 999999):06d}"
@@ -1152,17 +1160,31 @@ def request_pin_reset():
             print(f"[ERROR] Failed to save OTP record: {str(db_error)}")
             return jsonify({'error': 'Failed to save reset code', 'debug': str(db_error)}), 500
         
-        # Send code via EMAIL
-        email_sent = send_reset_email(user.email, reset_code, user.first_name)
-        
-        # Always return success since code is stored in DB
-        response = {
-            'message': 'Reset code sent to your email' if email_sent else 'Reset code generated (check email)',
-            'phone': phone,
-            'email_hint': user.email[:2] + '...' + user.email.split('@')[0][-2:] + '@' + user.email.split('@')[1],
-            'code_sent': email_sent,
-            'code_stored': True
-        }
+        # Send code via selected method
+        if method == 'email':
+            email_sent = send_reset_email(user.email, reset_code, user.first_name)
+            response = {
+                'message': 'Reset code sent to your email' if email_sent else 'Reset code generated (check email)',
+                'phone': phone,
+                'email_hint': user.email[:2] + '...' + user.email.split('@')[0][-2:] + '@' + user.email.split('@')[1],
+                'code_sent': email_sent,
+                'code_stored': True,
+                'method': 'email'
+            }
+        elif method == 'whatsapp':
+            # For WhatsApp, just store the code and return instructions
+            # User will message the bot with the code
+            response = {
+                'message': 'WhatsApp verification code generated',
+                'phone': phone,
+                'code_sent': True,
+                'code_stored': True,
+                'method': 'whatsapp',
+                'whatsapp_hint': f'Send this code to our WhatsApp: {reset_code}'
+            }
+            print(f"[DEBUG] WhatsApp verification code for {phone}: {reset_code}")
+        else:
+            return jsonify({'error': 'Invalid method. Use email or whatsapp'}), 400
         
         print(f"[DEBUG] Returning response: {response}")
         return jsonify(response), 200
