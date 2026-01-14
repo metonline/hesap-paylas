@@ -578,32 +578,50 @@
             const originalText = resetBtn.textContent;
             resetBtn.textContent = 'Gönderiliyor...';
 
+            // Create abort controller for timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
             // Send password reset request to backend
             fetch(`${API_BASE_URL}/auth/request-pin-reset`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ phone: formatPhoneForAPI(tempPhone) })
+                body: JSON.stringify({ phone: formatPhoneForAPI(tempPhone) }),
+                signal: controller.signal
             })
-            .then(response => response.json())
+            .then(response => {
+                clearTimeout(timeoutId);
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || 'İstek başarısız');
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
                 resetBtn.textContent = originalText;
-                if (data.success) {
-                    showMessage('✅ PIN sıfırlama talimatı e-posta adresinize gönderildi. Lütfen e-postanızı kontrol edin.', 'success');
+                if (data.code_stored || data.message) {
+                    showMessage('✅ PIN sıfırlama kodu e-posta adresinize gönderildi. Lütfen e-postanızı kontrol edin.', 'success');
                     // Hide wrong PIN section after a delay
                     setTimeout(() => {
                         document.getElementById('wrongPinSection').classList.add('hidden');
                         clearPINInputs();
-                    }, 2000);
+                    }, 3000);
                 } else {
-                    showMessage('❌ ' + (data.message || 'PIN sıfırlama isteği gönderilemedi'), 'error');
+                    showMessage('❌ ' + (data.error || 'PIN sıfırlama isteği gönderilemedi'), 'error');
                 }
             })
             .catch(error => {
+                clearTimeout(timeoutId);
                 resetBtn.textContent = originalText;
                 console.error('Reset error:', error);
-                showMessage('❌ Bağlantı hatası. Lütfen tekrar deneyin.', 'error');
+                if (error.name === 'AbortError') {
+                    showMessage('❌ İstek zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edin.', 'error');
+                } else {
+                    showMessage('❌ ' + (error.message || 'Bağlantı hatası. Lütfen tekrar deneyin.'), 'error');
+                }
             });
         }
 

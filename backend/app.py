@@ -8,6 +8,7 @@ import jwt
 import random
 import string
 import smtplib
+import threading
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
@@ -48,8 +49,8 @@ app = Flask(__name__)
 print(f"[INIT] Flask app created successfully", flush=True)
 
 # ==================== EMAIL UTILITY ====================
-def send_reset_email(email, reset_code, user_name):
-    """Send password reset code via email"""
+def _send_email_async(email, reset_code, user_name):
+    """Actually send the email (runs in background thread)"""
     try:
         smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
         smtp_port = int(os.getenv('SMTP_PORT', '587'))
@@ -57,16 +58,14 @@ def send_reset_email(email, reset_code, user_name):
         sender_password = os.getenv('SENDER_PASSWORD')
         
         if not all([sender_email, sender_password]):
-            print(f"[EMAIL] ⚠️  Email not configured (missing SENDER_EMAIL or SENDER_PASSWORD)")
+            print(f"[EMAIL] ⚠️  Email not configured")
             return False
         
-        # Create message
         message = MIMEMultipart('alternative')
         message['Subject'] = 'Hesap Paylaş - PIN Sıfırlama Kodu'
         message['From'] = sender_email
         message['To'] = email
         
-        # HTML template
         html = f"""\
         <html>
             <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -92,7 +91,7 @@ def send_reset_email(email, reset_code, user_name):
                     </p>
                     
                     <p style="color: #999; font-size: 12px; margin-top: 30px;">
-                        Bu e-postayı tarafından gönderilen istek olmaksızın aldıysanız, lütfen dikkate almayın.
+                        Bu e-postayı talep olmaksızın aldıysanız, lütfen dikkate almayın.
                     </p>
                 </div>
             </body>
@@ -102,8 +101,7 @@ def send_reset_email(email, reset_code, user_name):
         part = MIMEText(html, 'html')
         message.attach(part)
         
-        # Send email
-        server = smtplib.SMTP(smtp_server, smtp_port)
+        server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
         server.starttls()
         server.login(sender_email, sender_password)
         server.send_message(message)
@@ -112,6 +110,25 @@ def send_reset_email(email, reset_code, user_name):
         print(f"[EMAIL] ✅ Reset code sent to {email}")
         return True
         
+    except Exception as e:
+        print(f"[EMAIL] ❌ Failed to send email: {str(e)}")
+        return False
+
+def send_reset_email(email, reset_code, user_name):
+    """Send password reset code via email (non-blocking)"""
+    try:
+        # Send email in background thread so it doesn't block the response
+        thread = threading.Thread(
+            target=_send_email_async,
+            args=(email, reset_code, user_name),
+            daemon=True
+        )
+        thread.start()
+        return True
+    except Exception as e:
+        print(f"[EMAIL] ❌ Failed to start email thread: {str(e)}")
+        return False
+
     except Exception as e:
         print(f"[EMAIL] ❌ Failed to send email: {e}")
         return False
