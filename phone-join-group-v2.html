@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giriş - Hesap Paylaş</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>Giriş - Hesap Paylaş v2.3</title>
     <style>
         * {
             margin: 0;
@@ -203,6 +206,7 @@
             width: 100%;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
             animation: slideUp 0.3s ease-out;
+            position: relative;
         }
 
         .modal-title {
@@ -219,31 +223,43 @@
 
         .pin-inputs {
             display: flex;
-            gap: 10px;
+            gap: 15px;
             justify-content: center;
-            margin: 20px 0;
+            margin: 30px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
         }
 
         .pin-input {
-            width: 50px;
-            height: 50px;
-            border: 2px solid #ddd;
-            border-radius: 10px;
+            width: 70px;
+            height: 70px;
+            border: 3px solid #ddd;
+            border-radius: 12px;
             text-align: center;
-            font-size: 24px;
+            font-size: 32px;
             font-weight: 700;
             color: #667eea;
-            transition: border-color 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background: white;
+            -webkit-appearance: none;
+            appearance: none;
         }
 
         .pin-input:focus {
             outline: none;
             border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2), 0 4px 12px rgba(102, 126, 234, 0.4);
+            transform: scale(1.05);
+            background: #f8faff;
         }
 
         .pin-input.filled {
             border-color: #667eea;
-            background: #f0f4ff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.3);
         }
 
         .close-modal {
@@ -255,6 +271,31 @@
 
         .close-modal:hover {
             box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .close-btn-top {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.2s;
+        }
+
+        .close-btn-top:hover {
+            background: #c0392b;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
         }
 
         .text-center {
@@ -281,9 +322,13 @@
 
         <!-- Step 1: Phone Entry -->
         <div id="phoneSection">
-            <div class="logo">
-                <h1>🥄 Hesap</h1>
-                <p>Paylaş</p>
+            <div class="logo" style="background: linear-gradient(135deg, #e8f0ff 0%, #f5e8ff 100%); padding: 12px 15px; border-radius: 0; margin: -40px -40px 20px -40px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden;">
+                <h1 style="font-size: 1.5em; margin: 0 0 -10px 0; letter-spacing: 0.5px; line-height: 1; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <span style="color: #4A90E2; font-weight: 900;">Hesap</span>
+                    <span style="color: #27ae60; font-weight: 400; font-size: 1.2em;">%</span>
+                    <span style="color: #9B59B6; font-weight: 900;">Paylaş</span>
+                </h1>
+                <p style="font-size: 1.1em; color: #666; font-style: italic; margin: 8px 0 0 0; font-family: 'Pacifico', 'Brush Script MT', 'Great Vibes', cursive; font-weight: 400; letter-spacing: 0.5px;">tükettiğin kadar öde !</p>
             </div>
 
             <div class="form-group">
@@ -335,13 +380,12 @@
 
             <div class="form-group">
                 <label>İlk PIN Kodunuz (4 Rakam)</label>
-                <input 
-                    type="password" 
-                    id="newUserPin" 
-                    placeholder="••••"
-                    maxlength="4"
-                    autocomplete="off"
-                />
+                <div class="pin-inputs" id="newUserPinInputs">
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                </div>
             </div>
 
             <button onclick="registerNewUser()">Hesap Oluştur</button>
@@ -352,6 +396,7 @@
     <!-- Modal for Existing User Login -->
     <div id="existingUserModal" class="modal">
         <div class="modal-content">
+            <button class="close-btn-top" onclick="closeExistingUserModal()">×</button>
             <div class="modal-title">PIN Kodunuzu Girin</div>
             <div id="existingUserMessage" class="status-message"></div>
 
@@ -366,40 +411,43 @@
             </div>
 
             <button onclick="loginWithPin()">Giriş Yap</button>
-            <button class="tertiary-btn" onclick="showPinReset()">Şifremi Unuttum</button>
-            <button class="close-modal" onclick="closeExistingUserModal()">İptal</button>
+            <button class="tertiary-btn" onclick="sendResetPinEmail()">PIN kodumu unuttum</button>
         </div>
     </div>
 
     <!-- Modal for PIN Reset -->
     <div id="pinResetModal" class="modal">
         <div class="modal-content">
-            <div class="modal-title">PIN Kodunu Sıfırla</div>
+            <button class="close-btn-top" onclick="closePinResetModal()">×</button>
+            <div class="modal-title">Yeni PIN Kodunu Girin</div>
             <div id="resetMessage" class="status-message"></div>
 
+            <div class="form-group" style="text-align: center; color: #666; font-size: 14px; margin-bottom: 20px;">
+                <p>E-postanıza gönderilen kodu ve yeni PIN kodunuzu giriniz</p>
+            </div>
+
             <div class="form-group">
-                <label>E-posta Adresiniz</label>
+                <label>Doğrulama Kodu (E-postadan)</label>
                 <input 
-                    type="email" 
-                    id="resetEmail" 
-                    placeholder="örnek@email.com"
+                    type="text" 
+                    id="verificationCode" 
+                    placeholder="6 haneli kodu girin"
                     autocomplete="off"
+                    maxlength="6"
                 />
             </div>
 
             <div class="form-group">
                 <label>Yeni PIN Kodunuz (4 Rakam)</label>
-                <input 
-                    type="password" 
-                    id="newPin" 
-                    placeholder="••••"
-                    maxlength="4"
-                    autocomplete="off"
-                />
+                <div class="pin-inputs" id="newResetPinInputs">
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                    <input class="pin-input" type="text" maxlength="1" autocomplete="off" />
+                </div>
             </div>
 
-            <button onclick="resetPin()">PIN Sıfırla</button>
-            <button class="close-modal" onclick="closePinResetModal()">İptal</button>
+            <button onclick="submitNewPin()">PIN Sıfırla ve Giriş Yap</button>
         </div>
     </div>
 
@@ -491,6 +539,9 @@
 
                 // Decision logic
                 console.log('Phone exists:', data.exists);
+                console.log('typeof exists:', typeof data.exists);
+                console.log('exists === true:', data.exists === true);
+                console.log('exists === false:', data.exists === false);
                 
                 if (data.exists === true) {
                     console.log('ACTION: Opening EXISTING USER modal (PIN only)');
@@ -525,6 +576,10 @@
         function openNewUserModal() {
             console.log('Opening NEW USER modal...');
             try {
+                // Close any other open modals first
+                document.getElementById('existingUserModal')?.classList.remove('active');
+                document.getElementById('pinResetModal')?.classList.remove('active');
+                
                 const modal = document.getElementById('newUserModal');
                 if (!modal) {
                     console.error('Modal element not found: newUserModal');
@@ -547,6 +602,13 @@
             console.log('Closing NEW USER modal...');
             try {
                 document.getElementById('newUserModal').classList.remove('active');
+                // Clear form fields
+                document.getElementById('userName').value = '';
+                document.getElementById('userEmail').value = '';
+                document.querySelectorAll('#newUserPinInputs input').forEach(input => {
+                    input.value = '';
+                    input.classList.remove('filled');
+                });
                 currentPhone = '';
                 currentPin = '';
                 document.getElementById('phone').value = '';
@@ -561,6 +623,10 @@
         function openExistingUserModal() {
             console.log('Opening EXISTING USER modal...');
             try {
+                // Close any other open modals first
+                document.getElementById('newUserModal')?.classList.remove('active');
+                document.getElementById('pinResetModal')?.classList.remove('active');
+                
                 const modal = document.getElementById('existingUserModal');
                 if (!modal) {
                     console.error('Modal element not found: existingUserModal');
@@ -598,7 +664,10 @@
             console.log('Registering new user...');
             const name = document.getElementById('userName').value.trim();
             const email = document.getElementById('userEmail').value.trim();
-            const pin = document.getElementById('newUserPin').value.trim();
+            
+            // Collect PIN from the 4 separate boxes
+            const pinInputs = document.querySelectorAll('#newUserPinInputs input');
+            const pin = Array.from(pinInputs).map(input => input.value).join('').trim();
 
             if (!name || name.length < 2) {
                 showMessage('newUserMessage', '⚠️ Adınız en az 2 karakter olmalıdır', 'error');
@@ -639,6 +708,7 @@
                     showMessage('newUserMessage', '✅ Hesap oluşturuldu! Yönlendiriliyor...', 'success');
                     localStorage.setItem('hesapPaylas_token', data.token);
                     localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                    localStorage.setItem('lastUsedLoginPage', 'v2');
 
                     setTimeout(() => {
                         if (groupCode) {
@@ -707,6 +777,56 @@
             });
 
             document.getElementById('phone').focus();
+
+            // PIN input auto-advance for NEW USER registration
+            const newUserPinInputs = document.querySelectorAll('#newUserPinInputs input');
+            newUserPinInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    // Only allow digits
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
+                    if (e.target.value.length === 1) {
+                        e.target.classList.add('filled');
+                        if (index < newUserPinInputs.length - 1) {
+                            newUserPinInputs[index + 1].focus();
+                        }
+                    }
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        newUserPinInputs[index - 1].focus();
+                    }
+                    if (e.key === 'Enter') {
+                        registerNewUser();
+                    }
+                });
+            });
+
+            // PIN input auto-advance for PIN RESET
+            const newResetPinInputs = document.querySelectorAll('#newResetPinInputs input');
+            newResetPinInputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    // Only allow digits
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
+                    if (e.target.value.length === 1) {
+                        e.target.classList.add('filled');
+                        if (index < newResetPinInputs.length - 1) {
+                            newResetPinInputs[index + 1].focus();
+                        }
+                    }
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        newResetPinInputs[index - 1].focus();
+                    }
+                    if (e.key === 'Enter') {
+                        submitNewPin();
+                    }
+                });
+            });
         });
 
         async function loginWithPin() {
@@ -739,6 +859,7 @@
                     showMessage('existingUserMessage', '✅ Başarıyla giriş yaptınız', 'success');
                     localStorage.setItem('hesapPaylas_token', data.token);
                     localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                    localStorage.setItem('lastUsedLoginPage', 'v2');
 
                     setTimeout(() => {
                         if (groupCode) {
@@ -768,17 +889,81 @@
             document.getElementById('resetEmail').focus();
         }
 
-        function closePinResetModal() {
-            document.getElementById('pinResetModal').classList.remove('active');
-            document.getElementById('existingUserModal').classList.add('active');
+        async function sendResetPinEmail() {
+            if (!currentPhone) {
+                showMessage('existingUserMessage', '⚠️ Telefon numarasını girmek gerekiyor', 'error');
+                return;
+            }
+
+            const btn = event.target;
+            btn.disabled = true;
+            btn.textContent = 'Gönderiliyor...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/request-pin-reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: currentPhone
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('existingUserMessage', '✅ PIN sıfırlama kodu e-postanıza gönderildi!', 'success');
+                    setTimeout(() => {
+                        // Show PIN reset modal for user to enter new PIN
+                        document.getElementById('existingUserModal').classList.remove('active');
+                        document.getElementById('pinResetModal').classList.add('active');
+                        // Clear and focus on first PIN input box
+                        document.querySelectorAll('#newResetPinInputs input').forEach(input => {
+                            input.value = '';
+                            input.classList.remove('filled');
+                        });
+                        document.querySelector('#newResetPinInputs input:first-child').focus();
+                        document.getElementById('resetMessage').textContent = '';
+                    }, 1500);
+                } else {
+                    showMessage('existingUserMessage', '❌ ' + (data.error || data.message || 'E-posta gönderilemedi'), 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'PIN kodumu unuttum';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessage('existingUserMessage', '❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'PIN kodumu unuttum';
+            }
         }
 
-        async function resetPin() {
-            const email = document.getElementById('resetEmail').value.trim();
-            const newPin = document.getElementById('newPin').value.trim();
+        function closePinResetModal() {
+            document.getElementById('pinResetModal').classList.remove('active');
+            // Clear form fields
+            document.getElementById('verificationCode').value = '';
+            document.querySelectorAll('#newResetPinInputs input').forEach(input => {
+                input.value = '';
+                input.classList.remove('filled');
+            });
+            document.getElementById('resetMessage').textContent = '';
+            // Return to main login page
+            clearPinInputs();
+            currentPhone = '';
+            currentPin = '';
+            document.getElementById('phone').value = '';
+            document.getElementById('phone').focus();
+        }
 
-            if (!email || !email.includes('@')) {
-                showMessage('resetMessage', '⚠️ Geçerli bir e-posta adresi girin', 'error');
+        async function submitNewPin() {
+            // Collect verification code
+            const verificationCode = document.getElementById('verificationCode').value.trim();
+            
+            // Collect new PIN from the 4 separate boxes
+            const newPinInputs = document.querySelectorAll('#newResetPinInputs input');
+            const newPin = Array.from(newPinInputs).map(input => input.value).join('').trim();
+
+            if (!verificationCode || verificationCode.length !== 6) {
+                showMessage('resetMessage', '⚠️ Doğrulama kodu 6 haneli olmalıdır', 'error');
                 return;
             }
 
@@ -789,7 +974,7 @@
 
             const btn = event.target;
             btn.disabled = true;
-            btn.textContent = 'Gönderiliyor...';
+            btn.textContent = 'Doğrulanıyor...';
 
             try {
                 const response = await fetch(`${API_BASE_URL}/auth/reset-pin`, {
@@ -797,7 +982,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         phone: currentPhone,
-                        email: email,
+                        verification_code: verificationCode,
                         new_pin: newPin
                     })
                 });
@@ -805,21 +990,32 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    showMessage('resetMessage', '✅ PIN kodunuz sıfırlandı. Giriş yapabilirsiniz.', 'success');
+                    showMessage('resetMessage', '✅ PIN başarıyla güncellendi! Giriş yapılıyor...', 'success');
+                    
+                    // Auto-login after PIN reset
                     setTimeout(() => {
-                        closePinResetModal();
-                        clearPinInputs();
+                        // Store token and user data
+                        localStorage.setItem('hesapPaylas_token', data.token);
+                        localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                        localStorage.setItem('lastUsedLoginPage', 'v2');
+                        
+                        // Redirect to home page
+                        if (groupCode) {
+                            window.location.href = `index.html?joinGroup=${groupCode}`;
+                        } else {
+                            window.location.href = 'index.html';
+                        }
                     }, 1500);
                 } else {
-                    showMessage('resetMessage', '❌ ' + (data.error || 'PIN sıfırlanır hatası'), 'error');
+                    showMessage('resetMessage', '❌ ' + (data.error || 'Doğrulama başarısız'), 'error');
+                    btn.disabled = false;
+                    btn.textContent = 'PIN Sıfırla ve Giriş Yap';
                 }
-                btn.disabled = false;
-                btn.textContent = 'PIN Sıfırla';
             } catch (error) {
                 console.error('Error:', error);
                 showMessage('resetMessage', '❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
                 btn.disabled = false;
-                btn.textContent = 'PIN Sıfırla';
+                btn.textContent = 'PIN Sıfırla ve Giriş Yap';
             }
         }
     </script>

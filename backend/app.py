@@ -57,8 +57,13 @@ def _send_email_async(email, reset_code, user_name):
         sender_email = os.getenv('SENDER_EMAIL')
         sender_password = os.getenv('SENDER_PASSWORD')
         
+        print(f"[EMAIL] Starting email send...")
+        print(f"[EMAIL] SMTP Server: {smtp_server}:{smtp_port}")
+        print(f"[EMAIL] Sender Email: {sender_email}")
+        print(f"[EMAIL] Recipient Email: {email}")
+        
         if not all([sender_email, sender_password]):
-            print(f"[EMAIL] ⚠️  Email not configured")
+            print(f"[EMAIL] ⚠️  Email not configured - SENDER_EMAIL={sender_email}, SENDER_PASSWORD={'***' if sender_password else 'NOT SET'}")
             return False
         
         message = MIMEMultipart('alternative')
@@ -101,9 +106,13 @@ def _send_email_async(email, reset_code, user_name):
         part = MIMEText(html, 'html')
         message.attach(part)
         
+        print(f"[EMAIL] Connecting to SMTP server...")
         server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
+        print(f"[EMAIL] Connected. Starting TLS...")
         server.starttls()
+        print(f"[EMAIL] TLS started. Logging in...")
         server.login(sender_email, sender_password)
+        print(f"[EMAIL] Login successful. Sending message...")
         server.send_message(message)
         server.quit()
         
@@ -965,39 +974,92 @@ def phone_pin_login():
 
 @app.route('/api/auth/reset-pin', methods=['POST'])
 def reset_pin():
-    """Reset PIN for existing user"""
+    """Reset PIN for existing user - requires verification code from email"""
     try:
         data = request.get_json()
+        print(f"[DEBUG] reset_pin called with data: {data}")
         
-        if not data or not all(k in data for k in ['phone', 'new_pin']):
-            return jsonify({'error': 'Phone and new PIN are required'}), 400
+        if not data or not all(k in data for k in ['phone', 'new_pin', 'verification_code']):
+            print(f"[DEBUG] Missing required fields")
+            return jsonify({'error': 'Phone, verification code, and new PIN are required'}), 400
         
         phone = data['phone'].strip()
         new_pin = data['new_pin'].strip()
+        verification_code = data['verification_code'].strip()
+        
+        print(f"[DEBUG] Phone: {phone}, Verification Code: {verification_code}, New PIN: {new_pin}")
         
         # Validate phone format
         if not phone.startswith('+'):
             phone = '+90' + phone.lstrip('0')
         
+        print(f"[DEBUG] Formatted phone: {phone}")
+        
         # Validate PIN - must be exactly 4 digits
         if not new_pin.isdigit() or len(new_pin) != 4:
             return jsonify({'error': 'PIN must be 4 digits'}), 400
         
+        # Validate verification code - must be 6 digits
+        if not verification_code.isdigit() or len(verification_code) != 6:
+            return jsonify({'error': 'Verification code must be 6 digits'}), 400
+        
         # Find user by phone
         user = User.query.filter_by(phone=phone).first()
+        print(f"[DEBUG] User found: {user is not None}")
         
         if not user:
             return jsonify({'error': 'User not found with this phone number'}), 404
         
+        # Find and verify the OTP code
+        print(f"[DEBUG] Looking for OTP with phone={phone}, code={verification_code}, purpose=pin_reset")
+        otp_record = OTPVerification.query.filter_by(
+            phone=phone,
+            code=verification_code,
+            purpose='pin_reset'
+        ).first()
+        
+        print(f"[DEBUG] OTP record found: {otp_record is not None}")
+        
+        if not otp_record:
+            print(f"[DEBUG] OTP not found. Checking all OTP records for this phone:")
+            all_otps = OTPVerification.query.filter_by(phone=phone, purpose='pin_reset').all()
+            for otp in all_otps:
+                print(f"  - Code: {otp.code}, Expires: {otp.expires_at}, Created: {otp.created_at}")
+            return jsonify({'error': 'Invalid or expired verification code'}), 400
+        
+        # Check if code has expired
+        if datetime.utcnow() > otp_record.expires_at:
+            print(f"[DEBUG] OTP expired. Expires at: {otp_record.expires_at}, Now: {datetime.utcnow()}")
+            return jsonify({'error': 'Verification code has expired'}), 400
+        
         # Update PIN (stored as password hash)
         user.set_password(new_pin)
+        db.session.delete(otp_record)  # Delete the used verification code
         db.session.commit()
         
         print(f"[AUTH] PIN reset successfully for phone: {phone}")
         
+        # Generate JWT token for auto-login
+        token = jwt.encode(
+            {
+                'user_id': user.id,
+                'phone': user.phone,
+                'exp': datetime.utcnow() + timedelta(days=30)
+            },
+            os.getenv('JWT_SECRET', 'dev-secret'),
+            algorithm='HS256'
+        )
+        
         return jsonify({
             'message': 'PIN reset successfully',
-            'phone': phone
+            'token': token,
+            'user': {
+                'id': user.id,
+                'phone': user.phone,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'email': user.email
+            }
         }), 200
     
     except Exception as e:
@@ -2039,6 +2101,11 @@ def serve_css(filename):
 @app.route('/js/<path:filename>')
 def serve_js(filename):
     return send_from_directory(str(BASE_DIR), f'js/{filename}')
+
+# Serve v2 HTML page
+@app.route('/phone-join-group-v2.html')
+def serve_v2():
+    return send_from_directory(str(BASE_DIR), 'phone-join-group-v2.html')
 
 # ==================== 404 Handler - Serve SPA ====================
 # This catches ALL 404s and serves index.html for SPA routing

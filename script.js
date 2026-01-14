@@ -287,7 +287,7 @@ function updateHomePageProfile() {
             
             // Hoşgeldin mesajını göster
             if (welcomeMessage && userName) {
-                userName.textContent = userData.firstName || userData.name || 'Kullanıcı';
+                userName.textContent = userData.first_name || userData.firstName || userData.name || 'Kullanıcı';
                 welcomeMessage.style.display = 'block';
             }
             
@@ -1036,14 +1036,12 @@ function goToProfile() {
     const profileNameEdit = document.getElementById('profileNameEdit');
     const profileEmailEdit = document.getElementById('profileEmailEdit');
     const profilePhone = document.getElementById('profilePhone');
-    const profileEmailInfo = document.getElementById('profileEmailInfo');
     
     if (profileNameEdit) profileNameEdit.value = `${user.firstName || ''} ${user.lastName || ''}`.trim() || '';
-    // Leave email field empty - user fills it in when they want
-    if (profileEmailEdit) profileEmailEdit.value = '';
+    // Show email from user data if available
+    if (profileEmailEdit) profileEmailEdit.value = user.email || '';
     // Telefonu mask formatı ile göster
     if (profilePhone) profilePhone.textContent = formatPhoneDisplay(user.phone || '-');
-    if (profileEmailInfo) profileEmailInfo.textContent = user.email || '';
 
     
     console.log('Opening profile modal');
@@ -1439,7 +1437,12 @@ function logout() {
     // Profil bilgilerini gizle
     updateHomePageProfile();
     
-    showPage('onboardingPage');
+    // If we're on a v2 page URL, redirect to v2 login instead of index.html
+    if (window.location.pathname.includes('v2') || localStorage.getItem('lastUsedLoginPage') === 'v2') {
+        window.location.href = '/phone-join-group-v2.html';
+    } else {
+        showPage('onboardingPage');
+    }
 }
 
 // Hesabı Kapatma (Deactivate)
@@ -1865,7 +1868,7 @@ const colorNames = [
 function continueFromGroupCode() {
     // Mevcut kullanıcının adını kullan
     if (app.currentUser) {
-        app.currentUserName = `${app.currentUser.firstName} ${app.currentUser.lastName}`;
+        app.currentUserName = `${app.currentUser.first_name || app.currentUser.firstName} ${app.currentUser.last_name || app.currentUser.lastName}`;
     } else {
         app.currentUserName = 'Kullanıcı';
     }
