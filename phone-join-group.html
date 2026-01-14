@@ -430,15 +430,6 @@
             clearPINInputs();
         }
 
-        function resetPin() {
-            if (tempPhone.length !== 10) {
-                showMessage('Telefon numarası gerekli', 'error');
-                return;
-            }
-            showMessage('PIN sıfırlama bağlantısı e-mail adresinize gönderilecektir. Lütfen e-mail adresinizi girin.', 'info');
-            // Simple placeholder for now - in real app this would send email
-        }
-
         function showNameForm() {
             document.getElementById('passwordSection').classList.add('hidden');
             document.getElementById('nameSection').classList.remove('hidden');
@@ -581,8 +572,39 @@
                 showMessage('Telefon numarası gerekli', 'error');
                 return;
             }
-            showMessage('PIN sıfırlama e-postası ' + tempPhone + ' numarasıyla ilişkili e-posta adresine gönderilecektir.', 'info');
-            // In a real implementation, this would send an email with reset link
+
+            // Show loading state
+            const resetBtn = document.querySelector('#resetBtnText');
+            const originalText = resetBtn.textContent;
+            resetBtn.textContent = 'Gönderiliyor...';
+
+            // Send password reset request to backend
+            fetch(`${API_BASE_URL}/auth/request-pin-reset`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ phone: formatPhoneForAPI(tempPhone) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                resetBtn.textContent = originalText;
+                if (data.success) {
+                    showMessage('✅ PIN sıfırlama talimatı e-posta adresinize gönderildi. Lütfen e-postanızı kontrol edin.', 'success');
+                    // Hide wrong PIN section after a delay
+                    setTimeout(() => {
+                        document.getElementById('wrongPinSection').classList.add('hidden');
+                        clearPINInputs();
+                    }, 2000);
+                } else {
+                    showMessage('❌ ' + (data.message || 'PIN sıfırlama isteği gönderilemedi'), 'error');
+                }
+            })
+            .catch(error => {
+                resetBtn.textContent = originalText;
+                console.error('Reset error:', error);
+                showMessage('❌ Bağlantı hatası. Lütfen tekrar deneyin.', 'error');
+            });
         }
 
         document.addEventListener('DOMContentLoaded', () => {
