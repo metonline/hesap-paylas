@@ -345,14 +345,11 @@
         let tempPhone = '';
         let tempPin = '';
 
-        // Format phone for API (remove formatting, add +90)
+        // Format phone for API (remove formatting only)
         function formatPhoneForAPI(phone) {
-            let cleaned = phone.replace(/\D/g, '');
-            // Remove leading 0 if present
-            if (cleaned.startsWith('0')) {
-                cleaned = cleaned.substring(1);
-            }
-            return '90' + cleaned;
+            // Just remove formatting, keep the 10 digits as-is
+            // Backend will add +90 prefix
+            return phone.replace(/\D/g, '');
         }
 
         function showMessage(message, type = 'info') {
