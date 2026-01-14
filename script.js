@@ -1170,17 +1170,55 @@ function saveProfile() {
     const firstName = nameParts[0];
     const lastName = nameParts.slice(1).join(' ');
     
-    // Kullanıcı bilgisini güncelle
-    if (app.currentUser) {
-        app.currentUser.firstName = firstName;
-        app.currentUser.lastName = lastName;
-        app.currentUser.email = email; // Can be empty
-        
-        localStorage.setItem('hesapPaylas_user', JSON.stringify(app.currentUser));
-        
-        alert('✅ Profil bilgileriniz kaydedildi!');
-        closeProfileModal();
+    // Send to backend API
+    const token = localStorage.getItem('hesapPaylas_token');
+    
+    const updateData = {
+        firstName: firstName,
+        lastName: lastName
+    };
+    
+    // If email is provided, send it too (to add-email endpoint)
+    if (email) {
+        fetch(`${API_BASE_URL}/user/add-email`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ email: email })
+        })
+        .catch(error => {
+            console.error('Email save error:', error);
+        });
     }
+    
+    // Update profile endpoint (name)
+    fetch(`${API_BASE_URL}/user/profile`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updateData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.user) {
+            // Update localStorage with response from backend
+            app.currentUser = data.user;
+            localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+            alert('✅ Profil bilgileriniz kaydedildi!');
+            closeProfileModal();
+            updateHomePageProfile();
+        } else {
+            alert('❌ ' + (data.error || 'Profil güncellenemedi'));
+        }
+    })
+    .catch(error => {
+        console.error('Profile update error:', error);
+        alert('❌ Profil güncellenirken hata oluştu');
+    });
 }
 
 // Siparişleri Görüntüle
