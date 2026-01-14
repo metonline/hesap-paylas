@@ -705,9 +705,16 @@
             let phone = '';
             const phoneInput = document.getElementById('phone');
             
-            if (phoneInput && phoneInput.value.length === 10) {
-                phone = phoneInput.value;
-            } else if (currentResetPhone && currentResetPhone.length === 10) {
+            // Extract digits from phone input (handles masked format)
+            if (phoneInput && phoneInput.value) {
+                const digits = phoneInput.value.replace(/\D/g, '');
+                if (digits.length === 10) {
+                    phone = digits;
+                }
+            }
+            
+            // If not found in input, use stored currentResetPhone
+            if (!phone && currentResetPhone && currentResetPhone.length === 10) {
                 phone = currentResetPhone;
             }
             
