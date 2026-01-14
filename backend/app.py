@@ -306,7 +306,6 @@ class User(db.Model):
     bonus_points = db.Column(db.Integer, default=0)
     reset_token = db.Column(db.String(255), nullable=True)
     reset_token_expires = db.Column(db.DateTime, nullable=True)
-    email_verified = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)  # Hesap kapalı/açık
     is_deleted = db.Column(db.Boolean, default=False)  # Hesap silindi mi?
     account_type = db.Column(db.String(20), default='owner')  # 'owner' (hesap açan) or 'member' (invite edilen)
