@@ -942,8 +942,11 @@
         }
 
         async function authenticate() {
-            const phone = document.getElementById('phone').value.trim();
+            const phoneInput = document.getElementById('phone').value.trim();
             const pin = getPIN();
+
+            // Extract only digits from the formatted phone
+            const phone = phoneInput.replace(/\D/g, '');
 
             if (phone.length !== 10) {
                 showMessage('Telefon numarası 10 haneli olmalıdır', 'error');
