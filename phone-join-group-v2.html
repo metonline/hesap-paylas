@@ -182,12 +182,12 @@
             display: none;
             align-items: center;
             justify-content: center;
-            z-index: 1000;
+            z-index: 9999;
             animation: fadeIn 0.3s ease-out;
         }
 
         .modal.active {
-            display: flex;
+            display: flex !important;
         }
 
         @keyframes fadeIn {
@@ -496,19 +496,79 @@
 
         // ==================== NEW USER MODAL ====================
         function openNewUserModal() {
-            document.getElementById('newUserModal').classList.add('active');
-            document.getElementById('userName').focus();
+            console.log('Opening NEW USER modal...');
+            try {
+                const modal = document.getElementById('newUserModal');
+                if (!modal) {
+                    console.error('Modal element not found: newUserModal');
+                    return;
+                }
+                modal.classList.add('active');
+                console.log('Modal classes:', modal.className);
+                
+                const nameInput = document.getElementById('userName');
+                if (nameInput) {
+                    setTimeout(() => nameInput.focus(), 100);
+                }
+                console.log('✅ New user modal opened');
+            } catch (e) {
+                console.error('Error opening new user modal:', e);
+            }
         }
 
         function closeNewUserModal() {
-            document.getElementById('newUserModal').classList.remove('active');
-            currentPhone = '';
-            currentPin = '';
-            document.getElementById('phone').value = '';
-            document.getElementById('phone').focus();
+            console.log('Closing NEW USER modal...');
+            try {
+                document.getElementById('newUserModal').classList.remove('active');
+                currentPhone = '';
+                currentPin = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('phone').focus();
+                console.log('✅ Modal closed');
+            } catch (e) {
+                console.error('Error closing modal:', e);
+            }
+        }
+
+        // ==================== EXISTING USER MODAL ====================
+        function openExistingUserModal() {
+            console.log('Opening EXISTING USER modal...');
+            try {
+                const modal = document.getElementById('existingUserModal');
+                if (!modal) {
+                    console.error('Modal element not found: existingUserModal');
+                    return;
+                }
+                modal.classList.add('active');
+                console.log('Modal classes:', modal.className);
+                
+                const firstPinInput = document.querySelector('#pinInputs input:first-child');
+                if (firstPinInput) {
+                    setTimeout(() => firstPinInput.focus(), 100);
+                }
+                console.log('✅ Existing user modal opened');
+            } catch (e) {
+                console.error('Error opening existing user modal:', e);
+            }
+        }
+
+        function closeExistingUserModal() {
+            console.log('Closing EXISTING USER modal...');
+            try {
+                document.getElementById('existingUserModal').classList.remove('active');
+                clearPinInputs();
+                currentPhone = '';
+                currentPin = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('phone').focus();
+                console.log('✅ Modal closed');
+            } catch (e) {
+                console.error('Error closing modal:', e);
+            }
         }
 
         async function registerNewUser() {
+            console.log('Registering new user...');
             const name = document.getElementById('userName').value.trim();
             const email = document.getElementById('userEmail').value.trim();
             const pin = document.getElementById('newUserPin').value.trim();
