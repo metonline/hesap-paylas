@@ -951,7 +951,17 @@ def phone_pin_login():
     except Exception as e:
         db.session.rollback()
         print(f"[ERROR] Phone-PIN login failed: {str(e)}")
-        return jsonify({'error': 'Authentication failed. Please try again.'}), 500
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        
+        # Return more specific error messages
+        error_msg = str(e)
+        if 'unique constraint' in error_msg.lower() or 'duplicate' in error_msg.lower():
+            return jsonify({'error': 'Email already exists. Please use a different email.'}), 400
+        elif 'email' in error_msg.lower():
+            return jsonify({'error': 'Email error: ' + error_msg}), 400
+        else:
+            return jsonify({'error': 'Authentication failed: ' + error_msg[:100]}), 500
 
 @app.route('/api/auth/reset-pin', methods=['POST'])
 def reset_pin():
