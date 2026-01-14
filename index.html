@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="0" />
-    <title>Hesap Paylaş - Tükettiğin Kadar Öde</title>
+    <title>Telefon ile Giriş - Hesap Paylaş</title>
     <style>
         * {
             margin: 0;
@@ -207,25 +207,6 @@
         .footer a:hover {
             text-decoration: underline;
         }
-
-        .section-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 14px 20px;
-            border-radius: 12px;
-            text-align: center;
-            font-size: 16px;
-            font-weight: 700;
-            margin-bottom: 15px;
-            letter-spacing: 0.5px;
-        }
-
-        .section-description {
-            text-align: center;
-            font-size: 12px;
-            color: #999;
-            margin-bottom: 20px;
-        }
     </style>
 </head>
 <body>
@@ -233,10 +214,143 @@
         <div class="header">
             <div class="logo">Hesap % Paylaş</div>
             <p>tükettiğin kadar öde!</p>
+            <h1>Telefon ile Giriş</h1>
         </div>
 
-        <button onclick="window.location.href='phone-join-group.html'" class="section-header" style="border: none; cursor: pointer; padding: 16px 20px; font-size: 16px;">📱 TELEFON İLE GİRİŞ</button>
-        <div class="section-description">Telefon numarası ve 4 haneli PIN ile giriş yapın</div>
+        <div id="message" class="message"></div>
+
+        <form onsubmit="submitLogin(event)">
+            <div class="form-group">
+                <label>Telefon Numaranız</label>
+                <div class="phone-input-group">
+                    <input type="text" value="+90" disabled>
+                    <input type="text" id="phoneInput" placeholder="(532) 257 88 37" maxlength="16" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>PIN Kodunuz (4 Rakam)</label>
+                <div class="pin-group" id="pinGroup">
+                    <input type="text" class="pin-box" maxlength="1" inputmode="numeric" required>
+                    <input type="text" class="pin-box" maxlength="1" inputmode="numeric" required>
+                    <input type="text" class="pin-box" maxlength="1" inputmode="numeric" required>
+                    <input type="text" class="pin-box" maxlength="1" inputmode="numeric" required>
+                </div>
+            </div>
+
+            <button type="submit">Giriş Yap</button>
+        </form>
+
+        <div class="footer">
+            Hesabınız yok mu? <a onclick="alert('Kayıt sayfası yapılacak')">Kayıt Ol</a>
+        </div>
     </div>
+
+    <script>
+        const API_URL = 'https://metonline.pythonanywhere.com/api/auth';
+
+        // PIN Box Navigation
+        document.addEventListener('DOMContentLoaded', () => {
+            const boxes = document.querySelectorAll('#pinGroup .pin-box');
+            boxes.forEach((box, index) => {
+                box.addEventListener('input', (e) => {
+                    if (e.target.value) {
+                        e.target.classList.add('filled');
+                        if (index < boxes.length - 1) boxes[index + 1].focus();
+                    }
+                });
+
+                box.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        boxes[index - 1].focus();
+                    }
+                });
+            });
+        });
+
+        function formatPhone(input) {
+            let value = input.replace(/\D/g, '');
+            if (value.startsWith('90')) value = value.slice(2);
+            
+            if (value.length > 10) value = value.slice(0, 10);
+            
+            if (value.length > 6) {
+                return `(${value.slice(0, 3)}) ${value.slice(3, 6)} ${value.slice(6)}`;
+            } else if (value.length > 3) {
+                return `(${value.slice(0, 3)}) ${value.slice(3)}`;
+            } else if (value.length > 0) {
+                return `(${value}`;
+            }
+            return value;
+        }
+
+        document.getElementById('phoneInput').addEventListener('input', (e) => {
+            e.target.value = formatPhone(e.target.value);
+        });
+
+        function getPinValue() {
+            const boxes = document.querySelectorAll('#pinGroup .pin-box');
+            return Array.from(boxes).map(box => box.value).join('');
+        }
+
+        async function submitLogin(event) {
+            event.preventDefault();
+
+            const phoneInput = document.getElementById('phoneInput').value;
+            const cleaned = phoneInput.replace(/\D/g, '');
+            const pin = getPinValue();
+
+            if (cleaned.length !== 10) {
+                showMessage('Lütfen geçerli bir telefon numarası girin', 'error');
+                return;
+            }
+
+            if (pin.length !== 4) {
+                showMessage('PIN 4 rakamdan oluşmalıdır', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/phone-pin-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: cleaned,
+                        pin: pin,
+                        is_signup: false
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    localStorage.setItem('token', data.token);
+                    showMessage('Başarılı! Yönlendiriliyorsunuz...', 'success');
+                    setTimeout(() => {
+                        window.location.href = '/home.html';
+                    }, 1500);
+                } else {
+                    showMessage('Telefon numarası veya PIN hatalı', 'error');
+                    clearPinBoxes();
+                }
+            } catch (error) {
+                showMessage('Bağlantı hatası. Lütfen tekrar deneyin.', 'error');
+            }
+        }
+
+        function clearPinBoxes() {
+            document.querySelectorAll('#pinGroup .pin-box').forEach(box => {
+                box.value = '';
+                box.classList.remove('filled');
+            });
+            document.querySelectorAll('#pinGroup .pin-box')[0].focus();
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            setTimeout(() => msg.className = 'message', 4000);
+        }
+    </script>
 </body>
 </html>
