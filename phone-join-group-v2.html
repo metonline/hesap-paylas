@@ -440,10 +440,12 @@
         });
 
         async function checkPhoneAndProceed() {
+            console.log('=== checkPhoneAndProceed STARTED ===');
+            
             const phoneInput = document.getElementById('phone').value.trim();
             const phone = formatPhoneForAPI(phoneInput);
+            const btn = document.querySelector('#phoneSection button');
 
-            console.log('=== checkPhoneAndProceed ===');
             console.log('Raw input:', phoneInput);
             console.log('Formatted:', phone);
 
@@ -452,23 +454,37 @@
                 return;
             }
 
+            // Show loading state
+            btn.disabled = true;
+            btn.textContent = 'Kontrol ediliyor...';
+            
             currentPhone = phone;
 
             try {
                 const requestBody = { phone: phone };
                 console.log('Sending request:', requestBody);
+                console.log('API URL:', `${API_BASE_URL}/auth/check-phone`);
+                
+                // Add timeout
+                const controller = new AbortController();
+                const timeout = setTimeout(() => controller.abort(), 10000); // 10 second timeout
                 
                 const response = await fetch(`${API_BASE_URL}/auth/check-phone`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestBody)
+                    body: JSON.stringify(requestBody),
+                    signal: controller.signal
                 });
 
-                const data = await response.json();
+                clearTimeout(timeout);
                 console.log('Response status:', response.status);
+                
+                const data = await response.json();
                 console.log('Response data:', data);
 
                 if (!response.ok) {
+                    btn.disabled = false;
+                    btn.textContent = 'İleri';
                     showMessage('statusMessage', '❌ Hata: ' + (data.error || 'Telefon kontrolü başarısız'), 'error');
                     return;
                 }
@@ -486,12 +502,23 @@
                     openNewUserModal();
                 } else {
                     console.error('Unexpected exists value:', data.exists);
+                    btn.disabled = false;
+                    btn.textContent = 'İleri';
                     showMessage('statusMessage', '❌ Beklenmeyen cevap', 'error');
                 }
             } catch (error) {
+                btn.disabled = false;
+                btn.textContent = 'İleri';
                 console.error('Fetch error:', error);
-                showMessage('statusMessage', '❌ Bağlantı hatası. Lütfen tekrar deneyin.', 'error');
+                
+                if (error.name === 'AbortError') {
+                    showMessage('statusMessage', '❌ İstek zaman aşımına uğradı. Lütfen internet bağlantınızı kontrol edin.', 'error');
+                } else {
+                    showMessage('statusMessage', '❌ Bağlantı hatası: ' + error.message, 'error');
+                }
             }
+            
+            console.log('=== checkPhoneAndProceed ENDED ===');
         }
 
         // ==================== NEW USER MODAL ====================
