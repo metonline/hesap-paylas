@@ -339,10 +339,21 @@
     <script>
         // API Base URL
         const API_BASE = window.location.origin;
+        const API_BASE_URL = API_BASE + '/api';
         const urlParams = new URLSearchParams(window.location.search);
         const groupCode = urlParams.get('code');
         let tempPhone = '';
         let tempPin = '';
+
+        // Format phone for API (remove formatting, add +90)
+        function formatPhoneForAPI(phone) {
+            let cleaned = phone.replace(/\D/g, '');
+            // Remove leading 0 if present
+            if (cleaned.startsWith('0')) {
+                cleaned = cleaned.substring(1);
+            }
+            return '90' + cleaned;
+        }
 
         function showMessage(message, type = 'info') {
             const statusDiv = document.getElementById('statusMessage');
@@ -578,21 +589,28 @@
             const originalText = resetBtn.textContent;
             resetBtn.textContent = 'Gönderiliyor...';
 
+            const formattedPhone = formatPhoneForAPI(tempPhone);
+            console.log('resetPin called', { tempPhone, formattedPhone, API_BASE_URL });
+
             // Create abort controller for timeout
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
 
             // Send password reset request to backend
-            fetch(`${API_BASE_URL}/auth/request-pin-reset`, {
+            const url = `${API_BASE_URL}/auth/request-pin-reset`;
+            console.log('Sending fetch to:', url);
+            
+            fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ phone: formatPhoneForAPI(tempPhone) }),
+                body: JSON.stringify({ phone: formattedPhone }),
                 signal: controller.signal
             })
             .then(response => {
                 clearTimeout(timeoutId);
+                console.log('Response status:', response.status);
                 if (!response.ok) {
                     return response.json().then(data => {
                         throw new Error(data.error || 'İstek başarısız');
@@ -601,6 +619,7 @@
                 return response.json();
             })
             .then(data => {
+                console.log('Response data:', data);
                 resetBtn.textContent = originalText;
                 if (data.code_stored || data.message) {
                     showMessage('✅ PIN sıfırlama kodu e-posta adresinize gönderildi. Lütfen e-postanızı kontrol edin.', 'success');
