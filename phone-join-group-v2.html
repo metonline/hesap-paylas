@@ -443,42 +443,53 @@
             const phoneInput = document.getElementById('phone').value.trim();
             const phone = formatPhoneForAPI(phoneInput);
 
+            console.log('=== checkPhoneAndProceed ===');
+            console.log('Raw input:', phoneInput);
+            console.log('Formatted:', phone);
+
             if (phone.length !== 10) {
                 showMessage('statusMessage', '⚠️ Telefon numarası 10 haneli olmalıdır', 'error');
                 return;
             }
 
             currentPhone = phone;
-            console.log('Checking phone:', { phoneInput, phone });
 
             try {
+                const requestBody = { phone: phone };
+                console.log('Sending request:', requestBody);
+                
                 const response = await fetch(`${API_BASE_URL}/auth/check-phone`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phone })
+                    body: JSON.stringify(requestBody)
                 });
 
                 const data = await response.json();
-                console.log('Check phone response:', data);
+                console.log('Response status:', response.status);
+                console.log('Response data:', data);
 
                 if (!response.ok) {
                     showMessage('statusMessage', '❌ Hata: ' + (data.error || 'Telefon kontrolü başarısız'), 'error');
                     return;
                 }
 
-                // If phone exists, show PIN login
-                if (data.exists) {
-                    console.log('Phone exists - showing PIN login');
+                // Decision logic
+                console.log('Phone exists:', data.exists);
+                
+                if (data.exists === true) {
+                    console.log('ACTION: Opening EXISTING USER modal (PIN only)');
                     isNewUser = false;
                     openExistingUserModal();
-                } else {
-                    // If phone doesn't exist, show registration
-                    console.log('Phone is new - showing registration');
+                } else if (data.exists === false) {
+                    console.log('ACTION: Opening NEW USER modal (Name + Email + PIN)');
                     isNewUser = true;
                     openNewUserModal();
+                } else {
+                    console.error('Unexpected exists value:', data.exists);
+                    showMessage('statusMessage', '❌ Beklenmeyen cevap', 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Fetch error:', error);
                 showMessage('statusMessage', '❌ Bağlantı hatası. Lütfen tekrar deneyin.', 'error');
             }
         }
