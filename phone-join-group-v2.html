@@ -449,6 +449,7 @@
             }
 
             currentPhone = phone;
+            console.log('Checking phone:', { phoneInput, phone });
 
             try {
                 const response = await fetch(`${API_BASE_URL}/auth/check-phone`, {
@@ -458,13 +459,21 @@
                 });
 
                 const data = await response.json();
+                console.log('Check phone response:', data);
 
+                if (!response.ok) {
+                    showMessage('statusMessage', '❌ Hata: ' + (data.error || 'Telefon kontrolü başarısız'), 'error');
+                    return;
+                }
+
+                // If phone exists, show PIN login
                 if (data.exists) {
-                    // Existing user - show PIN login
+                    console.log('Phone exists - showing PIN login');
                     isNewUser = false;
                     openExistingUserModal();
                 } else {
-                    // New user - show registration
+                    // If phone doesn't exist, show registration
+                    console.log('Phone is new - showing registration');
                     isNewUser = true;
                     openNewUserModal();
                 }

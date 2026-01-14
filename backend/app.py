@@ -829,22 +829,39 @@ def check_phone():
             return jsonify({'error': 'Phone is required'}), 400
         
         phone = data['phone'].strip()
+        print(f"[DEBUG] check_phone: Raw input: {phone}")
         
-        # Format phone
-        if not phone.startswith('+'):
-            phone = '+90' + phone.lstrip('0')
+        # Format phone - handle both formats
+        # If it's 10 digits, prepend country code
+        if len(phone) == 10 and not phone.startswith('0'):
+            formatted_phone = '+90' + phone
+        elif len(phone) == 10 and phone.startswith('0'):
+            formatted_phone = '+90' + phone[1:]
+        elif phone.startswith('+'):
+            formatted_phone = phone
+        else:
+            formatted_phone = '+90' + phone.lstrip('0')
+        
+        print(f"[DEBUG] check_phone: Formatted phone: {formatted_phone}")
         
         # Check if user exists
-        user = User.query.filter_by(phone=phone).first()
+        user = User.query.filter_by(phone=formatted_phone).first()
+        print(f"[DEBUG] check_phone: User found: {user is not None}")
+        
+        if user:
+            print(f"[DEBUG] check_phone: User exists - {user.phone}, Email: {user.email}")
         
         return jsonify({
             'exists': user is not None,
-            'phone': phone
+            'phone': formatted_phone,
+            'debug': f'Checked phone: {formatted_phone}'
         }), 200
     
     except Exception as e:
         print(f"[ERROR] check-phone failed: {str(e)}")
-        return jsonify({'error': 'Failed to check phone'}), 500
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'Failed to check phone', 'debug': str(e)}), 500
 
 @app.route('/api/auth/phone-pin-login', methods=['POST'])
 def phone_pin_login():
