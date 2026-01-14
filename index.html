@@ -1180,6 +1180,11 @@ Konaklama
             const msgEl = document.getElementById('statusMessageHome');
             msgEl.textContent = message;
             msgEl.className = `status-message ${type}`;
+            if (!message) {
+                msgEl.style.display = 'none';
+            } else {
+                msgEl.style.display = 'block';
+            }
         }
 
         // Phone input listener
