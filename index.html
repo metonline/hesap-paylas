@@ -127,6 +127,28 @@
                             </div>
                         </div>
                         
+                        <!-- Name Input Section (for new users) -->
+                        <div id="nameSection" style="margin-bottom: 20px; padding: 0 20px; display: none;">
+                            <input 
+                                type="text" 
+                                id="userName" 
+                                placeholder="Adınız (ve Soyadınız)"
+                                style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px;"
+                                autocomplete="off"
+                            />
+                        </div>
+                        
+                        <!-- Email Input Section (for new users) -->
+                        <div id="emailSection" style="margin-bottom: 20px; padding: 0 20px; display: none;">
+                            <input 
+                                type="email" 
+                                id="userEmail" 
+                                placeholder="E-posta Adresiniz"
+                                style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px;"
+                                autocomplete="off"
+                            />
+                        </div>
+                        
                         <!-- PIN Input Section -->
                         <div style="margin-bottom: 20px; padding: 0 20px;">
                             <label style="display: block; margin-bottom: 12px; color: #333; font-weight: 600; font-size: 14px; text-align: center;">PIN Kodunuz (4 Rakam)</label>
@@ -138,9 +160,9 @@
                             </div>
                         </div>
                         
-                        <!-- Login Button -->
-                        <button onclick="loginPhoneHome()" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 0; margin-left: 20px; margin-right: 20px; padding: 14px; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: calc(100% - 40px);">
-                            Giriş Yap
+                        <!-- Login/Register Button -->
+                        <button onclick="submitPhoneForm()" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 0; margin-left: 20px; margin-right: 20px; padding: 14px; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: calc(100% - 40px);">
+                            <span id="buttonText">Giriş Yap</span>
                         </button>
                         
                         <!-- Signup Link -->
@@ -1035,6 +1057,8 @@ Konaklama
     <script>
         // ===== PHONE LOGIN HOME PAGE FUNCTIONS =====
         
+        let isNewUser = false;
+        
         // Format phone number input
         function formatPhoneInputHome(value) {
             const digits = value.replace(/\D/g, '');
@@ -1079,22 +1103,75 @@ Konaklama
                         pinInputsHome[index - 1].focus();
                     }
                     if (e.key === 'Enter') {
-                        loginPhoneHome();
+                        submitPhoneForm();
                     }
                 });
             });
         });
 
-        // Main login function
-        async function loginPhoneHome() {
+        // Check phone existence and show appropriate form
+        async function checkPhoneAndShowForm() {
+            const phoneInput = document.getElementById('phoneHome').value.trim();
+            const phone = formatPhoneForAPI(phoneInput);
+
+            if (phone.length !== 10) {
+                showMessageHome('⚠️ Telefon numarası 10 haneli olmalıdır', 'error');
+                return;
+            }
+
+            try {
+                const API_BASE = window.location.origin;
+                const API_BASE_URL = API_BASE + '/api';
+                
+                const response = await fetch(`${API_BASE_URL}/auth/check-phone`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    if (data.exists === true) {
+                        // Existing user - hide registration fields
+                        isNewUser = false;
+                        document.getElementById('nameSection').style.display = 'none';
+                        document.getElementById('emailSection').style.display = 'none';
+                        document.getElementById('buttonText').textContent = 'Giriş Yap';
+                        showMessageHome('');
+                    } else if (data.exists === false) {
+                        // New user - show registration fields
+                        isNewUser = true;
+                        document.getElementById('nameSection').style.display = 'block';
+                        document.getElementById('emailSection').style.display = 'block';
+                        document.getElementById('buttonText').textContent = 'Hesap Oluştur';
+                        showMessageHome('');
+                    }
+                } else {
+                    showMessageHome('❌ Telefon kontrolü başarısız', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessageHome('❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+            }
+        }
+
+        // Check phone on blur
+        document.getElementById('phoneHome').addEventListener('blur', () => {
+            const phoneInput = document.getElementById('phoneHome').value.trim();
+            if (phoneInput.length >= 10) {
+                checkPhoneAndShowForm();
+            }
+        });
+
+        // Main submit function - handles both login and signup
+        async function submitPhoneForm() {
             const phoneInput = document.getElementById('phoneHome').value.trim();
             const phone = formatPhoneForAPI(phoneInput);
             
             // Collect PIN from the 4 boxes
             const pinInputsHome = document.querySelectorAll('.pin-input-home');
             const pin = Array.from(pinInputsHome).map(input => input.value).join('').trim();
-            
-            console.log('Phone:', phone, 'PIN:', pin);
 
             if (phone.length !== 10) {
                 showMessageHome('⚠️ Telefon numarası 10 haneli olmalıdır', 'error');
@@ -1106,12 +1183,35 @@ Konaklama
                 return;
             }
 
-            const btn = document.querySelector('[onclick="loginPhoneHome()"]');
+            // Validate registration fields if new user
+            if (isNewUser) {
+                const name = document.getElementById('userName').value.trim();
+                const email = document.getElementById('userEmail').value.trim();
+
+                if (!name || name.length < 2) {
+                    showMessageHome('⚠️ Adınız en az 2 karakter olmalıdır', 'error');
+                    return;
+                }
+
+                if (!email || !email.includes('@')) {
+                    showMessageHome('⚠️ Geçerli bir e-posta adresi girin', 'error');
+                    return;
+                }
+
+                registerNewUser(phone, pin, name, email);
+            } else {
+                loginExistingUser(phone, pin);
+            }
+        }
+
+        // Login existing user
+        async function loginExistingUser(phone, pin) {
+            const btn = document.querySelector('[onclick="submitPhoneForm()"]');
             btn.disabled = true;
+            const originalText = btn.textContent;
             btn.textContent = 'Giriş Yapılıyor...';
 
             try {
-                // Get API base URL (same as script.js)
                 const API_BASE = window.location.origin;
                 const API_BASE_URL = API_BASE + '/api';
                 
@@ -1138,16 +1238,63 @@ Konaklama
                 } else {
                     showMessageHome('❌ ' + (data.error || 'PIN kodu yanlış'), 'error');
                     btn.disabled = false;
-                    btn.textContent = 'Giriş Yap';
+                    btn.textContent = originalText;
                     // Clear PIN boxes
-                    pinInputsHome.forEach(input => input.value = '');
-                    pinInputsHome[0].focus();
+                    document.querySelectorAll('.pin-input-home').forEach(input => input.value = '');
+                    document.querySelector('.pin-input-home').focus();
                 }
             } catch (error) {
                 console.error('Error:', error);
                 showMessageHome('❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
                 btn.disabled = false;
-                btn.textContent = 'Giriş Yap';
+                btn.textContent = originalText;
+            }
+        }
+
+        // Register new user
+        async function registerNewUser(phone, pin, name, email) {
+            const btn = document.querySelector('[onclick="submitPhoneForm()"]');
+            btn.disabled = true;
+            const originalText = btn.textContent;
+            btn.textContent = 'Hesap Oluşturuluyor...';
+
+            try {
+                const API_BASE = window.location.origin;
+                const API_BASE_URL = API_BASE + '/api';
+                
+                const response = await fetch(`${API_BASE_URL}/auth/phone-pin-login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        phone: phone,
+                        pin: pin,
+                        is_signup: true,
+                        first_name: name.split(' ')[0],
+                        last_name: name.includes(' ') ? name.split(' ').slice(1).join(' ') : '',
+                        email: email
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessageHome('✅ Hesap oluşturuldu! Giriş yapılıyor...', 'success');
+                    localStorage.setItem('hesapPaylas_token', data.token);
+                    localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                } else {
+                    showMessageHome('❌ ' + (data.error || 'Hesap oluşturulamadı'), 'error');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showMessageHome('❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                btn.disabled = false;
+                btn.textContent = originalText;
             }
         }
     </script>
