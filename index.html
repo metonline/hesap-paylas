@@ -1574,22 +1574,23 @@ Konaklama
             try {
                 const API_BASE = window.location.origin;
                 const API_BASE_URL = API_BASE + '/api';
-
+                // Always send phone in +90 format
+                let phoneToSend = pinResetPhone;
+                if (!phoneToSend.startsWith('+')) {
+                    phoneToSend = '+90' + phoneToSend.replace(/^0+/, '');
+                }
                 const response = await fetch(`${API_BASE_URL}/auth/verify-pin-reset`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        phone: pinResetPhone,
+                        phone: phoneToSend,
                         code: otp
                     })
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
                     showOtpStatus('✅ Kod doğrulandı!', 'success');
                     pinResetOtpVerified = true;
-
                     // Close OTP modal and show new PIN modal after 1 second
                     setTimeout(() => {
                         closeVerifyOtpModal();
