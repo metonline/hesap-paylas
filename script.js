@@ -3668,10 +3668,12 @@ function loadActiveGroups() {
     // Prevent duplicate simultaneous calls
     if (loadActiveGroupsInProgress) {
         console.log('⏳ loadActiveGroups already in progress, skipping duplicate call');
+        console.trace('Skipped from:');
         return Promise.resolve();
     }
     
     console.log('✅ loadActiveGroups çağrıldı');
+    console.trace('Called from:');
     const token = localStorage.getItem('hesapPaylas_token');
     if (!token) return Promise.resolve();
     
