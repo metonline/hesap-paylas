@@ -885,9 +885,21 @@ function handleManualLogin(event) {
                 errorCode = error.message;
             }
             if (errorCode.includes('user_not_found')) {
-                alert('Sistemde böyle bir kullanıcı bulunmuyor... Üye ol sayfasına yönlendirileceksiniz...');
-                showAuthForm('signup');
-                showPage('onboardingPage');
+                alert('Sistemde böyle bir kullanıcı bulunmuyor. Kayıt için adınızı ve e-posta adresinizi girin.');
+                // Show name and email fields for registration
+                var nameSection = document.getElementById('nameSection');
+                var emailSection = document.getElementById('emailSection');
+                if (nameSection) nameSection.style.display = 'block';
+                if (emailSection) emailSection.style.display = 'block';
+                // Change button text to "Kayıt Ol" if the element exists
+                var buttonText = document.getElementById('buttonText');
+                if (buttonText) { buttonText.textContent = 'Kayıt Ol'; }
+                // Optionally clear PIN fields
+                var pinInputs = document.querySelectorAll('.pin-input-home');
+                if (pinInputs && pinInputs.length) { pinInputs.forEach(function(input) { input.value = ''; }); }
+                // Focus on name input
+                var nameInput = document.getElementById('userName');
+                if (nameInput) nameInput.focus();
             } else if (errorCode.includes('wrong_password')) {
                 alert('Şifre yanlış!');
             } else {
@@ -1093,6 +1105,111 @@ function closeProfileModal() {
         document.body.style.overflow = 'auto';
     }
 }
+
+// PIN Change in Profile
+function showPinChangeInProfile() {
+    // Close the profile modal first
+    closeProfileModal();
+    
+    // Then show PIN change modal
+    const modal = document.getElementById('pinChangeInProfile');
+    if (modal) {
+        modal.style.display = 'flex';
+        // Clear previous PIN
+        document.querySelectorAll('.pin-profile-change').forEach(input => input.value = '');
+        document.getElementById('pinChangeProfileMsg').style.display = 'none';
+        // Focus first input
+        setTimeout(() => {
+            document.querySelector('.pin-profile-change').focus();
+        }, 100);
+    }
+}
+
+function closePinChangeInProfile() {
+    const modal = document.getElementById('pinChangeInProfile');
+    if (modal) {
+        modal.style.display = 'none';
+    }
+}
+
+function savePinFromProfile() {
+    const pinInputs = document.querySelectorAll('.pin-profile-change');
+    const pin = Array.from(pinInputs).map(input => input.value).join('');
+    const msgEl = document.getElementById('pinChangeProfileMsg');
+    
+    if (pin.length !== 4 || !/^\d+$/.test(pin)) {
+        msgEl.textContent = '⚠️ PIN 4 haneli rakam olmalıdır';
+        msgEl.style.background = '#ffe5e5';
+        msgEl.style.color = '#e74c3c';
+        msgEl.style.display = 'block';
+        return;
+    }
+    
+    const token = localStorage.getItem('hesapPaylas_token');
+    const user = JSON.parse(localStorage.getItem('hesapPaylas_user') || '{}');
+    
+    msgEl.textContent = '⏳ PIN kaydediliyor...';
+    msgEl.style.background = '#e8f4f8';
+    msgEl.style.color = '#667eea';
+    msgEl.style.display = 'block';
+    
+    fetch(`${API_BASE_URL}/auth/change-pin`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            phone: user.phone,
+            new_pin: pin
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message || data.success) {
+            msgEl.textContent = '✅ PIN başarıyla kaydedildi!';
+            msgEl.style.background = '#e8f8e8';
+            msgEl.style.color = '#27ae60';
+            msgEl.style.display = 'block';
+            setTimeout(() => {
+                closePinChangeInProfile();
+                closeProfileModal();
+            }, 1500);
+        } else {
+            msgEl.textContent = '❌ ' + (data.error || 'PIN kaydı başarısız');
+            msgEl.style.background = '#ffe5e5';
+            msgEl.style.color = '#e74c3c';
+            msgEl.style.display = 'block';
+        }
+    })
+    .catch(error => {
+        msgEl.textContent = '❌ Hata: ' + error.message;
+        msgEl.style.background = '#ffe5e5';
+        msgEl.style.color = '#e74c3c';
+        msgEl.style.display = 'block';
+    });
+}
+
+// Setup PIN input auto-advance for profile PIN change
+document.addEventListener('DOMContentLoaded', () => {
+    const pinInputs = document.querySelectorAll('.pin-profile-change');
+    pinInputs.forEach((input, index) => {
+        input.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            if (e.target.value.length === 1 && index < pinInputs.length - 1) {
+                pinInputs[index + 1].focus();
+            }
+        });
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                pinInputs[index - 1].focus();
+            }
+            if (e.key === 'Enter' && index === pinInputs.length - 1) {
+                savePinFromProfile();
+            }
+        });
+    });
+});
 
 // Bonus Puanlarını Güncelle
 function updateBonusPoints() {
@@ -1440,6 +1557,43 @@ function closeProfileModal() {
 
 // Çıkış Yap
 function logout() {
+        // Clear localStorage completely
+        localStorage.removeItem('hesapPaylas_token');
+        localStorage.removeItem('hesapPaylas_user');
+        
+        // Hide login status messages and reset login form fields
+        var loginStatus = document.getElementById('statusMessageHome');
+        if (loginStatus) {
+            loginStatus.textContent = '';
+            loginStatus.style.display = 'none';
+            loginStatus.className = 'status-message';
+            loginStatus.style.background = '';
+            loginStatus.style.color = '';
+        }
+        var phoneInput = document.getElementById('phoneHome');
+        if (phoneInput) phoneInput.value = '';
+        
+        // Clear all PIN inputs for security
+        var pinInputs = document.querySelectorAll('.login-pin-input');
+        pinInputs.forEach(function(input) { input.value = ''; });
+        
+        // Clear PIN profile change inputs
+        var profilePinInputs = document.querySelectorAll('.pin-profile-change');
+        profilePinInputs.forEach(function(input) { input.value = ''; });
+        
+        // Clear PIN home inputs
+        var homePinInputs = document.querySelectorAll('.pin-input-home');
+        homePinInputs.forEach(function(input) { input.value = ''; });
+        
+        // Clear reset code inputs
+        var resetCodeInputs = document.querySelectorAll('.reset-code-input');
+        resetCodeInputs.forEach(function(input) { input.value = ''; });
+        
+        var loginBtn = document.getElementById('loginBtnHome');
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.textContent = 'Giriş Yap';
+        }
     // FORCE HIDE EVERYTHING from home page IMMEDIATELY
     const homeMenu = document.getElementById('homeUserMenu');
     if (homeMenu) {
@@ -1668,20 +1822,31 @@ function ensurePageHasMenuButton(page) {
 
 // Ana Sayfaya Dön
 function backToHome() {
-    app.currentMode = null;
     app.currentUser = null;
-    app.cart = {};
-    showPage('homePage');
-}
+    localStorage.removeItem('hesapPaylas_user');
+    localStorage.removeItem('hesapPaylas_token');
 
-// Bilgi Sayfasına Dön
-function backToInfo() {
-    showPage('infoPage');
-}
+    // Close all modals and overlays
+    closeProfileModal && closeProfileModal();
+    if (typeof closeForgotPinModal === 'function') closeForgotPinModal();
+    if (typeof closeVerifyOtpModal === 'function') closeVerifyOtpModal();
+    if (typeof closeNewPinModal === 'function') closeNewPinModal();
+    // Hide overlays
+    var overlays = document.querySelectorAll('.profile-modal, .modal, #sideMenuOverlay');
+    overlays.forEach(function(el) { el.style.display = 'none'; });
+    // Hide all status messages
+    var statusEls = document.querySelectorAll('.status-message');
+    statusEls.forEach(function(el) { el.style.display = 'none'; });
 
-// Restaurant Sayfasına Dön
-function backToRestaurant() {
-    showPage('restaurantPage');
+    // Profil bilgilerini gizle
+    updateHomePageProfile && updateHomePageProfile();
+
+    // If we're on a v2 page URL, redirect to v2 login instead of index.html
+    if (window.location.pathname.includes('v2') || localStorage.getItem('lastUsedLoginPage') === 'v2') {
+        window.location.href = '/phone-join-group-v2.html';
+    } else {
+        showPage('onboardingPage');
+    }
 }
 
 // Menüye Dön

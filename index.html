@@ -25,7 +25,7 @@
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23FF6B6B' width='192' height='192'/><text x='96' y='110' font-size='80' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>HP</text></svg>">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect fill='%23FF6B6B' width='180' height='180' rx='40'/><text x='90' y='105' font-size='70' font-weight='bold' text-anchor='middle' fill='white' font-family='Arial'>HP</text></svg>">
     
-    <link rel="stylesheet" href="styles.css?v=35">
+    <link rel="stylesheet" href="styles.css?v=37">
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
@@ -93,6 +93,39 @@
     </style>
 </head>
 <body>
+    <!-- PIN Reminder Code Modal -->
+    <div id="resetCodeModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; flex-direction: column; align-items: center; justify-content: center;">
+        <div style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 8px 30px rgba(0,0,0,0.3); text-align: center;">
+            <h2 style="color: #333; margin-bottom: 10px; font-size: 1.5em;">PIN Hatırlatma Kodunuzu Doğrulayın</h2>
+            <p style="color: #666; margin-bottom: 25px; font-size: 0.95em;">E-posta aracılığıyla alınan 6 haneli kodu girin.</p>
+            
+            <!-- Step Counter -->
+            <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 25px;">
+                <div style="width: 30px; height: 30px; border-radius: 50%; background: #667eea; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">1</div>
+                <div style="width: 30px; height: 30px; border-radius: 50%; background: #ddd; color: #999; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px;">2</div>
+            </div>
+            
+            <!-- Code Input Fields -->
+            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 25px; max-width: 300px; margin-left: auto; margin-right: auto;">
+                <input class="reset-code-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease;" autocomplete="off" />
+                <input class="reset-code-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease;" autocomplete="off" />
+                <input class="reset-code-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease;" autocomplete="off" />
+                <input class="reset-code-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease;" autocomplete="off" />
+                <input class="reset-code-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease;" autocomplete="off" />
+                <input class="reset-code-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease;" autocomplete="off" />
+            </div>
+            
+            <!-- Status Message -->
+            <div id="resetCodeMessage" style="margin-bottom: 20px; min-height: 30px;"></div>
+            
+            <!-- Buttons -->
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button onclick="closeResetCodeModal()" style="flex: 1; padding: 12px; background: #f0f0f0; color: #333; border: 1px solid #ddd; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">İptal</button>
+                <button onclick="verifyResetCode()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s;">Doğrula</button>
+            </div>
+        </div>
+    </div>
+
     <div class="container">
         <!-- Onboarding/Kayıt Sayfası -->
         <div id="onboardingPage" class="page active" style="background: white; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 1000; overflow-y: auto;">
@@ -111,70 +144,112 @@
                     <div id="loginForm" class="auth-form login-card" style="padding: 0;">
                         <div class="login-header" style="margin: 20px 20px 20px 20px; text-align: center; color: white; font-size: 18px; font-weight: 600; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 14px; border-radius: 10px; line-height: 1.5;">Telefon No.su ile Giriş</div>
                         
-                        <div id="statusMessageHome" class="status-message" style="margin-bottom: 15px; margin-left: 20px; margin-right: 20px;"></div>
+                        <!-- Unified Login Form Container -->
+                        <div style="max-width: 340px; margin: 0 auto; padding: 0 20px;">
                         
-                        <!-- Phone Input Section -->
-                        <div style="margin-bottom: 20px; padding: 0 20px; text-align: center;">
-                            <div style="display: inline-flex; gap: 8px; align-items: center; justify-content: center;">
-                                <div style="background: #f5f5f5; border: 2px solid #ddd; border-radius: 10px; padding: 12px; font-weight: 600; color: #333; display: flex; align-items: center; justify-content: center; height: 44px;">+90</div>
+                            <div id="statusMessageHome" class="status-message" style="margin-bottom: 15px; word-wrap: break-word; white-space: normal; line-height: 1.4; max-height: 4.2em; overflow: hidden;"></div>
+                            
+                            <!-- Phone Input Section -->
+                            <div style="margin-bottom: 20px; display: flex; gap: 8px; align-items: center; min-width: 0;">
+                                <div style="background: #f5f5f5; border: 2px solid #ddd; border-radius: 10px; padding: 12px; font-weight: 600; color: #333; display: flex; align-items: center; justify-content: center; height: 44px; width: 50px; flex-shrink: 0;">+90</div>
                                 <input 
                                     type="text" 
                                     id="phoneHome" 
                                     placeholder="(5xx) 333 22 22"
-                                    style="padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; width: 200px;"
+                                    style="padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; flex: 1; box-sizing: border-box; min-width: 0;"
                                     autocomplete="off"
                                 />
                             </div>
-                        </div>
-                        
-                        <!-- PIN Input Section -->
-                        <div style="margin-bottom: 20px; padding: 0 20px;">
-                            <label style="display: block; margin-bottom: 12px; color: #333; font-weight: 600; font-size: 14px; text-align: center;">PIN Kodunuz (4 Rakam)</label>
-                            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 240px; margin: 0 auto;">
-                                <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
-                                <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
-                                <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
-                                <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
+                            
+                            <!-- PIN Input Section -->
+                            <div style="margin-bottom: 20px;">
+                                <label style="display: block; margin-bottom: 12px; color: #333; font-weight: 600; font-size: 14px; text-align: center;">PIN Kodunuz (4 Rakam)</label>
+                                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                                    <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
+                                    <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
+                                    <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
+                                    <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
+                                </div>
                             </div>
-                        </div>
-                        
-                        <!-- Name Input Section (for new users) -->
-                        <div id="nameSection" style="margin-bottom: 20px; padding: 0 20px; display: none;">
-                            <input 
-                                type="text" 
-                                id="userName" 
-                                placeholder="Adınız (ve Soyadınız)"
-                                style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px;"
-                                autocomplete="off"
-                            />
-                        </div>
-                        
-                        <!-- Email Input Section (for new users) -->
-                        <div id="emailSection" style="margin-bottom: 20px; padding: 0 20px; display: none;">
-                            <input 
-                                type="email" 
-                                id="userEmail" 
-                                placeholder="E-posta Adresiniz"
-                                style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px;"
-                                autocomplete="off"
-                            />
-                        </div>
-                        
-                        <!-- Login/Register Button -->
-                        <button onclick="submitPhoneForm()" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 0; margin-left: 20px; margin-right: 20px; padding: 14px; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: calc(100% - 40px);">
-                            <span id="buttonText">Giriş Yap</span>
-                        </button>
-                        
-                        <!-- Signup Link - REMOVED, replaced with PIN reset buttons -->
-                        <!-- PIN Reset Quick Access Buttons -->
-                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; padding: 0 20px 20px 20px;">
-                            <button onclick="document.getElementById('forgotPinModal').style.display='flex'; document.body.style.overflow='hidden';" style="padding: 12px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.78em; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                ✉️ E-mail ile yenile
+                            
+                            <!-- Name Input Section (for new users) -->
+                            <div id="nameSection" style="margin-bottom: 20px; display: none;">
+                                <input 
+                                    type="text" 
+                                    id="userName" 
+                                    placeholder="Adınız (ve Soyadınız)"
+                                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; box-sizing: border-box;"
+                                    autocomplete="off"
+                                />
+                            </div>
+                            
+                            <!-- Email Input Section (for new users) -->
+                            <div id="emailSection" style="margin-bottom: 20px; display: none;">
+                                <input 
+                                    type="email" 
+                                    id="userEmail" 
+                                    placeholder="E-posta Adresiniz"
+                                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; box-sizing: border-box;"
+                                    autocomplete="off"
+                                />
+                            </div>
+                            
+                            <!-- Login/Register Button -->
+                            <button onclick="submitPhoneForm()" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 12px; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; padding: 14px; box-sizing: border-box;">
+                                <span id="buttonText">Giriş Yap</span>
                             </button>
-                            <button onclick="document.getElementById('forgotPinModal').style.display='flex'; document.body.style.overflow='hidden';" style="padding: 12px; background: #25D366; color: white; border: none; border-radius: 10px; font-size: 0.78em; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                💬 WhatsApp ile yenile
-                            </button>
+                            
+                            <!-- PIN Reminder Quick Access Buttons -->
+                            <button id="resetPinBtn" onclick="resetPinBothChannels()" style="padding: 14px; width: 100%; background: linear-gradient(135deg, #25D366 0%, #13b955 100%); color: white; border: none; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; transition: all 0.3s; box-sizing: border-box;">🔑 PIN Hatırlatma Kodu Gönder</button>
+                        
                         </div>
+                            <script>
+                            async function resetPinBothChannels() {
+                                console.log('[DEBUG] resetPinBothChannels called');
+                                const user = app && app.currentUser ? app.currentUser : null;
+                                console.log('[DEBUG] app.currentUser:', user);
+                                let phone = user && user.phone ? user.phone : '';
+                                // Ensure phone is formatted as +90XXXXXXXXXX
+                                if (phone && !phone.startsWith('+')) {
+                                    phone = '+90' + phone.replace(/^0+/, '');
+                                }
+                                const statusEl = document.getElementById('statusMessageHome');
+                                if (!phone) {
+                                    statusEl.textContent = 'Profilinizde kayıtlı telefon gereklidir. Lütfen profilinizi güncelleyin.';
+                                    statusEl.className = 'status-message error';
+                                    statusEl.style.display = 'block';
+                                    return;
+                                }
+                                try {
+                                    const API_BASE = window.location.origin;
+                                    const API_BASE_URL = API_BASE + '/api';
+                                    const response = await fetch(`${API_BASE_URL}/auth/request-pin-reset-both`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ phone: phone })
+                                    });
+                                    const data = await response.json();
+                                    if (response.ok) {
+                                        let msg = '6 haneli doğrulama kodu hem SMS hem e-posta ile gönderildi!';
+                                        if (data.sms_sent === false) msg += ' (SMS gönderilemedi)';
+                                        if (data.email_sent === false) msg += ' (E-posta gönderilemedi)';
+                                        statusEl.textContent = msg;
+                                        statusEl.className = 'status-message success';
+                                        statusEl.style.display = 'block';
+                                    } else {
+                                        let errMsg = '❌ ' + (data.message || data.error || 'Hata oluştu');
+                                        if (data.debug) errMsg += ' [Debug: ' + data.debug + ']';
+                                        statusEl.textContent = errMsg;
+                                        statusEl.className = 'status-message error';
+                                        statusEl.style.display = 'block';
+                                    }
+                                } catch (error) {
+                                    statusEl.textContent = '❌ Bir hata oluştu. Lütfen tekrar deneyin.';
+                                    statusEl.className = 'status-message error';
+                                    statusEl.style.display = 'block';
+                                }
+                            }
+                            </script>
                     </div>
                 </div>
             </div>
@@ -260,50 +335,137 @@
                     </button>
                     <button onclick="setReservationType('hotel')" style="padding: 15px; background: linear-gradient(135deg, #4ECDC4 0%, #44B3AB 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.1em; font-weight: 600; display: flex; flex-direction: column; align-items: center; gap: 8px;">
                         <span style="font-size: 2em;">🏨</span>
-                        <span>Hotel</span>
-                    </button>
-                </div>
-                
-                <!-- Hedef Konum Seçimi -->
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">📍 Hedef Konum (2 km çapında)</label>
-                    <div style="display: flex; gap: 8px; align-items: center;">
-                        <input type="text" id="targetLocation" placeholder="Manuel gir (Örn: Kızılay, Ankara)" style="flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; box-sizing: border-box; cursor: text;">
-                        <button onclick="openMapSelection()" style="padding: 12px 20px; background: linear-gradient(135deg, #4A90E2 0%, #357ABD 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.2em; white-space: nowrap; display: flex; align-items: center; gap: 5px;" title="Haritadan seç">
-                            🗺️
-                        </button>
-                    </div>
-                    <small style="display: block; margin-top: 5px; color: #999;">Manuel yazabilir veya harita butonuna tıklayarak seçebilirsiniz</small>
-                </div>
-                
-                <!-- Manuel İsim Girişi -->
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Mekan Adı (Manuel Giriş)</label>
-                    <input type="text" id="manualVenueName" placeholder="Örn: Tarihi Kebapçı, Luxor Otel..." style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 1em; box-sizing: border-box;">
-                </div>
-                
-                <!-- Devam Butonu -->
-                <button onclick="handleReservationSearch()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #11a853 0%, #0d7e3a 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 1.05em; font-weight: 600;">Devam Et</button>
-            </div>
-        </div>
-        
-        <!-- Arama Sonuçları Sayfası -->
-        <div id="searchResultsPage" class="page">
-            <button onclick="showPage('reservationPage')" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.8em; cursor: pointer; color: #999; z-index: 10;" title="Kapat">×</button>
-            <div class="standard-header">
-                <h1>
-                    <span class="hesap-word">Hesap</span>
-                    <span class="percent-sign">%</span>
-                    <span class="paylas-word">Paylaş</span>
-                </h1>
-                <p>tükettiğin kadar öde !</p>
-            </div>
+        <script>
+        async function resetPinBothChannels() {
+            console.log('[DEBUG] resetPinBothChannels called');
+            // Get phone from login input
+            var phoneInput = document.getElementById('phoneHome');
+            var phone = phoneInput ? phoneInput.value.replace(/\D/g, '') : '';
+            var statusEl = document.getElementById('statusMessageHome');
+            if (!phone || phone.length < 10) {
+                statusEl.textContent = 'Lütfen geçerli bir telefon numarası girin.';
+                statusEl.className = 'status-message error';
+                statusEl.style.display = 'block';
+                return;
+            }
+            // Always use last 10 digits for Turkish numbers
+            if (phone.length > 10) phone = phone.slice(-10);
             
-            <div class="form-container" style="padding: 15px;">
-                <h2 style="text-align: center; margin-bottom: 20px;" id="searchResultsTitle">Arama Sonuçları</h2>
+            try {
+                const API_BASE = window.location.origin;
+                const API_BASE_URL = API_BASE + '/api';
+                const response = await fetch(`${API_BASE_URL}/auth/request-pin-reset-both`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    let msg = '✅ 6 haneli doğrulama kodu e-posta ile gönderildi!';
+                    statusEl.textContent = msg;
+                    statusEl.className = 'status-message success';
+                    statusEl.style.display = 'block';
+                    
+                    // Store phone for later verification
+                    window.resetPhoneNumber = phone;
+                    // Show reset code modal after 1 second
+                    setTimeout(() => {
+                        openResetCodeModal();
+                    }, 1000);
+                } else {
+                    let errMsg = '❌ ' + (data.message || data.error || 'Hata oluştu');
+                    statusEl.textContent = errMsg;
+                    statusEl.className = 'status-message error';
+                    statusEl.style.display = 'block';
+                }
+            } catch (error) {
+                statusEl.textContent = '❌ Bir hata oluştu. Lütfen tekrar deneyin.';
+                statusEl.className = 'status-message error';
+                statusEl.style.display = 'block';
+            }
+        }
+        
+        // Reset Code Modal Functions
+        function openResetCodeModal() {
+            const modal = document.getElementById('resetCodeModal');
+            modal.style.display = 'flex';
+            // Clear previous inputs
+            document.querySelectorAll('.reset-code-input').forEach(input => {
+                input.value = '';
+                input.style.borderColor = '#ddd';
+            });
+            document.getElementById('resetCodeMessage').textContent = '';
+            // Focus first input
+            document.querySelector('.reset-code-input').focus();
+        }
+        
+        function closeResetCodeModal() {
+            const modal = document.getElementById('resetCodeModal');
+            modal.style.display = 'none';
+        }
+        
+        async function verifyResetCode() {
+            const inputs = document.querySelectorAll('.reset-code-input');
+            const code = Array.from(inputs).map(input => input.value).join('');
+            const messageEl = document.getElementById('resetCodeMessage');
+            
+            if (code.length !== 6) {
+                messageEl.textContent = '❌ Lütfen 6 haneli kodu tam olarak girin.';
+                messageEl.style.color = '#e74c3c';
+                return;
+            }
+            
+            try {
+                const API_BASE = window.location.origin;
+                const API_BASE_URL = API_BASE + '/api';
+                const phone = window.resetPhoneNumber || '';
                 
-                <div id="resultsList" style="display: flex; flex-direction: column; gap: 12px;">
-                    <!-- Dinamik sonuçlar buraya gelecek -->
+                const response = await fetch(`${API_BASE_URL}/auth/verify-pin-reset`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone, code: code })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    messageEl.textContent = '✅ Kodunuz doğrulandı! PIN sıfırlandı.';
+                    messageEl.style.color = '#27ae60';
+                    
+                    // Close modal after 2 seconds
+                    setTimeout(() => {
+                        closeResetCodeModal();
+                        // Show success on login page
+                        const statusEl = document.getElementById('statusMessageHome');
+                        statusEl.textContent = '✅ PIN başarıyla sıfırlandı. Yeni PIN belirlemeyi unutmayın!';
+                        statusEl.className = 'status-message success';
+                        statusEl.style.display = 'block';
+                    }, 2000);
+                } else {
+                    messageEl.textContent = '❌ ' + (data.error || 'Kod doğrulama başarısız');
+                    messageEl.style.color = '#e74c3c';
+                    
+                    // Highlight all inputs on error
+                    inputs.forEach(input => {
+                        input.style.borderColor = '#e74c3c';
+                    });
+                }
+            } catch (error) {
+                messageEl.textContent = '❌ Bir hata oluştu. Lütfen tekrar deneyin.';
+                messageEl.style.color = '#e74c3c';
+            }
+        }
+        
+        // Allow auto-focus to next input on digit entry
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('reset-code-input')) {
+                if (e.target.value && e.target.value.match(/[0-9]/)) {
+                    const next = e.target.nextElementSibling;
+                    if (next) next.focus();
+                }
+            }
+        });
+        </script>
                 </div>
             </div>
         </div>
@@ -673,10 +835,34 @@
                 <button onclick="saveProfile()" style="padding: 12px; background: #27ae60; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
                     💾 Kaydet
                 </button>
-                <button onclick="changePassword()" style="padding: 12px; background: #f5576c; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
-                    🔐 Şifre
+                <button onclick="showPinChangeInProfile()" style="padding: 12px; background: #f5576c; color: white; border: none; border-radius: 10px; font-size: 0.85em; font-weight: 600; cursor: pointer;">
+                    🔐 PIN Değiştir
                 </button>
             </div>
+            </div>
+        </div>
+
+        <!-- Simple PIN Change in Profile -->
+        <div id="pinChangeInProfile" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+            <div style="position: relative; background: white; border-radius: 20px; max-width: 350px; width: 90%; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px;">
+                <button onclick="closePinChangeInProfile()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center;">×</button>
+                
+                <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.3em; text-align: center;">🔐 Yeni PIN</h2>
+                
+                <div style="margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                        <input class="pin-profile-change" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s; box-shadow: 0 2px 6px rgba(0,0,0,0.1);" autocomplete="off" />
+                        <input class="pin-profile-change" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s; box-shadow: 0 2px 6px rgba(0,0,0,0.1);" autocomplete="off" />
+                        <input class="pin-profile-change" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s; box-shadow: 0 2px 6px rgba(0,0,0,0.1);" autocomplete="off" />
+                        <input class="pin-profile-change" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s; box-shadow: 0 2px 6px rgba(0,0,0,0.1);" autocomplete="off" />
+                    </div>
+                </div>
+                
+                <div id="pinChangeProfileMsg" style="display: none; margin-bottom: 15px; padding: 10px; border-radius: 8px; text-align: center; font-weight: 600; font-size: 0.9em;"></div>
+                
+                <button onclick="savePinFromProfile()" style="width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 10px; font-size: 0.95em; font-weight: 600; cursor: pointer;">
+                    ✓ PIN'i Kaydet
+                </button>
             </div>
         </div>
 
@@ -686,22 +872,12 @@
                 <button onclick="closeForgotPinModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center;">×</button>
                 
                 <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.3em; text-align: center;">🔐 PIN Sıfırlama</h2>
-                
                 <div style="background: #f9f9f9; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #667eea;">
-                    <p style="margin: 0; color: #666; font-size: 0.9em;">Telefon numaranız girin. Doğrulama kodunu e-posta veya WhatsApp ile alacaksınız.</p>
+                    <p style="margin: 0; color: #666; font-size: 0.9em;">Doğrulama kodu, profilinizde kayıtlı telefon numarasına gönderilecektir.</p>
                 </div>
-                
                 <div style="margin-bottom: 20px;">
-                    <label style="display: block; color: #666; font-size: 0.9em; margin-bottom: 8px; font-weight: 500;">Telefon Numarası</label>
-                    <div style="display: inline-flex; gap: 8px; align-items: center; width: 100%;">
-                        <div style="background: #f5f5f5; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-weight: 600; color: #333; display: flex; align-items: center; justify-content: center; height: 40px;">+90</div>
-                        <input 
-                            type="text" 
-                            id="forgotPinPhone" 
-                            placeholder="(5xx) 333 22 22"
-                            style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; height: 40px;"
-                            autocomplete="off"
-                        />
+                    <div style="background: #f5f5f5; border: 1px solid #ddd; border-radius: 8px; padding: 10px; font-weight: 600; color: #333; display: flex; align-items: center; justify-content: center; height: 40px;">
+                        <input id="profilePhoneInput" type="text" value="+90" style="width: 140px; text-align: center; font-size: 1.1em; font-weight: 600; border: none; background: transparent; color: #333; border-radius: 8px; padding: 8px 0; outline: none;" maxlength="13" placeholder="+90 5xx xxx xx xx" oninput="this.value=this.value.replace(/[^\d+]/g,'')" />
                     </div>
                 </div>
                 
@@ -723,62 +899,82 @@
             <div style="position: relative; background: white; border-radius: 20px; max-width: 400px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px;">
                 <button onclick="closeVerifyOtpModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center;">×</button>
                 
-                <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.3em; text-align: center;">✓ Doğrulama Kodu</h2>
-                
-                <div style="background: #f0f8ff; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #667eea;">
-                    <p style="margin: 0; color: #555; font-size: 0.9em;" id="otpHint">6 haneli kodu girin</p>
-                </div>
-                
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; color: #666; font-size: 0.9em; margin-bottom: 12px; font-weight: 500; text-align: center;">Doğrulama Kodunuz (6 Rakam)</label>
-                    <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; max-width: 280px; margin: 0 auto; margin-bottom: 20px;">
-                        <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
-                        <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
-                        <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
-                        <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
-                        <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
-                        <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                <!-- SECTION 1: OTP Verification -->
+                <div id="otpSection" style="display: block;">
+                    <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.3em; text-align: center;">✓ Doğrulama Kodu</h2>
+                    
+                    <div style="background: #f0f8ff; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                        <p style="margin: 0; color: #555; font-size: 0.9em;" id="otpHint">6 haneli kodu girin</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; color: #666; font-size: 0.9em; margin-bottom: 12px; font-weight: 500; text-align: center;">Doğrulama Kodunuz (6 Rakam)</label>
+                        <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; max-width: 280px; margin: 0 auto; margin-bottom: 20px;">
+                            <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="otp-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                        </div>
                     </div>
                 </div>
                 
-                <button onclick="verifyOtpCode()" style="padding: 12px; width: 100%; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.9em; font-weight: 600; cursor: pointer; margin-bottom: 12px;">
+                <!-- SECTION 2: PIN Setup (shown after verification) -->
+                <div id="pinSection" style="display: none;">
+                    <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.3em; text-align: center;">🔑 Yeni PIN Belirle</h2>
+                    
+                    <div style="background: #f0fff4; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #27ae60;">
+                        <p style="margin: 0; color: #555; font-size: 0.9em;">4 haneli yeni PIN kodunuzu girin</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; color: #666; font-size: 0.9em; margin-bottom: 12px; font-weight: 500; text-align: center;">Yeni PIN (4 Rakam)</label>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 240px; margin: 0 auto; margin-bottom: 20px;">
+                            <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- DYNAMIC BUTTON: Changes based on state -->
+                <button id="modalActionBtn" onclick="verifyOtpCode()" style="padding: 12px; width: 100%; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.9em; font-weight: 600; cursor: pointer; margin-bottom: 12px;">
                     ✓ Doğrula
                 </button>
                 
                 <div id="verifyOtpStatus" class="status-message" style="display: none;"></div>
+                
+                <!-- NEW PIN SECTION (HIDDEN INITIALLY) -->
+                <div id="newPinSection" style="display: none;">
+                    <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+                    <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.3em; text-align: center;">🔑 Yeni PIN Belirle</h2>
+                    
+                    <div style="background: #f0fff4; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #27ae60;">
+                        <p style="margin: 0; color: #555; font-size: 0.9em;">Yeni 4 haneli PIN kodunuzu girin</p>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; color: #666; font-size: 0.9em; margin-bottom: 12px; font-weight: 500; text-align: center;">Yeni PIN Kodunuz (4 Rakam)</label>
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 240px; margin: 0 auto;">
+                            <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                            <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #27ae60; transition: all 0.3s ease; background: white;" autocomplete="off" />
+                        </div>
+                    </div>
+                    
+                    <button id="savePinBtn" onclick="confirmNewPin(this)" style="padding: 12px; width: 100%; background: #27ae60; color: white; border: none; border-radius: 10px; font-size: 0.9em; font-weight: 600; cursor: pointer; margin-bottom: 12px;">
+                        ✓ PIN'i Kaydet
+                    </button>
+                    
+                    <div id="newPinStatus" class="status-message" style="display: none;"></div>
+                </div>
             </div>
         </div>
 
         <!-- Forgot PIN Modal 3: Set New PIN -->
-        <div id="newPinModal" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; display: none; align-items: center; justify-content: center;">
-            <div style="position: relative; background: white; border-radius: 20px; max-width: 400px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.3); padding: 25px;">
-                <button onclick="closeNewPinModal()" style="position: absolute; top: 15px; right: 15px; background: #f0f0f0; border: none; border-radius: 50%; width: 35px; height: 35px; font-size: 24px; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center;">×</button>
-                
-                <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.3em; text-align: center;">🔑 Yeni PIN Belirle</h2>
-                
-                <div style="background: #f0fff4; border-radius: 12px; padding: 15px; margin-bottom: 20px; border-left: 4px solid #27ae60;">
-                    <p style="margin: 0; color: #555; font-size: 0.9em;">Yeni 4 haneli PIN kodunuzu girin</p>
-                </div>
-                
-                <div style="margin-bottom: 20px;">
-                    <label style="display: block; color: #666; font-size: 0.9em; margin-bottom: 12px; font-weight: 500; text-align: center;">Yeni PIN Kodunuz (4 Rakam)</label>
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; max-width: 240px; margin: 0 auto;">
-                        <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
-                        <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
-                        <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
-                        <input class="new-pin-input" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; background: white;" autocomplete="off" />
-                    </div>
-                </div>
-                
-                <button onclick="confirmNewPin()" style="padding: 12px; width: 100%; background: #27ae60; color: white; border: none; border-radius: 10px; font-size: 0.9em; font-weight: 600; cursor: pointer; margin-bottom: 12px;">
-                    ✓ PIN'i Kaydet ve Giriş Yap
-                </button>
-                
-                <div id="newPinStatus" class="status-message" style="display: none;"></div>
-            </div>
-        </div>
-
-        </div>
 
         <!-- Sidebar Menu -->
         <div id="groupDetailsModal" class="profile-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 10000; display: none; align-items: center; justify-content: center; overflow-y: auto; visibility: hidden; opacity: 1;">
@@ -1154,9 +1350,9 @@ Konaklama
     </div>
 
     <!-- QR Code Libraries - With fallback -->
-    <script src="qr-scanner.js?ver=1.0.12"></script>
+    <script src="qr-scanner.js?ver=1.0.14"></script>
     
-    <script src="script.js?ver=1.0.13"></script>
+    <script src="script.js?ver=1.0.15"></script>
     
     <script>
         // ===== PHONE LOGIN HOME PAGE FUNCTIONS =====
@@ -1190,6 +1386,8 @@ Konaklama
         // Phone input listener
         document.getElementById('phoneHome').addEventListener('input', (e) => {
             e.target.value = formatPhoneInputHome(e.target.value);
+            // Her input'ta telefonun varlığı kontrol edilsin, yeni kullanıcı ise alanlar açılsın
+            checkPhoneAndShowForm();
         });
 
         // PIN auto-advance functionality
@@ -1223,7 +1421,10 @@ Konaklama
             const phoneInput = document.getElementById('phoneHome').value.trim();
             const phone = formatPhoneForAPI(phoneInput);
 
+            console.log('[CHECK-PHONE] phoneInput:', phoneInput, 'formatted:', phone, 'length:', phone.length);
+
             if (phone.length !== 10) {
+                console.log('[CHECK-PHONE] Skipping - phone length is', phone.length, 'need 10');
                 return;
             }
 
@@ -1231,6 +1432,7 @@ Konaklama
                 const API_BASE = window.location.origin;
                 const API_BASE_URL = API_BASE + '/api';
                 
+                console.log('[CHECK-PHONE] Calling API with phone:', phone);
                 const response = await fetch(`${API_BASE_URL}/auth/check-phone`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1238,28 +1440,43 @@ Konaklama
                 });
 
                 const data = await response.json();
+                console.log('[CHECK-PHONE] API response:', data);
 
                 if (response.ok) {
                     if (data.exists === true) {
                         // Existing user - hide registration fields
+                        console.log('[CHECK-PHONE] ✓ User EXISTS - hiding registration fields and name/email inputs');
                         isNewUser = false;
-                        document.getElementById('nameSection').style.display = 'none';
-                        document.getElementById('emailSection').style.display = 'none';
-                        document.getElementById('buttonText').textContent = 'Giriş Yap';
+                        const nameSec = document.getElementById('nameSection');
+                        const emailSec = document.getElementById('emailSection');
+                        const btnText = document.getElementById('buttonText');
+                        if (nameSec) nameSec.style.display = 'none';
+                        if (emailSec) emailSec.style.display = 'none';
+                        if (btnText) btnText.textContent = 'Giriş Yap';
                         showMessageHome('');
                     } else if (data.exists === false) {
                         // New user - show registration fields and message
+                        console.log('[CHECK-PHONE] ✗ User NOT FOUND - showing registration fields');
                         isNewUser = true;
-                        document.getElementById('nameSection').style.display = 'block';
-                        document.getElementById('emailSection').style.display = 'block';
-                        document.getElementById('buttonText').textContent = 'Hesap Oluştur';
+                        const nameSec = document.getElementById('nameSection');
+                        const emailSec = document.getElementById('emailSection');
+                        const btnText = document.getElementById('buttonText');
+                        const userName = document.getElementById('userName');
+                        const userEmail = document.getElementById('userEmail');
+                        if (nameSec) nameSec.style.display = 'block';
+                        if (emailSec) emailSec.style.display = 'block';
+                        if (btnText) btnText.textContent = 'Hesap Oluştur';
+                        // Clear any previous values in name and email fields
+                        if (userName) userName.value = '';
+                        if (userEmail) userEmail.value = '';
                         showMessageHome('Sistemimizde bu Telefon No.su kayıtlı değildir.. Gireceğiniz PIN kodu ve diğer bilgilerle kaydolunuz', 'info');
                     }
                 } else {
+                    console.error('[CHECK-PHONE] API error:', response.status);
                     showMessageHome('❌ Telefon kontrolü başarısız', 'error');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('[CHECK-PHONE] Catch error:', error);
                 showMessageHome('❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
             }
         }
@@ -1341,13 +1558,15 @@ Konaklama
                     showMessageHome('✅ Başarıyla giriş yaptınız!', 'success');
                     localStorage.setItem('hesapPaylas_token', data.token);
                     localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
-                    // Switch to home page and load groups without reload
+                    // Switch to home page - it will load groups automatically via showPage()
                     setTimeout(() => {
                         showPage('homePage');
-                        loadActiveGroups();
+                        // Reset button state
+                        btn.disabled = false;
+                        btn.textContent = originalText;
                     }, 800);
                 } else {
-                    showMessageHome('❌ Hatalı PIN...tekrar deneyin ya da PIN\'inizi yenileyin', 'error');
+                    showMessageHome('❌ Hatalı PIN...Tekrar deneyin veya hatırlatma kodu isteyin', 'error');
                     btn.disabled = false;
                     btn.textContent = originalText;
                     // Clear PIN boxes
@@ -1373,20 +1592,25 @@ Konaklama
                 const API_BASE = window.location.origin;
                 const API_BASE_URL = API_BASE + '/api';
                 
+                const payload = {
+                    phone: phone,
+                    pin: pin,
+                    is_signup: true,
+                    first_name: name.split(' ')[0],
+                    last_name: name.includes(' ') ? name.split(' ').slice(1).join(' ') : '',
+                    email: email
+                };
+                
+                console.log('[REGISTER] Payload:', payload);
+                
                 const response = await fetch(`${API_BASE_URL}/auth/phone-pin-login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phone: phone,
-                        pin: pin,
-                        is_signup: true,
-                        first_name: name.split(' ')[0],
-                        last_name: name.includes(' ') ? name.split(' ').slice(1).join(' ') : '',
-                        email: email
-                    })
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
+                console.log('[REGISTER] Response status:', response.status, 'Data:', data);
 
                 if (response.ok) {
                     showMessageHome('✅ Hesap oluşturuldu! Giriş yapılıyor...', 'success');
@@ -1397,12 +1621,13 @@ Konaklama
                         window.location.href = 'index.html';
                     }, 1500);
                 } else {
-                    showMessageHome('❌ ' + (data.error || 'Hesap oluşturulamadı'), 'error');
+                    console.log('[REGISTER] Error response:', data);
+                    showMessageHome('❌ ' + (data.error || data.debug || 'Hesap oluşturulamadı'), 'error');
                     btn.disabled = false;
                     btn.textContent = originalText;
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('[REGISTER] Catch error:', error);
                 showMessageHome('❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
                 btn.disabled = false;
                 btn.textContent = originalText;
@@ -1412,24 +1637,71 @@ Konaklama
         // ===== PIN RESET FUNCTIONS (Scenario 3) =====
 
         let pinResetPhone = '';
+        let pinResetEmail = '';
         let pinResetMethod = '';
         let pinResetOtpVerified = false;
 
         function openForgotPinModal() {
             document.getElementById('forgotPinModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
+            // Always get latest profile phone from API/localStorage
+            var phone = '';
+            if (window.api && typeof api.getProfile === 'function') {
+                api.getProfile().then(function(profile) {
+                    if (profile && profile.phone) {
+                        app.currentUser = app.currentUser || {};
+                        app.currentUser.phone = profile.phone;
+                        localStorage.setItem('hesapPaylas_user', JSON.stringify(profile));
+                        phone = profile.phone;
+                    } else {
+                        phone = '';
+                    }
+                    var input = document.getElementById('profilePhoneInput');
+                    if (input) {
+                        input.value = phone && phone.length >= 10 ? ('+90' + phone.replace(/^\+?90/, '')) : '+90';
+                    }
+                }).catch(function() {
+                    // fallback to localStorage
+                    var user = localStorage.getItem('hesapPaylas_user');
+                    if (user) {
+                        try {
+                            var parsed = JSON.parse(user);
+                            phone = parsed.phone || '';
+                        } catch (e) { phone = ''; }
+                    }
+                    app.currentUser = app.currentUser || {};
+                    app.currentUser.phone = phone;
+                    var input = document.getElementById('profilePhoneInput');
+                    if (input) {
+                        input.value = phone && phone.length >= 10 ? ('+90' + phone.replace(/^\+?90/, '')) : '+90';
+                    }
+                });
+            } else {
+                var user = localStorage.getItem('hesapPaylas_user');
+                if (user) {
+                    try {
+                        var parsed = JSON.parse(user);
+                        phone = parsed.phone || '';
+                    } catch (e) { phone = ''; }
+                }
+                app.currentUser = app.currentUser || {};
+                app.currentUser.phone = phone;
+                var input = document.getElementById('profilePhoneInput');
+                if (input) {
+                    input.value = phone && phone.length >= 10 ? ('+90' + phone.replace(/^\+?90/, '')) : '+90';
+                }
+            }
         }
 
         function closeForgotPinModal() {
             document.getElementById('forgotPinModal').style.display = 'none';
             document.body.style.overflow = 'auto';
-            document.getElementById('forgotPinPhone').value = '';
             document.getElementById('forgotPinStatus').style.display = 'none';
         }
 
         function closeVerifyOtpModal() {
             document.getElementById('verifyOtpModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
+            // Don't set overflow - let newPinModal control it
             document.querySelectorAll('.otp-input').forEach(input => input.value = '');
             document.getElementById('verifyOtpStatus').style.display = 'none';
         }
@@ -1483,11 +1755,7 @@ Konaklama
 
             // Format phone in forgot PIN form
             const forgotPinPhoneInput = document.getElementById('forgotPinPhone');
-            if (forgotPinPhoneInput) {
-                forgotPinPhoneInput.addEventListener('input', (e) => {
-                    e.target.value = formatPhoneInputHome(e.target.value);
-                });
-            }
+
         });
 
         function showOtpStatus(message, type = 'info') {
@@ -1505,15 +1773,26 @@ Konaklama
         }
 
         async function requestPinReset(method) {
-            const phoneInput = document.getElementById('forgotPinPhone').value.trim();
-            const phone = formatPhoneForAPI(phoneInput);
+                    // NOTE: Replace whatsappNumber below with your WhatsApp bot number (in international format, e.g. 905555555555)
+
+            // Use phone from input (editable)
+            const phoneInput = document.getElementById('profilePhoneInput');
+            let phone = phoneInput.value.replace(/\D/g, '');
             const statusEl = document.getElementById('forgotPinStatus');
 
-            if (phone.length !== 10) {
-                statusEl.textContent = '⚠️ Telefon numarası 10 haneli olmalıdır';
-                statusEl.className = 'status-message error';
+            // If phone is missing or not 10/11 digits, show info message and do not show error
+            if (!phone || (phone.length !== 10 && phone.length !== 11)) {
+                statusEl.textContent = 'Lütfen geçerli bir telefon numarası girin (örn: 5xx xxx xx xx).';
+                statusEl.className = 'status-message info';
                 statusEl.style.display = 'block';
                 return;
+            }
+
+            // Always use last 10 digits for Turkish numbers
+            if (phone.length === 11 && phone.startsWith('90')) {
+                phone = phone.slice(1);
+            } else if (phone.length > 10) {
+                phone = phone.slice(-10);
             }
 
             pinResetPhone = phone;
@@ -1524,25 +1803,25 @@ Konaklama
                 const API_BASE = window.location.origin;
                 const API_BASE_URL = API_BASE + '/api';
 
-                const response = await fetch(`${API_BASE_URL}/auth/request-pin-reset`, {
+                const response = await fetch(`${API_BASE_URL}/auth/request-pin-reset-both`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        phone: phone,
-                        method: method
+                        phone: phone
                     })
                 });
 
                 const data = await response.json();
 
                 if (response.ok) {
-                    statusEl.textContent = method === 'email' 
-                        ? `✅ Doğrulama kodunu e-posta adresine gönderdik: ${data.email_hint}`
-                        : '✅ WhatsApp\'ta doğrulama kodu alacaksınız';
+                    // Capture email and phone from response
+                    pinResetEmail = data.email || data.email_hint || '';
+                    console.log('[DEBUG] PIN reset request response received');
+                    console.log('[DEBUG] Response data:', data);
+                    console.log('[DEBUG] pinResetEmail set to:', pinResetEmail);
+                    statusEl.textContent = `✅ Doğrulama kodunu e-posta adresine gönderdik: ${pinResetEmail}`;
                     statusEl.className = 'status-message success';
                     statusEl.style.display = 'block';
-
-                    // Close current modal and show OTP verification modal after 2 seconds
                     setTimeout(() => {
                         closeForgotPinModal();
                         document.getElementById('verifyOtpModal').style.display = 'flex';
@@ -1589,15 +1868,42 @@ Konaklama
                 });
                 const data = await response.json();
                 if (response.ok) {
+                    console.log('[DEBUG] OTP verification successful');
+                    console.log('[DEBUG] pinResetEmail:', pinResetEmail);
                     showOtpStatus('✅ Kod doğrulandı!', 'success');
                     pinResetOtpVerified = true;
-                    // Close OTP modal and show new PIN modal after 1 second
+                    console.log('[DEBUG] pinResetOtpVerified set to true');
+                    
+                    // Hide OTP input section and show PIN section
                     setTimeout(() => {
-                        closeVerifyOtpModal();
-                        document.getElementById('newPinModal').style.display = 'flex';
-                        document.body.style.overflow = 'hidden';
-                        document.querySelector('.new-pin-input').focus();
-                    }, 1000);
+                        // Hide all OTP inputs and their label
+                        const modal = document.getElementById('verifyOtpModal');
+                        if (modal) {
+                            // Hide OTP div with inputs
+                            const otpDiv = modal.querySelector('div:has(.otp-input)');
+                            if (otpDiv && otpDiv.parentElement) {
+                                otpDiv.parentElement.style.display = 'none';
+                            }
+                            // Hide verify button
+                            const buttons = modal.querySelectorAll('button');
+                            for (let btn of buttons) {
+                                if (btn.textContent.includes('Doğrula')) {
+                                    btn.style.display = 'none';
+                                }
+                            }
+                        }
+                        
+                        // Show new PIN section
+                        const newPinSection = document.getElementById('newPinSection');
+                        console.log('[DEBUG] newPinSection:', newPinSection);
+                        if (newPinSection) {
+                            newPinSection.style.display = 'block';
+                            // Focus first PIN input
+                            const firstInput = newPinSection.querySelector('.new-pin-input');
+                            console.log('[DEBUG] Focusing first input:', firstInput);
+                            if (firstInput) firstInput.focus();
+                        }
+                    }, 800);
                 } else {
                     showOtpStatus('❌ ' + (data.error || 'Kod yanlış veya süresi doldu'), 'error');
                 }
@@ -1607,7 +1913,7 @@ Konaklama
             }
         }
 
-        async function confirmNewPin() {
+        async function confirmNewPin(btn) {
             const newPinInputs = document.querySelectorAll('.new-pin-input');
             const newPin = Array.from(newPinInputs).map(input => input.value).join('').trim();
 
@@ -1621,7 +1927,7 @@ Konaklama
                 return;
             }
 
-            const btn = event.target;
+            if (!btn) btn = document.getElementById('savePinBtn');
             btn.disabled = true;
             const originalText = btn.textContent;
             btn.textContent = 'PIN Kaydediliyor...';
@@ -1634,6 +1940,13 @@ Konaklama
                 if (!phoneToSend.startsWith('+')) {
                     phoneToSend = '+90' + phoneToSend.replace(/^0+/, '');
                 }
+                
+                console.log('[DEBUG] confirmNewPin called');
+                console.log('[DEBUG] phoneToSend:', phoneToSend);
+                console.log('[DEBUG] pinResetEmail:', pinResetEmail);
+                console.log('[DEBUG] newPin:', newPin);
+                console.log('[DEBUG] pinResetOtpVerified:', pinResetOtpVerified);
+                
                 // Only allow PIN reset if OTP was verified
                 if (!pinResetOtpVerified) {
                     showNewPinStatus('❌ Lütfen önce doğrulama kodunu girin', 'error');
@@ -1641,20 +1954,30 @@ Konaklama
                     btn.textContent = originalText;
                     return;
                 }
-                const response = await fetch(`${API_BASE_URL}/auth/confirm-pin-reset`, {
+                
+                const payload = {
+                    phone: phoneToSend,
+                    email: pinResetEmail || document.getElementById('emailForReset')?.value || '',
+                    new_pin: newPin
+                };
+                
+                console.log('[DEBUG] Sending payload:', payload);
+                
+                const response = await fetch(`${API_BASE_URL}/auth/reset-pin`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phone: phoneToSend,
-                        code: Array.from(document.querySelectorAll('.otp-input')).map(input => input.value).join(''),
-                        new_pin: newPin
-                    })
+                    body: JSON.stringify(payload)
                 });
                 const data = await response.json();
+                
+                console.log('[DEBUG] Response status:', response.status);
+                console.log('[DEBUG] Response data:', data);
+                
                 if (response.ok) {
                     showNewPinStatus('✅ PIN başarıyla sıfırlandı! Giriş yapılıyor...', 'success');
                     // Reset state
                     pinResetPhone = '';
+                    pinResetEmail = '';
                     pinResetMethod = '';
                     pinResetOtpVerified = false;
                     // Close modal and redirect to login after 2 seconds

@@ -1,3 +1,6 @@
+# ...existing code...
+
+## Route moved to end of file after app = Flask(__name__)
 """
 Hesap Paylaş Backend
 Flask + SQLAlchemy + PostgreSQL
@@ -48,6 +51,35 @@ print(f"[INIT] Creating Flask app", flush=True)
 app = Flask(__name__)
 print(f"[INIT] Flask app created successfully", flush=True)
 
+# ==================== PHONE NORMALIZATION UTILITY ====================
+def normalize_phone(phone):
+    """
+    Normalize phone number to international format: +905323133277
+    Standards: Always use +90 prefix for Turkish numbers
+    """
+    if not phone:
+        return None
+    
+    phone = str(phone).strip()
+    
+    # Remove any spaces, hyphens, parentheses
+    phone = phone.replace(' ', '').replace('-', '').replace('(', '').replace(')', '')
+    
+    # If already has + prefix, just ensure it's correct
+    if phone.startswith('+'):
+        return phone
+    
+    # Remove leading 0 if present (for Turkish numbers entered as 05323133277)
+    if phone.startswith('0'):
+        phone = phone[1:]
+    
+    # Add country code if not present
+    if not phone.startswith('90'):
+        phone = '90' + phone
+    
+    # Add + prefix
+    return '+' + phone
+
 # ==================== EMAIL UTILITY ====================
 def _send_email_async(email, reset_code, user_name):
     """Actually send the email (runs in background thread)"""
@@ -67,44 +99,75 @@ def _send_email_async(email, reset_code, user_name):
             return False
         
         message = MIMEMultipart('alternative')
-        message['Subject'] = 'Hesap Paylaş - PIN Sıfırlama Kodu'
-        message['From'] = sender_email
+        message['Subject'] = 'Hesap Paylaş - PIN Sıfırlama Kodu / Password Reset Code'
+        message['From'] = 'Hesap Paylaş <noreply@hesappaylas.local>'
         message['To'] = email
+        message['Reply-To'] = sender_email
+        message['X-Priority'] = '3'
+        message['X-Mailer'] = 'Hesap Paylas System'
+        message['Precedence'] = 'bulk'
         
         html = f"""\
         <html>
-            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px; color: white;">
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f5f5f5;">
+                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; color: white; text-align: center;">
                     <h1 style="margin: 0; font-size: 28px;">🥄 Hesap Paylaş</h1>
+                    <p style="margin: 5px 0 0 0; opacity: 0.9;">PIN Sıfırlama / Password Reset</p>
                 </div>
                 
-                <div style="padding: 30px; background: #f9f9f9;">
-                    <h2>Merhaba {user_name}!</h2>
-                    <p>PIN kodunuzu sıfırlamak için aşağıdaki kodu kullanabilirsiniz:</p>
+                <div style="padding: 30px; background: white; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    <h2 style="color: #333; margin-top: 0;">Merhaba {user_name}!</h2>
+                    <p style="color: #666; line-height: 1.6;">PIN kodunuzu sıfırlamak için aşağıdaki 6 haneli kodu kullanabilirsiniz:</p>
                     
-                    <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #667eea; margin: 20px 0;">
-                        <p style="font-size: 32px; font-weight: bold; color: #667eea; margin: 0; text-align: center; letter-spacing: 5px;">
+                    <div style="background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%); padding: 25px; border-radius: 8px; border: 2px solid #667eea; margin: 25px 0; text-align: center;">
+                        <p style="font-size: 14px; color: #999; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 2px;">Kodunuz</p>
+                        <p style="font-size: 42px; font-weight: bold; color: #667eea; margin: 10px 0; letter-spacing: 8px; font-family: 'Courier New', monospace;">
                             {reset_code}
                         </p>
-                        <p style="text-align: center; color: #999; margin-top: 10px; font-size: 12px;">
-                            Bu kod 10 dakika geçerlidir
+                        <p style="color: #999; margin: 10px 0 0 0; font-size: 13px;">
+                            ⏱️ Bu kod 5 dakika geçerlidir / Valid for 5 minutes
                         </p>
                     </div>
                     
-                    <p style="color: #666; font-size: 14px; margin: 20px 0;">
-                        <strong>Güvenlik Uyarısı:</strong> Bu kodu kimseyle paylaşmayın!
-                    </p>
+                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 4px; margin: 20px 0;">
+                        <p style="margin: 0; color: #856404; font-size: 13px;">
+                            <strong>⚠️ Güvenlik Uyarısı:</strong> Bu kodu kimseyle paylaşmayın! Bu e-posta tarafından talep edilmediyse, lütfen dikkate almayın.
+                        </p>
+                    </div>
                     
-                    <p style="color: #999; font-size: 12px; margin-top: 30px;">
-                        Bu e-postayı talep olmaksızın aldıysanız, lütfen dikkate almayın.
+                    <p style="color: #999; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                        <strong>Hesap Paylaş Team</strong><br>
+                        Sorularınız için destek alın: <a href="mailto:{sender_email}" style="color: #667eea; text-decoration: none;">{sender_email}</a><br>
+                        © 2026 Hesap Paylaş. Tüm hakları saklıdır.
                     </p>
                 </div>
             </body>
         </html>
         """
         
-        part = MIMEText(html, 'html')
-        message.attach(part)
+        # Also add plain text version for email clients that don't support HTML
+        text = f"""\
+Hesap Paylaş - PIN Sıfırlama Kodu
+
+Merhaba {user_name}!
+
+PIN kodunuzu sıfırlamak için aşağıdaki kodu kullanabilirsiniz:
+
+{reset_code}
+
+Bu kod 5 dakika geçerlidir.
+
+GÜVENLIK UYARISI: Bu kodu kimseyle paylaşmayın!
+
+---
+Hesap Paylaş Team
+© 2026 Hesap Paylaş. Tüm hakları saklıdır.
+        """
+        
+        part1 = MIMEText(text, 'plain')
+        part2 = MIMEText(html, 'html')
+        message.attach(part1)
+        message.attach(part2)
         
         print(f"[EMAIL] Connecting to SMTP server...")
         server = smtplib.SMTP(smtp_server, smtp_port, timeout=10)
@@ -721,42 +784,61 @@ def request_otp():
     """Request OTP via SMS to phone number"""
     try:
         data = request.get_json()
+        print(f"[OTP] Request received: {data}")
         
         if not data or 'phone' not in data:
             return jsonify({'error': 'Phone number is required'}), 400
         
         phone = data['phone'].strip()
+        print(f"[OTP] Raw phone: {phone}")
         
         # Validate phone format (basic)
         if not phone.startswith('+'):
             phone = '+90' + phone.lstrip('0')
         
+        print(f"[OTP] Formatted phone: {phone}")
+        
         if not twilio_client:
-            print("[OTP] Twilio client not initialized")
-            return jsonify({'error': 'SMS service temporarily unavailable'}), 503
+            print("[OTP] ERROR: Twilio client not initialized")
+            return jsonify({'error': 'SMS service not configured'}), 503
         
         try:
-            # Use Twilio Verify API
+            print(f"[OTP] Attempting to send SMS via Twilio Verify Service: {TWILIO_SERVICE_SID}")
+            
+            # Use Twilio Verify API (free service)
             verification = twilio_client.verify \
                 .v2 \
                 .services(TWILIO_SERVICE_SID) \
                 .verifications \
                 .create(to=phone, channel='sms')
             
-            print(f"[OTP] Verification sent to {phone}, SID: {verification.sid}")
+            print(f"[OTP] ✅ Verification sent successfully!")
+            print(f"[OTP] Verification SID: {verification.sid}")
+            print(f"[OTP] Status: {verification.status}")
+            print(f"[OTP] Phone: {verification.to}")
             
             return jsonify({
                 'message': 'OTP sent to your phone',
                 'verification_sid': verification.sid,
-                'phone_masked': phone[-4:]
+                'phone_masked': phone[-4:],
+                'status': verification.status
             }), 200
         
         except Exception as e:
-            print(f"[OTP] Twilio error: {str(e)}")
-            return jsonify({'error': 'Failed to send OTP. Please try again.'}), 500
+            print(f"[OTP] ❌ Twilio error: {str(e)}")
+            print(f"[OTP] Error type: {type(e).__name__}")
+            import traceback
+            print(f"[OTP] Full traceback:\n{traceback.format_exc()}")
+            
+            return jsonify({
+                'error': f'Failed to send OTP: {str(e)}',
+                'error_type': type(e).__name__
+            }), 500
     
     except Exception as e:
         print(f"[ERROR] Request OTP failed: {str(e)}")
+        import traceback
+        print(f"[ERROR] Full traceback:\n{traceback.format_exc()}")
         return jsonify({'error': 'Request OTP failed. Please try again.'}), 500
 
 @app.route('/api/auth/verify-otp', methods=['POST'])
@@ -764,38 +846,49 @@ def verify_otp():
     """Verify OTP code and authenticate user"""
     try:
         data = request.get_json()
+        print(f"[VERIFY-OTP] Request received: {data}")
         
         if not data or not all(k in data for k in ['phone', 'code']):
             return jsonify({'error': 'Phone and OTP code are required'}), 400
         
         phone = data['phone'].strip()
         code = data['code'].strip()
-        verification_sid = data.get('verification_sid')
+        
+        print(f"[VERIFY-OTP] Phone: {phone}, Code: {code}")
         
         # Validate phone format
         if not phone.startswith('+'):
             phone = '+90' + phone.lstrip('0')
         
+        print(f"[VERIFY-OTP] Formatted phone: {phone}")
+        
         if not twilio_client:
+            print(f"[VERIFY-OTP] ERROR: Twilio client not initialized")
             return jsonify({'error': 'SMS service temporarily unavailable'}), 503
         
         try:
-            # Verify code with Twilio
+            print(f"[VERIFY-OTP] Verifying code against Service: {TWILIO_SERVICE_SID}")
+            
+            # Verify code with Twilio Verify Service
             verification_check = twilio_client.verify \
                 .v2 \
                 .services(TWILIO_SERVICE_SID) \
                 .verification_checks \
                 .create(to=phone, code=code)
             
+            print(f"[VERIFY-OTP] ✅ Verification check completed")
+            print(f"[VERIFY-OTP] Status: {verification_check.status}")
+            print(f"[VERIFY-OTP] Phone: {verification_check.to}")
+            
             if verification_check.status == 'approved':
-                print(f"[OTP] Verification approved for {phone}")
+                print(f"[VERIFY-OTP] ✅ Verification APPROVED for {phone}")
                 
                 # Check if user exists with this phone
                 user = User.query.filter_by(phone=phone).first()
                 
                 if not user:
-                    print(f"[OTP] New user with phone {phone}, creating account")
-                    # Create new user with phone (name and email optional for now)
+                    print(f"[VERIFY-OTP] New user with phone {phone}, creating account")
+                    # Create new user with phone
                     user = User(
                         first_name='User',
                         last_name='',
@@ -807,11 +900,14 @@ def verify_otp():
                     db.session.add(user)
                     db.session.commit()
                     is_new_user = True
+                    print(f"[VERIFY-OTP] ✅ User created: {user.id}")
                 else:
                     is_new_user = False
+                    print(f"[VERIFY-OTP] User already exists: {user.id}")
                 
                 # Generate JWT token
                 token = generate_token(user.id)
+                print(f"[VERIFY-OTP] ✅ JWT token generated")
                 
                 return jsonify({
                     'message': 'Phone verified successfully',
@@ -820,12 +916,15 @@ def verify_otp():
                     'is_new_user': is_new_user
                 }), 200
             else:
-                print(f"[OTP] Verification failed for {phone}: {verification_check.status}")
-                return jsonify({'error': 'Invalid OTP code'}), 401
+                print(f"[VERIFY-OTP] ❌ Verification FAILED for {phone}: Status = {verification_check.status}")
+                return jsonify({'error': f'Invalid OTP code. Status: {verification_check.status}'}), 401
         
         except Exception as e:
-            print(f"[OTP] Twilio verification error: {str(e)}")
-            return jsonify({'error': 'Verification failed. Please try again.'}), 500
+            print(f"[VERIFY-OTP] ❌ Verification error: {str(e)}")
+            print(f"[VERIFY-OTP] Error type: {type(e).__name__}")
+            import traceback
+            print(f"[VERIFY-OTP] Full traceback:\n{traceback.format_exc()}")
+            return jsonify({'error': f'Verification failed: {str(e)}', 'error_type': type(e).__name__}), 500
     
     except Exception as e:
         db.session.rollback()
@@ -844,21 +943,8 @@ def check_phone():
         phone = data['phone'].strip()
         print(f"[CHECK-PHONE] Raw input: {phone}, Length: {len(phone)}")
         
-        # Remove any formatting
-        clean_phone = phone.replace(' ', '').replace('(', '').replace(')', '').replace('-', '')
-        print(f"[CHECK-PHONE] Cleaned: {clean_phone}")
-        
-        # Format phone - handle both formats
-        # If it's 10 digits, prepend country code
-        if len(clean_phone) == 10 and not clean_phone.startswith('0'):
-            formatted_phone = '+90' + clean_phone
-        elif len(clean_phone) == 10 and clean_phone.startswith('0'):
-            formatted_phone = '+90' + clean_phone[1:]
-        elif clean_phone.startswith('+'):
-            formatted_phone = clean_phone
-        else:
-            formatted_phone = '+90' + clean_phone.lstrip('0')
-        
+        # Normalize phone to standard format
+        formatted_phone = normalize_phone(phone)
         print(f"[CHECK-PHONE] Formatted: {formatted_phone}")
         
         # Check if user exists
@@ -896,15 +982,11 @@ def phone_pin_login():
         if not data or not all(k in data for k in ['phone', 'pin']):
             return jsonify({'error': 'Phone and PIN are required'}), 400
         
-        phone = data['phone'].strip()
+        phone = normalize_phone(data['phone'].strip())
         pin = data['pin'].strip()
         is_signup = data.get('is_signup', False)  # True if new user
         
         print(f"[AUTH] Request: phone={phone}, is_signup={is_signup}, pin_length={len(pin)}")
-        
-        # Validate phone format
-        if not phone.startswith('+'):
-            phone = '+90' + phone.lstrip('0')
         
         print(f"[AUTH] Formatted phone: {phone}")
         
@@ -1195,23 +1277,169 @@ def request_pin_reset():
         print(f"[ERROR] Traceback: {traceback.format_exc()}")
         return jsonify({'error': 'Failed to send reset code', 'debug': str(e)}), 500
 
+@app.route('/api/auth/set-email-for-reset', methods=['POST'])
+def set_email_for_reset():
+    """Set user email using phone number - for PIN reset flow"""
+    try:
+        print("[DEBUG] set_email_for_reset called")
+        data = request.get_json()
+        
+        if not data or 'phone' not in data or 'email' not in data:
+            return jsonify({'error': 'Phone and email required'}), 400
+        
+        phone = normalize_phone(data['phone'].strip())
+        email = data['email'].strip().lower()
+        
+        print(f"[DEBUG] Looking for user with phone: {phone}, email: {email}")
+        
+        # Find user
+        user = User.query.filter_by(phone=phone).first()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Validate email format
+        if '@' not in email or '.' not in email.split('@')[1]:
+            return jsonify({'error': 'Invalid email format'}), 400
+        
+        # Don't allow test emails
+        if '@test.local' in email or '@hesappaylas.local' in email:
+            return jsonify({'error': 'Please use a real email address (not a test email)'}), 400
+        
+        # Check if email already taken by another user
+        existing = User.query.filter_by(email=email).first()
+        if existing and existing.id != user.id:
+            return jsonify({'error': 'Email already registered'}), 409
+        
+        # Update email
+        user.email = email
+        user.email_verified = True
+        db.session.commit()
+        
+        print(f"[EMAIL-RESET] Email updated for phone {phone}: {email}")
+        return jsonify({'message': 'Email saved successfully', 'email': email}), 200
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] set_email_for_reset failed: {str(e)}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        return jsonify({'error': 'Failed to save email', 'debug': str(e)}), 500
+
+@app.route('/api/auth/request-pin-reset-both', methods=['POST'])
+def request_pin_reset_both():
+    """Request PIN reset - send code via EMAIL and SMS"""
+    try:
+        print("[DEBUG] request_pin_reset_both called")
+        data = request.get_json()
+        print(f"[DEBUG] Request data: {data}")
+        
+        if not data or 'phone' not in data:
+            return jsonify({'error': 'Phone is required'}), 400
+        
+        phone = normalize_phone(data['phone'].strip())
+        print(f"[DEBUG] Processing phone: {phone}")
+        
+        print(f"[DEBUG] Formatted phone: {phone}")
+        
+        # Check if user exists
+        user = User.query.filter_by(phone=phone).first()
+        print(f"[DEBUG] User found: {user is not None}")
+        
+        if not user:
+            return jsonify({'error': 'User not found with this phone number', 'message': 'Bu telefon numarasına kayıtlı kullanıcı bulunamadı.'}), 404
+        
+        # Use whatever email is in the database
+        if not user.email:
+            return jsonify({
+                'error': 'No email on file',
+                'message': 'Hesabınızda e-posta adresi kayıtlı değil.',
+                'code': 'NO_EMAIL'
+            }), 400
+        
+        print(f"[DEBUG] Using email for reset: {user.email}")
+        
+        # Generate 6-digit reset code
+        reset_code = f"{random.randint(0, 999999):06d}"
+        print(f"[DEBUG] Generated code: {reset_code}")
+        
+        # Store in OTPVerification table with 5 minute expiry
+        try:
+            otp_record = OTPVerification(
+                phone=phone,
+                otp_code=reset_code,
+                code=reset_code,
+                purpose='pin_reset',
+                expires_at=datetime.utcnow() + timedelta(minutes=5)
+            )
+            db.session.add(otp_record)
+            db.session.commit()
+            print(f"[DEBUG] OTP record saved to DB")
+        except Exception as db_error:
+            db.session.rollback()
+            print(f"[ERROR] Failed to save OTP record: {str(db_error)}")
+            return jsonify({'error': 'Failed to save reset code', 'debug': str(db_error)}), 500
+        
+        sms_sent = False
+        email_sent = False
+        
+        print(f"[DEBUG] PIN reset code for {phone}: {reset_code}")
+        
+        # Mock SMS sending (development/testing mode)
+        sms_message = f"HesapPaylas PIN Hatırlatma Kodu: {reset_code}\n\n5 dakika geçerlidir."
+        print(f"[SMS MOCK] Simulated SMS to {phone}: {sms_message}")
+        sms_sent = True  # Mark as sent in mock mode
+        
+        # Try to send via Email
+        try:
+            email_sent = send_reset_email(user.email, reset_code, user.first_name)
+            print(f"[DEBUG] Email sent to {user.email}: {email_sent}")
+        except Exception as email_error:
+            print(f"[WARNING] Email sending failed: {str(email_error)}")
+            email_sent = False
+        
+        response = {
+            'message': '6 haneli doğrulama kodu gönderildi!',
+            'phone': phone,
+            'email': user.email,
+            'email_hint': user.email,
+            'sms_sent': sms_sent,
+            'email_sent': email_sent,
+            'code_stored': True
+        }
+        
+        print(f"[DEBUG] Returning response: {response}")
+        return jsonify(response), 200
+    
+    except Exception as e:
+        print(f"[ERROR] PIN reset both request failed: {str(e)}")
+        import traceback
+        print(f"[ERROR] Traceback: {traceback.format_exc()}")
+        return jsonify({'error': 'Failed to send reset code', 'debug': str(e)}), 500
+
 @app.route('/api/auth/verify-pin-reset', methods=['POST'])
 def verify_pin_reset():
     """Verify PIN reset code"""
     try:
         data = request.get_json()
+        print(f"[VERIFY-RESET] Request received: {data}")
         
         if not data or not all(k in data for k in ['phone', 'code']):
+            print(f"[VERIFY-RESET] Missing required fields")
             return jsonify({'error': 'Phone and code are required'}), 400
         
         phone = data['phone'].strip()
         code = data['code'].strip()
         
+        print(f"[VERIFY-RESET] Raw phone: {phone}, Code: {code}")
+        
         # Validate phone format
         if not phone.startswith('+'):
             phone = '+90' + phone.lstrip('0')
         
+        print(f"[VERIFY-RESET] Formatted phone: {phone}")
+        
         # Find valid OTP record
+        print(f"[VERIFY-RESET] Looking for OTP record with phone={phone}, code={code}, purpose='pin_reset'")
         otp_record = OTPVerification.query.filter_by(
             phone=phone,
             code=code,
@@ -1219,18 +1447,27 @@ def verify_pin_reset():
             used=False
         ).first()
         
+        print(f"[VERIFY-RESET] OTP record found: {otp_record is not None}")
+        
         if not otp_record:
+            print(f"[VERIFY-RESET] ❌ No matching OTP record found")
+            # Debug: list all OTP records for this phone
+            all_otps = OTPVerification.query.filter_by(phone=phone).all()
+            print(f"[VERIFY-RESET] All OTPs for {phone}: {len(all_otps)}")
+            for otp in all_otps:
+                print(f"  - code={otp.code}, purpose={otp.purpose}, used={otp.used}, expires_at={otp.expires_at}")
             return jsonify({'error': 'Invalid or expired code'}), 400
         
         # Check expiry
         if otp_record.expires_at < datetime.utcnow():
+            print(f"[VERIFY-RESET] ❌ OTP expired")
             return jsonify({'error': 'Code expired'}), 400
         
         # Mark as used
         otp_record.used = True
         db.session.commit()
         
-        print(f"[AUTH] PIN reset code verified for phone: {phone}")
+        print(f"[VERIFY-RESET] ✅ PIN reset code verified for phone: {phone}")
         
         return jsonify({
             'message': 'Code verified successfully'
@@ -1339,6 +1576,61 @@ def confirm_pin_reset():
         db.session.rollback()
         print(f"[ERROR] PIN reset confirmation failed: {str(e)}")
         return jsonify({'error': 'PIN reset failed'}), 500
+
+@app.route('/api/auth/change-pin', methods=['POST'])
+def change_pin():
+    """Change PIN for authenticated user (from profile)"""
+    try:
+        # Check JWT token
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            return jsonify({'error': 'Unauthorized'}), 401
+        
+        token = auth_header.replace('Bearer ', '')
+        try:
+            payload = jwt.decode(token, app.config['JWT_SECRET'], algorithms=['HS256'])
+            user_id = payload.get('user_id')
+        except jwt.ExpiredSignatureError:
+            return jsonify({'error': 'Token expired'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'error': 'Invalid token'}), 401
+        except Exception as e:
+            print(f"[AUTH] Token decode error: {str(e)}")
+            return jsonify({'error': 'Invalid token'}), 401
+        
+        data = request.get_json()
+        
+        if not data or 'new_pin' not in data:
+            return jsonify({'error': 'New PIN is required'}), 400
+        
+        new_pin = data['new_pin'].strip()
+        
+        # Validate PIN - must be exactly 4 digits
+        if not new_pin.isdigit() or len(new_pin) != 4:
+            return jsonify({'error': 'PIN must be 4 digits'}), 400
+        
+        # Find user
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Update PIN
+        user.set_password(new_pin)
+        db.session.commit()
+        
+        print(f"[AUTH] PIN changed for user: {user.phone}")
+        
+        return jsonify({
+            'message': 'PIN changed successfully',
+            'success': True
+        }), 200
+    
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] PIN change failed: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': 'PIN change failed', 'debug': str(e)}), 500
 
 @app.route('/api/auth/debug-reset-codes', methods=['GET'])
 def debug_reset_codes():
@@ -1464,7 +1756,7 @@ def update_profile():
         if 'lastName' in data:
             user.last_name = data['lastName']
         if 'phone' in data:
-            user.phone = data['phone']
+            user.phone = normalize_phone(data['phone'])
         
         db.session.commit()
         print(f"[PROFILE] Updated for user {user.id}")
@@ -2130,7 +2422,152 @@ def init_db_admin():
             'message': str(e)
         }), 500
 
-@app.route('/')
+# ==================== ADMIN ENDPOINTS ====================
+
+@app.route('/api/admin/stats', methods=['GET'])
+def admin_stats():
+    """Get system statistics"""
+    try:
+        require_auth()
+        
+        total_users = User.query.count()
+        total_groups = Group.query.count()
+        active_groups = Group.query.filter_by(is_active=True).count()
+        
+        # Calculate total expenses across all groups
+        total_expenses = 0
+        for group in Group.query.all():
+            expenses = Expense.query.filter_by(group_id=group.id).all()
+            total_expenses += sum(e.amount for e in expenses)
+        
+        return jsonify({
+            'total_users': total_users,
+            'total_groups': total_groups,
+            'active_groups': active_groups,
+            'total_expenses': float(total_expenses)
+        }), 200
+    except Exception as e:
+        print(f"[ADMIN] Error getting stats: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users', methods=['GET'])
+def admin_users():
+    """Get all users"""
+    try:
+        require_auth()
+        
+        users = User.query.all()
+        users_data = [u.to_dict() for u in users]
+        
+        return jsonify({'users': users_data}), 200
+    except Exception as e:
+        print(f"[ADMIN] Error getting users: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users/<int:user_id>', methods=['DELETE'])
+def admin_delete_user(user_id):
+    """Delete a user"""
+    try:
+        require_auth()
+        
+        user = User.query.get(user_id)
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        db.session.delete(user)
+        db.session.commit()
+        
+        print(f"[ADMIN] User deleted: {user.email}")
+        return jsonify({'message': 'User deleted successfully'}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ADMIN] Error deleting user: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/users/<int:user_id>', methods=['PUT'])
+def admin_update_user(user_id):
+    """Update user information"""
+    try:
+        require_auth()
+        
+        data = request.get_json()
+        user = User.query.get(user_id)
+        
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        if 'first_name' in data:
+            user.first_name = data['first_name']
+        if 'last_name' in data:
+            user.last_name = data['last_name']
+        if 'email' in data:
+            user.email = data['email']
+        
+        db.session.commit()
+        print(f"[ADMIN] User updated: {user.email}")
+        
+        return jsonify({'message': 'User updated successfully', 'user': user.to_dict()}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ADMIN] Error updating user: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/groups', methods=['GET'])
+def admin_groups():
+    """Get all groups"""
+    try:
+        require_auth()
+        
+        groups = Group.query.all()
+        groups_data = []
+        for g in groups:
+            group_dict = {
+                'id': g.id,
+                'name': g.name,
+                'code': g.code,
+                'created_at': g.created_at.isoformat() if g.created_at else None,
+                'member_count': len(g.members) if g.members else 0,
+                'is_active': g.is_active
+            }
+            groups_data.append(group_dict)
+        
+        return jsonify({'groups': groups_data}), 200
+    except Exception as e:
+        print(f"[ADMIN] Error getting groups: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/admin/settings', methods=['GET'])
+def admin_settings():
+    """Get system settings"""
+    try:
+        require_auth()
+        
+        return jsonify({
+            'sender_email': os.getenv('SENDER_EMAIL', 'not set'),
+            'db_type': 'PostgreSQL (Render)',
+            'total_records': User.query.count() + Group.query.count()
+        }), 200
+    except Exception as e:
+        print(f"[ADMIN] Error getting settings: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/admin')
+def admin_page():
+    """Serve admin panel"""
+    try:
+        admin_path = BASE_DIR / 'admin.html'
+        if admin_path.exists():
+            with open(admin_path, 'r', encoding='utf-8') as f:
+                return f.read()
+        else:
+            return 'Admin panel not found', 404
+    except Exception as e:
+        print(f'[ERROR] Failed to load admin.html: {e}')
+        return f'Error loading admin panel: {e}', 500
+
+# ==================== END ADMIN ENDPOINTS ====================
+
+
 def index():
     try:
         index_path = BASE_DIR / 'index.html'
@@ -2198,33 +2635,68 @@ if __name__ == '__main__':
         db.create_all()
         
         # Only create default users if none exist
-        if User.query.count() == 0:
-            # Initialize default user 1
-            user1 = User(
-                first_name='Metin',
-                last_name='Güven',
-                email='metonline@gmail.com',
-                phone='05323332222',
-                account_type='owner'
-            )
-            user1.set_password('test123')
-            db.session.add(user1)
+        # DISABLED FOR TESTING - Don't auto-create default users
+        # if User.query.count() == 0:
+        #     # Initialize default user 1
+        #     user1 = User(
+        #         first_name='Metin',
+        #         last_name='Güven',
+        #         email='metonline@gmail.com',
+        #         phone='05323332222',
+        #         account_type='owner'
+        #     )
+        #     user1.set_password('test123')
+        #     db.session.add(user1)
+        #     
+        #     # Initialize default user 2
+        #     user2 = User(
+        #         first_name='Metin',
+        #         last_name='Güven',
+        #         email='metin_guven@hotmail.com',
+        #         phone='05323332222',
+        #         account_type='owner'
+        #     )
+        #     user2.set_password('12345')
+        #     db.session.add(user2)
+        #     
+        #     db.session.commit()
+        #     print("[INIT] Database initialized with default users")
+        # else:
+        print(f"[INIT] Database ready - {User.query.count()} users, {Group.query.count()} groups")
+    
+    # DEBUG: Endpoint to set PIN for a phone number (temporary - for testing only)
+    @app.route('/api/debug/set-pin', methods=['POST'])
+    def debug_set_pin():
+        """TEMPORARY DEBUG ENDPOINT: Set PIN for a phone number"""
+        try:
+            data = request.get_json()
+            phone = data.get('phone', '').strip()
+            pin = data.get('pin', '').strip()
             
-            # Initialize default user 2
-            user2 = User(
-                first_name='Metin',
-                last_name='Güven',
-                email='metin_guven@hotmail.com',
-                phone='05323332222',
-                account_type='owner'
-            )
-            user2.set_password('12345')
-            db.session.add(user2)
+            if not phone or not pin:
+                return jsonify({'error': 'Phone and PIN required'}), 400
             
+            if not pin.isdigit() or len(pin) != 4:
+                return jsonify({'error': 'PIN must be 4 digits'}), 400
+            
+            # Normalize phone
+            if not phone.startswith('+'):
+                phone = '+90' + phone.lstrip('0')
+            
+            user = User.query.filter_by(phone=phone).first()
+            if not user:
+                return jsonify({'error': 'User not found'}), 404
+            
+            # Set the PIN
+            user.set_password(pin)
             db.session.commit()
-            print("[INIT] Database initialized with default users")
-        else:
-            print(f"[INIT] Database ready - {User.query.count()} users, {Group.query.count()} groups")
+            
+            print(f"[DEBUG] PIN set for {phone}: {pin}")
+            return jsonify({'message': 'PIN set successfully', 'phone': phone, 'pin': pin}), 200
+        except Exception as e:
+            db.session.rollback()
+            print(f"[ERROR] Failed to set PIN: {str(e)}")
+            return jsonify({'error': str(e)}), 500
     
     port = int(os.getenv('PORT', 5000))
     # Debug mode ON for development (shows detailed error tracebacks)
