@@ -1628,27 +1628,34 @@ Konaklama
             try {
                 const API_BASE = window.location.origin;
                 const API_BASE_URL = API_BASE + '/api';
-
+                // Always send phone in +90 format
+                let phoneToSend = pinResetPhone;
+                if (!phoneToSend.startsWith('+')) {
+                    phoneToSend = '+90' + phoneToSend.replace(/^0+/, '');
+                }
+                // Only allow PIN reset if OTP was verified
+                if (!pinResetOtpVerified) {
+                    showNewPinStatus('❌ Lütfen önce doğrulama kodunu girin', 'error');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                    return;
+                }
                 const response = await fetch(`${API_BASE_URL}/auth/confirm-pin-reset`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        phone: pinResetPhone,
+                        phone: phoneToSend,
                         code: Array.from(document.querySelectorAll('.otp-input')).map(input => input.value).join(''),
                         new_pin: newPin
                     })
                 });
-
                 const data = await response.json();
-
                 if (response.ok) {
                     showNewPinStatus('✅ PIN başarıyla sıfırlandı! Giriş yapılıyor...', 'success');
-
                     // Reset state
                     pinResetPhone = '';
                     pinResetMethod = '';
                     pinResetOtpVerified = false;
-
                     // Close modal and redirect to login after 2 seconds
                     setTimeout(() => {
                         closeNewPinModal();
