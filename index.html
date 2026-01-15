@@ -168,10 +168,10 @@
                         <!-- Signup Link - REMOVED, replaced with PIN reset buttons -->
                         <!-- PIN Reset Quick Access Buttons -->
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; padding: 0 20px 20px 20px;">
-                            <button onclick="requestPinReset('email')" style="padding: 12px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.78em; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <button onclick="document.getElementById('forgotPinModal').style.display='flex'; document.body.style.overflow='hidden';" style="padding: 12px; background: #667eea; color: white; border: none; border-radius: 10px; font-size: 0.78em; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 ✉️ E-mail ile yenile
                             </button>
-                            <button onclick="requestPinReset('whatsapp')" style="padding: 12px; background: #25D366; color: white; border: none; border-radius: 10px; font-size: 0.78em; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            <button onclick="document.getElementById('forgotPinModal').style.display='flex'; document.body.style.overflow='hidden';" style="padding: 12px; background: #25D366; color: white; border: none; border-radius: 10px; font-size: 0.78em; font-weight: 600; cursor: pointer; transition: all 0.3s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                 💬 WhatsApp ile yenile
                             </button>
                         </div>
