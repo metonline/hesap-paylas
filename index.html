@@ -1359,11 +1359,16 @@ Konaklama
         
         let isNewUser = false;
         
-        // Format phone number input
+        // Format phone number input with smart backspace handling
         function formatPhoneInputHome(value) {
+            // Only extract digits for formatting
             const digits = value.replace(/\D/g, '');
+            
+            // Empty input
             if (digits.length === 0) return '';
-            if (digits.length <= 3) return `(${digits})`;
+            
+            // Format: (5xx) or (5xx) 3 or (5xx) 333 or (5xx) 333 22 or (5xx) 333 22 22
+            if (digits.length <= 3) return `(${digits}`;
             if (digits.length <= 6) return `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
             return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)} ${digits.slice(6, 8)} ${digits.slice(8, 10)}`;
         }
@@ -1383,9 +1388,13 @@ Konaklama
             }
         }
 
-        // Phone input listener
+        // Phone input listener with smart formatting
         document.getElementById('phoneHome').addEventListener('input', (e) => {
-            e.target.value = formatPhoneInputHome(e.target.value);
+            const oldValue = e.target.value;
+            const newValue = formatPhoneInputHome(oldValue);
+            if (newValue !== oldValue) {
+                e.target.value = newValue;
+            }
             // Her input'ta telefonun varlığı kontrol edilsin, yeni kullanıcı ise alanlar açılsın
             checkPhoneAndShowForm();
         });
