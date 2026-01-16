@@ -84,6 +84,12 @@ def normalize_phone(phone):
 def _send_email_async(email, reset_code, user_name):
     """Actually send the email (runs in background thread)"""
     try:
+        # Log to file since daemon threads don't show in stdout
+        log_file = '/tmp/hesap_paylas_email.log'
+        
+        with open(log_file, 'a') as f:
+            f.write(f"\n[{datetime.now()}] Starting email send to {email}\n")
+        
         smtp_server = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
         smtp_port = int(os.getenv('SMTP_PORT', '587'))
         sender_email = os.getenv('SENDER_EMAIL')
@@ -109,37 +115,20 @@ def _send_email_async(email, reset_code, user_name):
         
         html = f"""\
         <html>
-            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f5f5f5;">
-                <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0; color: white; text-align: center;">
-                    <h1 style="margin: 0; font-size: 28px;">🥄 Hesap Paylaş</h1>
-                    <p style="margin: 5px 0 0 0; opacity: 0.9;">PIN Sıfırlama / Password Reset</p>
-                </div>
-                
-                <div style="padding: 30px; background: white; border-radius: 0 0 10px 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
-                    <h2 style="color: #333; margin-top: 0;">Merhaba {user_name}!</h2>
-                    <p style="color: #666; line-height: 1.6;">PIN kodunuzu sıfırlamak için aşağıdaki 6 haneli kodu kullanabilirsiniz:</p>
+            <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                <div style="padding: 20px; background: #f9f9f9; border: 1px solid #ddd;">
+                    <h2>Hesap Paylaş - PIN Sıfırlama Kodu</h2>
+                    <p>Merhaba {user_name},</p>
+                    <p>PIN kodunuzu sıfırlamak için aşağıdaki 6 haneli kodu kullanabilirsiniz:</p>
                     
-                    <div style="background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%); padding: 25px; border-radius: 8px; border: 2px solid #667eea; margin: 25px 0; text-align: center;">
-                        <p style="font-size: 14px; color: #999; margin: 0 0 10px 0; text-transform: uppercase; letter-spacing: 2px;">Kodunuz</p>
-                        <p style="font-size: 42px; font-weight: bold; color: #667eea; margin: 10px 0; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+                    <div style="padding: 20px; background: #f0f0f0; border: 1px solid #ccc; text-align: center; margin: 20px 0;">
+                        <p style="font-size: 32px; font-weight: bold; letter-spacing: 4px; margin: 0; font-family: monospace;">
                             {reset_code}
                         </p>
-                        <p style="color: #999; margin: 10px 0 0 0; font-size: 13px;">
-                            ⏱️ Bu kod 5 dakika geçerlidir / Valid for 5 minutes
-                        </p>
                     </div>
                     
-                    <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 4px; margin: 20px 0;">
-                        <p style="margin: 0; color: #856404; font-size: 13px;">
-                            <strong>⚠️ Güvenlik Uyarısı:</strong> Bu kodu kimseyle paylaşmayın! Bu e-posta tarafından talep edilmediyse, lütfen dikkate almayın.
-                        </p>
-                    </div>
-                    
-                    <p style="color: #999; font-size: 12px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-                        <strong>Hesap Paylaş Team</strong><br>
-                        Sorularınız için destek alın: <a href="mailto:{sender_email}" style="color: #667eea; text-decoration: none;">{sender_email}</a><br>
-                        © 2026 Hesap Paylaş. Tüm hakları saklıdır.
-                    </p>
+                    <p>Bu kod 5 dakika geçerlidir. Kodunuzu kimseyle paylaşmayın.</p>
+                    <p>Hesap Paylaş Team</p>
                 </div>
             </body>
         </html>
@@ -180,10 +169,14 @@ Hesap Paylaş Team
         server.quit()
         
         print(f"[EMAIL] ✅ Reset code sent to {email}")
+        with open(log_file, 'a') as f:
+            f.write(f"[{datetime.now()}] ✅ Email sent successfully to {email}\n")
         return True
         
     except Exception as e:
         print(f"[EMAIL] ❌ Failed to send email: {str(e)}")
+        with open('/tmp/hesap_paylas_email.log', 'a') as f:
+            f.write(f"[{datetime.now()}] ❌ Error: {str(e)}\n")
         return False
 
 def send_reset_email(email, reset_code, user_name):
