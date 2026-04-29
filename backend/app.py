@@ -1957,7 +1957,13 @@ def serve_index():
             content = f.read()
         
         print(f"[SERVE /] SUCCESS: Serving {len(content)} bytes", flush=True)
-        return content, 200, {'Content-Type': 'text/html; charset=utf-8'}
+        # NO-CACHE headers to prevent stale HTML on Render
+        return content, 200, {
+            'Content-Type': 'text/html; charset=utf-8',
+            'Cache-Control': 'no-cache, no-store, must-revalidate, max-age=0',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        }
     except Exception as e:
         import traceback
         print(f"[ERROR] serve_index failed: {e}", flush=True)
