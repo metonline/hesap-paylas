@@ -3342,50 +3342,156 @@ function showRestaurantMenu(groupData) {
 
 function displayMenuUI(groupData) {
     const menuHTML = `
-        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; overflow-y: auto; padding-top: 50px;">
-            <button onclick="closeMenu()" style="position: fixed; top: 10px; right: 10px; z-index: 10000; padding: 10px 15px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">✕ Kapat</button>
+        <div id="menuOverlay" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; overflow-y: auto; padding-top: 60px; padding-bottom: 100px;">
+            <div style="position: fixed; top: 0; left: 0; width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px; z-index: 10000; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <div style="max-width: 600px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h2 style="margin: 0; font-size: 20px;">🍽️ ${groupData.restaurant_name || groupData.name}</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 12px; opacity: 0.9;">Grup: <strong>${groupData.code_formatted || groupData.code}</strong></p>
+                    </div>
+                    <div style="text-align: right;">
+                        <button onclick="toggleCart()" id="cartBtn" style="padding: 10px 15px; background: rgba(255,255,255,0.2); border: 2px solid white; color: white; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                            🛒 Sepet <span id="cartCount" style="background: #ff6b6b; padding: 2px 6px; border-radius: 3px; font-size: 12px;">0</span>
+                        </button>
+                        <button onclick="closeMenu()" style="margin-left: 10px; padding: 10px 15px; background: rgba(255,255,255,0.2); border: 2px solid white; color: white; border-radius: 5px; cursor: pointer;">✕</button>
+                    </div>
+                </div>
+            </div>
             
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                <h2>🍽️ ${groupData.restaurant_name || groupData.name}</h2>
-                <p style="color: #666;">Grup Kodu: <strong>${groupData.code_formatted || groupData.code}</strong></p>
-                
-                <div id="menuCategories" style="margin-top: 20px;">
-                    ${Object.entries(groupData.menu_data.categories || {})
-                        .map(([category, items]) => `
-                            <div style="margin-bottom: 30px;">
-                                <h3 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">${category}</h3>
-                                <div style="display: grid; gap: 15px;">
-                                    ${items.map(item => `
-                                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 12px; cursor: pointer;" onclick="addItemToOrder('${item.name}', ${item.price})">
-                                            <div style="display: flex; justify-content: space-between; align-items: start;">
-                                                <div>
-                                                    <span style="font-size: 20px;">${item.emoji || '🍽️'}</span>
-                                                    <strong style="margin-left: 10px;">${item.name}</strong>
-                                                </div>
-                                                <span style="color: #667eea; font-weight: bold; font-size: 14px;">₺${item.price.toFixed(2)}</span>
+            <div id="menuContent" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                ${Object.entries(groupData.menu_data.categories || {})
+                    .map(([category, items]) => `
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #667eea; border-bottom: 3px solid #667eea; padding-bottom: 10px; font-size: 18px;">📌 ${category}</h3>
+                            <div style="display: grid; gap: 15px;">
+                                ${items.map((item, idx) => `
+                                    <div style="border: 1px solid #ddd; border-radius: 8px; padding: 15px; background: #f9f9f9; transition: all 0.2s;">
+                                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                                            <div style="flex: 1;">
+                                                <span style="font-size: 24px; margin-right: 10px;">${item.emoji || '🍽️'}</span>
+                                                <strong style="font-size: 16px;">${item.name}</strong>
                                             </div>
+                                            <span style="color: #667eea; font-weight: bold; font-size: 16px; white-space: nowrap; margin-left: 10px;">₺${item.price.toFixed(2)}</span>
                                         </div>
-                                    `).join('')}
-                                </div>
+                                        <div style="display: flex; gap: 5px;">
+                                            <button onclick="decreaseQuantity(${idx})" style="flex: 0 0 35px; padding: 5px; border: 1px solid #667eea; color: #667eea; background: white; border-radius: 4px; cursor: pointer; font-weight: bold;">−</button>
+                                            <input type="number" data-item='${JSON.stringify(item)}' id="qty_${idx}" value="0" min="0" style="flex: 1; padding: 5px; border: 1px solid #667eea; border-radius: 4px; text-align: center; font-weight: bold;" onchange="updateCart()">
+                                            <button onclick="increaseQuantity(${idx})" style="flex: 0 0 35px; padding: 5px; border: 1px solid #667eea; color: white; background: #667eea; border-radius: 4px; cursor: pointer; font-weight: bold;">+</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
                             </div>
-                        `).join('')}
+                        </div>
+                    `).join('')}
+            </div>
+            
+            <div id="cartPanel" style="position: fixed; bottom: 0; left: 0; width: 100%; max-height: 0; background: white; border-top: 2px solid #667eea; overflow: hidden; transition: max-height 0.3s; z-index: 9998;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px; max-height: 300px; overflow-y: auto;">
+                    <h3 style="margin-top: 0; color: #667eea;">🛒 Sepetin</h3>
+                    <div id="cartItems" style="display: grid; gap: 10px;"></div>
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 2px solid #ddd;">
+                        <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #667eea; margin-bottom: 15px;">
+                            <span>Toplam:</span>
+                            <span>₺<span id="totalPrice">0.00</span></span>
+                        </div>
+                        <button onclick="submitOrder()" style="width: 100%; padding: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer;">
+                            ✅ Siparişi Onayla
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     `;
     
     document.body.insertAdjacentHTML('beforeend', menuHTML);
+    
+    // Store current order in memory
+    window.currentOrder = {
+        groupId: groupData.id,
+        groupCode: groupData.code,
+        restaurantId: groupData.restaurant_id,
+        restaurantName: groupData.restaurant_name || groupData.name,
+        items: []
+    };
+}
+
+function increaseQuantity(idx) {
+    const input = document.getElementById(`qty_${idx}`);
+    const currentQty = parseInt(input.value) || 0;
+    input.value = currentQty + 1;
+    updateCart();
+}
+
+function decreaseQuantity(idx) {
+    const input = document.getElementById(`qty_${idx}`);
+    const currentQty = parseInt(input.value) || 0;
+    if (currentQty > 0) {
+        input.value = currentQty - 1;
+        updateCart();
+    }
+}
+
+function updateCart() {
+    const inputs = document.querySelectorAll('input[type="number"][id^="qty_"]');
+    let totalPrice = 0;
+    let totalItems = 0;
+    const cartItemsDiv = document.getElementById('cartItems');
+    let cartHTML = '';
+    
+    inputs.forEach((input, idx) => {
+        const qty = parseInt(input.value) || 0;
+        if (qty > 0) {
+            try {
+                const itemData = JSON.parse(input.getAttribute('data-item'));
+                const itemTotal = itemData.price * qty;
+                totalPrice += itemTotal;
+                totalItems += qty;
+                
+                cartHTML += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f5f5f5; border-radius: 5px; font-size: 14px;">
+                        <div style="flex: 1;">
+                            <span>${itemData.emoji} </span>
+                            <strong>${itemData.name}</strong>
+                            <span style="color: #999;"> x${qty}</span>
+                        </div>
+                        <span style="font-weight: bold; color: #667eea;">₺${itemTotal.toFixed(2)}</span>
+                    </div>
+                `;
+            } catch (e) {
+                console.error('Error parsing item data:', e);
+            }
+        }
+    });
+    
+    // Update cart UI
+    document.getElementById('cartCount').textContent = totalItems;
+    document.getElementById('cartItems').innerHTML = cartHTML || '<p style="color: #999;">Sepet boş</p>';
+    document.getElementById('totalPrice').textContent = totalPrice.toFixed(2);
+    
+    // Show cart panel if has items
+    const cartPanel = document.getElementById('cartPanel');
+    if (totalItems > 0) {
+        cartPanel.style.maxHeight = '350px';
+    } else {
+        cartPanel.style.maxHeight = '0px';
+    }
+}
+
+function toggleCart() {
+    const cartPanel = document.getElementById('cartPanel');
+    const currentHeight = parseInt(cartPanel.style.maxHeight) || 0;
+    cartPanel.style.maxHeight = currentHeight === 0 ? '350px' : '0px';
 }
 
 function closeMenu() {
-    const menuDiv = document.querySelector('div[style*="position: fixed"][style*="z-index: 9999"]');
+    const menuDiv = document.getElementById('menuOverlay');
     if (menuDiv) menuDiv.remove();
+    window.currentOrder = null;
 }
 
-function addItemToOrder(itemName, price) {
-    console.log(`[ORDER] Adding: ${itemName} - ₺${price}`);
-    // TODO: Implement order adding logic
-    alert(`✅ "${itemName}" sepete eklendi! (₺${price})`);
+function submitOrder() {
+    console.log('[ORDER] Submitting order:', window.currentOrder);
+    alert('✅ Sipariş alındı! (Detay sistemine entegre edilecek)');
 }
 
 // Keep old function for backwards compatibility
