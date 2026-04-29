@@ -8,6 +8,7 @@ Flask + SQLAlchemy + PostgreSQL
 
 import os
 import jwt
+import json
 import random
 import string
 import smtplib
@@ -414,6 +415,10 @@ class Group(db.Model):
     code = db.Column(db.String(10), unique=True, nullable=False, default=lambda: generate_group_code())  # 6 digit code: XXX-XXX
     qr_code = db.Column(db.String(255), nullable=True)
     category = db.Column(db.String(100), nullable=True, default='Genel Yaşam')  # Cafe/Restaurant, Genel Yaşam, Seyahat/Konaklama
+    # 🆕 Menu/Restaurant fields
+    restaurant_id = db.Column(db.String(50), nullable=True)  # ID from QR code (e.g., "rest_001")
+    restaurant_name = db.Column(db.String(100), nullable=True)  # Restaurant name
+    menu_data = db.Column(db.JSON, nullable=True)  # Full menu data from restaurants.json
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)  # Grup kapalı/açık
@@ -2006,12 +2011,35 @@ def create_group():
         if not group_name:
             group_name = random.choice(colors_tr)
         
+        # 🆕 Get restaurant info from request (from QR scan)
+        restaurant_id = data.get('restaurant_id')
+        menu_data = None
+        restaurant_name = None
+        
+        # Load menu data if restaurant_id provided
+        if restaurant_id:
+            try:
+                with open(BASE_DIR / 'restaurants.json', 'r', encoding='utf-8') as f:
+                    all_restaurants = json.load(f)
+                    if restaurant_id in all_restaurants:
+                        menu_data = all_restaurants[restaurant_id]
+                        restaurant_name = menu_data.get('name', restaurant_id)
+                        print(f"[GROUP] Loaded menu for restaurant: {restaurant_name}", flush=True)
+                    else:
+                        print(f"[GROUP] Restaurant {restaurant_id} not found in restaurants.json", flush=True)
+            except Exception as e:
+                print(f"[GROUP] Error loading restaurants.json: {e}", flush=True)
+        
         group = Group(
             name=group_name,
             description=data.get('description'),
             code=group_code,
             qr_code=None,
             category=data.get('category', 'Genel Yaşam'),
+            # 🆕 Restaurant/Menu fields
+            restaurant_id=restaurant_id,
+            restaurant_name=restaurant_name,
+            menu_data=menu_data,
             created_by=request.user_id
         )
         
@@ -2027,7 +2055,7 @@ def create_group():
         
         # Commit both group and membership at same time
         db.session.commit()
-        print(f"[GROUP] Created: {group.name} (ID: {group.id}, Code: {group_code})")
+        print(f"[GROUP] Created: {group.name} (ID: {group.id}, Code: {group_code}, Restaurant: {restaurant_name})")
         
         return jsonify({
             'success': True,
@@ -2039,6 +2067,9 @@ def create_group():
                 'category': group.category,
                 'code': group.code,  # Raw 6-digit code (123456)
                 'code_formatted': format_group_code(group.code),  # Formatted code (123-456)
+                'restaurant_id': restaurant_id,  # 🆕
+                'restaurant_name': restaurant_name,  # 🆕
+                'menu_data': menu_data,  # 🆕
                 'created_at': group.created_at.isoformat()
             }
         }), 201
@@ -2053,7 +2084,7 @@ def create_group():
 @app.route('/api/groups/<int:group_id>', methods=['GET'])
 @token_required
 def get_group(group_id):
-    """Get group details"""
+    """Get group details with menu data"""
     group = Group.query.get_or_404(group_id)
     creator = User.query.get(group.created_by) if group.created_by else None
     return jsonify({
@@ -2064,6 +2095,10 @@ def get_group(group_id):
         'code': group.code,
         'code_formatted': format_group_code(group.code),
         'qr_code': group.qr_code,
+        # 🆕 Restaurant/Menu fields
+        'restaurant_id': group.restaurant_id,
+        'restaurant_name': group.restaurant_name,
+        'menu_data': group.menu_data,
         'created_at': group.created_at.isoformat(),
         'created_by': group.created_by,
         'creator': creator.to_dict() if creator else None,
@@ -2112,7 +2147,10 @@ def join_group():
             return jsonify({
                 'message': 'Already a member of this group',
                 'id': group.id,
-                'name': group.name
+                'name': group.name,
+                'restaurant_id': group.restaurant_id,  # 🆕
+                'restaurant_name': group.restaurant_name,  # 🆕
+                'menu_data': group.menu_data  # 🆕
             }), 200
         
         group.members.append(user)
@@ -2123,7 +2161,10 @@ def join_group():
             'message': 'Successfully joined group',
             'id': group.id,
             'name': group.name,
-            'description': group.description
+            'description': group.description,
+            'restaurant_id': group.restaurant_id,  # 🆕
+            'restaurant_name': group.restaurant_name,  # 🆕
+            'menu_data': group.menu_data  # 🆕
         }), 201
     except Exception as e:
         db.session.rollback()
