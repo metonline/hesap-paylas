@@ -419,6 +419,7 @@ class Group(db.Model):
     restaurant_id = db.Column(db.String(50), nullable=True)  # ID from QR code (e.g., "rest_001")
     restaurant_name = db.Column(db.String(100), nullable=True)  # Restaurant name
     menu_data = db.Column(db.JSON, nullable=True)  # Full menu data from restaurants.json
+    menu_locked = db.Column(db.Boolean, default=False)  # Menu locked after finalization
     created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)  # Grup kapalı/açık
@@ -2099,6 +2100,7 @@ def get_group(group_id):
         'restaurant_id': group.restaurant_id,
         'restaurant_name': group.restaurant_name,
         'menu_data': group.menu_data,
+        'menu_locked': group.menu_locked,
         'created_at': group.created_at.isoformat(),
         'created_by': group.created_by,
         'creator': creator.to_dict() if creator else None,
@@ -2114,7 +2116,7 @@ def get_group(group_id):
 @app.route('/api/groups/<int:group_id>', methods=['PUT'])
 @token_required
 def update_group(group_id):
-    """Update group menu data (OCR results)"""
+    """Update group menu data (OCR results) - only if not locked"""
     try:
         group = Group.query.get_or_404(group_id)
         data = request.get_json()
@@ -2127,10 +2129,19 @@ def update_group(group_id):
         if user not in group.members:
             return jsonify({'error': 'Not a group member'}), 403
         
+        # Check if menu is already locked
+        if group.menu_locked:
+            return jsonify({'error': 'Menü zaten kilitli. Başka bir üye tarafından değiştirilemez.'}), 403
+        
         # Update menu_data if provided
         if 'menu_data' in data:
             group.menu_data = data['menu_data']
             print(f"[GROUP] Updated menu for group {group_id}")
+        
+        # Lock menu if requested
+        if data.get('menu_locked') == True:
+            group.menu_locked = True
+            print(f"[GROUP] Locked menu for group {group_id}")
         
         db.session.commit()
         
@@ -2144,6 +2155,7 @@ def update_group(group_id):
             'restaurant_id': group.restaurant_id,
             'restaurant_name': group.restaurant_name,
             'menu_data': group.menu_data,
+            'menu_locked': group.menu_locked,
             'created_at': group.created_at.isoformat(),
             'members': [u.to_dict() for u in group.members]
         }), 200
@@ -2191,7 +2203,8 @@ def join_group():
                 'name': group.name,
                 'restaurant_id': group.restaurant_id,  # 🆕
                 'restaurant_name': group.restaurant_name,  # 🆕
-                'menu_data': group.menu_data  # 🆕
+                'menu_data': group.menu_data,  # 🆕
+                'menu_locked': group.menu_locked  # 🆕
             }), 200
         
         group.members.append(user)
@@ -2205,7 +2218,8 @@ def join_group():
             'description': group.description,
             'restaurant_id': group.restaurant_id,  # 🆕
             'restaurant_name': group.restaurant_name,  # 🆕
-            'menu_data': group.menu_data  # 🆕
+            'menu_data': group.menu_data,  # 🆕
+            'menu_locked': group.menu_locked  # 🆕
         }), 201
     except Exception as e:
         db.session.rollback()

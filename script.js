@@ -3380,10 +3380,39 @@ function startMenuQRScan() {
         return;
     }
     
+    // Check if menu already exists and is locked
+    const token = localStorage.getItem('hesapPaylas_token');
+    fetch(`${API_BASE_URL}/groups/${groupId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(groupData => {
+        if (groupData.menu_data && groupData.menu_locked) {
+            alert('🔒 Menü zaten kaydedilmiş ve kilitli. Başka bir üye tarafından değiştirilemez.');
+            return;
+        }
+        
+        if (groupData.menu_data && Object.keys(groupData.menu_data.categories || {}).length > 0) {
+            alert('⚠️ Bu grup için zaten bir menü var. Eğer değiştirmek istiyorsanız, önceki menüyü silin.');
+            return;
+        }
+        
+        // Proceed with menu scan
+        proceedWithMenuScan();
+    })
+    .catch(err => {
+        console.error('[MENU-SCAN] Error checking menu status:', err);
+        proceedWithMenuScan(); // Fallback to proceeding
+    });
+}
+
+function proceedWithMenuScan() {
+    console.log('[MENU-SCAN] Proceeding with menu scan');
+    
     // Set lock flag
     isQRScanningInProgress = true;
-    currentGroupForMenuScan = groupId;
-    console.log('[MENU-SCAN] Lock set for group:', groupId);
+    currentGroupForMenuScan = currentGroupDetailsId;
+    console.log('[MENU-SCAN] Lock set for group:', currentGroupForMenuScan);
     
     // Close group details modal and open menu scan options
     closeGroupDetailsModal();
@@ -3568,19 +3597,33 @@ function stopMenuQRScan() {
 function startMenuPhotoCapture() {
     console.log('[OCR] Starting menu photo capture');
     
+    // Reset captured photos
+    window.capturedMenuPhotos = [];
+    window.photoThumbnails = {};
+    
     const scannerContainer = document.getElementById('menuQRContainer');
     scannerContainer.innerHTML = `
         <div style="width: 100%; max-width: 500px;">
-            <h2 style="color: white; text-align: center; margin-bottom: 20px;">📱 Menü Fotoğrafı</h2>
-            <div id="menuVideoPreview" style="width: 100%; border-radius: 10px; overflow: hidden; background: #000; position: relative;">
+            <h2 style="color: white; text-align: center; margin-bottom: 20px;">📱 Menü Fotoğrafları (2-3 tane)</h2>
+            <div id="menuVideoPreview" style="width: 100%; border-radius: 10px; overflow: hidden; background: #000; position: relative; margin-bottom: 15px;">
                 <video id="menuVideoFeed" style="width: 100%; height: auto; transform: scaleX(-1); display: block;"></video>
             </div>
-            <div id="photoCaptureMessage" style="color: white; text-align: center; margin-top: 15px; font-size: 0.95em;">Resmi çekmek için basın</div>
-            <div style="display: flex; gap: 10px; margin-top: 20px;">
-                <button onclick="captureMenuPhoto()" style="flex: 1; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">📸 Resmi Çek</button>
-                <button onclick="backToMenuScanOptions()" style="flex: 1; padding: 12px; background: #555; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">⬅️ Geri</button>
+            <div id="photoCaptureMessage" style="color: #ccc; text-align: center; margin-bottom: 15px; font-size: 0.95em;">📸 Menüyü tarayacak şekilde fotoğraf çekin</div>
+            
+            <!-- Thumbnails of captured photos -->
+            <div id="photoThumbnailsContainer" style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; min-height: 60px; align-content: flex-start;">
+                <p style="color: #999; width: 100%; text-align: center; margin: 0;">Henüz fotoğraf yok (2-3 önerilir)</p>
             </div>
-            <button onclick="stopMenuQRScan()" style="width: 100%; padding: 12px; margin-top: 10px; background: #c0392b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">🛑 İptal</button>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <button onclick="captureMenuPhoto()" style="padding: 12px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">📸 Foto Çek</button>
+                <button id="completePhotoBtn" onclick="completeMenuPhotoCapture()" disabled style="padding: 12px; background: #667eea; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; opacity: 0.5;">✅ Tamamla</button>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button onclick="backToMenuScanOptions()" style="flex: 1; padding: 12px; background: #555; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">⬅️ Geri</button>
+                <button onclick="stopMenuQRScan()" style="flex: 1; padding: 12px; background: #c0392b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">🛑 İptal</button>
+            </div>
         </div>
     `;
     
@@ -3590,7 +3633,7 @@ function startMenuPhotoCapture() {
         .then(stream => {
             video.srcObject = stream;
             video.play();
-            window.menuPhotoStream = stream; // Store stream for later
+            window.menuPhotoStream = stream;
         })
         .catch(err => {
             console.error('[OCR] Camera error:', err);
@@ -3600,7 +3643,7 @@ function startMenuPhotoCapture() {
 }
 
 function captureMenuPhoto() {
-    console.log('[OCR] Capturing menu photo');
+    console.log('[OCR] Capturing menu photo', (window.capturedMenuPhotos.length + 1));
     
     const video = document.getElementById('menuVideoFeed');
     const canvas = document.createElement('canvas');
@@ -3612,21 +3655,175 @@ function captureMenuPhoto() {
     ctx.scale(-1, 1);
     ctx.drawImage(video, -canvas.width, 0);
     
+    // Get image data
+    const imageData = canvas.toDataURL('image/jpeg', 0.85);
+    const photoIndex = window.capturedMenuPhotos.length;
+    window.capturedMenuPhotos.push(imageData);
+    
+    console.log('[OCR] Photo captured, total:', window.capturedMenuPhotos.length);
+    
+    // Show thumbnail
+    updatePhotoThumbnails();
+    
+    // Enable complete button if 1+ photos
+    if (window.capturedMenuPhotos.length > 0) {
+        const completeBtn = document.getElementById('completePhotoBtn');
+        completeBtn.disabled = false;
+        completeBtn.style.opacity = '1';
+    }
+    
+    // Show feedback
+    const message = document.getElementById('photoCaptureMessage');
+    message.textContent = `✅ Foto ${window.capturedMenuPhotos.length} kaydedildi`;
+    message.style.color = '#27ae60';
+    setTimeout(() => {
+        message.textContent = '📸 Menüyü tarayacak şekilde fotoğraf çekin';
+        message.style.color = '#ccc';
+    }, 1500);
+}
+
+function updatePhotoThumbnails() {
+    const container = document.getElementById('photoThumbnailsContainer');
+    
+    if (window.capturedMenuPhotos.length === 0) {
+        container.innerHTML = '<p style="color: #999; width: 100%; text-align: center; margin: 0;">Henüz fotoğraf yok (2-3 önerilir)</p>';
+        return;
+    }
+    
+    let html = '';
+    window.capturedMenuPhotos.forEach((photo, index) => {
+        html += `
+            <div style="position: relative; width: 70px; height: 70px; border-radius: 8px; overflow: hidden; border: 2px solid #667eea;">
+                <img src="${photo}" style="width: 100%; height: 100%; object-fit: cover;">
+                <div style="position: absolute; top: 2px; right: 2px; background: #FF6B6B; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.8em; font-weight: bold; cursor: pointer;" onclick="removeMenuPhoto(${index})">×</div>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
+function removeMenuPhoto(index) {
+    console.log('[OCR] Removing photo:', index);
+    window.capturedMenuPhotos.splice(index, 1);
+    updatePhotoThumbnails();
+    
+    // Disable complete button if no photos
+    if (window.capturedMenuPhotos.length === 0) {
+        const completeBtn = document.getElementById('completePhotoBtn');
+        completeBtn.disabled = true;
+        completeBtn.style.opacity = '0.5';
+    }
+}
+
+function completeMenuPhotoCapture() {
+    console.log('[OCR] Completing photo capture with', window.capturedMenuPhotos.length, 'photos');
+    
+    if (window.capturedMenuPhotos.length === 0) {
+        alert('❌ Lütfen en az bir fotoğraf çekin');
+        return;
+    }
+    
     // Stop video stream
     if (window.menuPhotoStream) {
         window.menuPhotoStream.getTracks().forEach(track => track.stop());
+        window.menuPhotoStream = null;
     }
     
-    // Get image data
-    const imageData = canvas.toDataURL('image/jpeg', 0.9);
-    window.capturedMenuImage = imageData;
+    // Process all photos with OCR
+    processAllMenuPhotosWithOCR();
+}
+
+async function processAllMenuPhotosWithOCR() {
+    console.log('[OCR] Processing', window.capturedMenuPhotos.length, 'photos with OCR');
     
-    // Show processing UI
-    processMenuPhotoWithOCR(imageData);
+    const scannerContainer = document.getElementById('menuQRContainer');
+    scannerContainer.innerHTML = `
+        <div style="width: 100%; max-width: 500px;">
+            <h2 style="color: white; text-align: center; margin-bottom: 20px;">⏳ Menüler Okunuyor...</h2>
+            <div style="text-align: center; color: #ccc; margin-bottom: 20px;">
+                <div style="font-size: 3em; margin-bottom: 10px;">🔄</div>
+                <p>Tüm fotoğraflar analiz ediliyor</p>
+                <p id="ocrStatus" style="font-size: 0.9em; color: #999; margin-top: 10px;">Fotoğraf 1/${window.capturedMenuPhotos.length}</p>
+            </div>
+            <div id="ocrProgressBar" style="width: 100%; height: 6px; background: #444; border-radius: 3px; overflow: hidden;">
+                <div style="height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); animation: progress 2s infinite;"></div>
+            </div>
+        </div>
+        <style>
+            @keyframes progress {
+                0% { width: 0%; }
+                50% { width: 100%; }
+                100% { width: 100%; }
+            }
+        </style>
+    `;
+    
+    try {
+        if (typeof Tesseract === 'undefined') {
+            throw new Error('OCR kütüphanesi yüklenmedi');
+        }
+        
+        // Process all photos and collect items
+        const allItems = [];
+        
+        for (let i = 0; i < window.capturedMenuPhotos.length; i++) {
+            console.log(`[OCR] Processing photo ${i + 1}/${window.capturedMenuPhotos.length}`);
+            
+            // Update status
+            const statusDiv = document.getElementById('ocrStatus');
+            if (statusDiv) statusDiv.textContent = `Fotoğraf ${i + 1}/${window.capturedMenuPhotos.length}`;
+            
+            // Run OCR on this photo
+            const { data } = await Tesseract.recognize(window.capturedMenuPhotos[i], 'tur', {
+                logger: m => {
+                    if (m.status === 'recognizing' && statusDiv) {
+                        const progress = Math.round(m.progress * 100);
+                    }
+                }
+            });
+            
+            console.log(`[OCR] Photo ${i + 1} text:`, data.text);
+            
+            // Parse items from this photo
+            const items = parseMenuFromOCRText(data.text);
+            console.log(`[OCR] Photo ${i + 1} items:`, items);
+            
+            // Add to collection (avoid duplicates by checking name+price)
+            items.forEach(newItem => {
+                const isDuplicate = allItems.some(existing => 
+                    existing.name.toLowerCase() === newItem.name.toLowerCase() &&
+                    Math.abs(existing.price - newItem.price) < 0.1
+                );
+                if (!isDuplicate) {
+                    allItems.push(newItem);
+                }
+            });
+        }
+        
+        console.log('[OCR] All items collected:', allItems);
+        
+        // Show results for editing
+        showMenuOCRResults(allItems);
+        
+    } catch (error) {
+        console.error('[OCR] Error:', error);
+        const container = document.getElementById('menuQRContainer');
+        if (container) {
+            container.innerHTML = `
+                <div style="width: 100%; max-width: 500px;">
+                    <h2 style="color: white; text-align: center; margin-bottom: 20px;">❌ Hata</h2>
+                    <p style="color: white; text-align: center; margin-bottom: 20px;">${error.message}</p>
+                    <button onclick="completeMenuPhotoCapture()" style="width: 100%; padding: 12px; background: #FF6B6B; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-bottom: 10px;">🔄 Tekrar Dene</button>
+                    <button onclick="backToMenuScanOptions()" style="width: 100%; padding: 12px; background: #555; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">⬅️ Geri</button>
+                </div>
+            `;
+        }
+    }
 }
 
 async function processMenuPhotoWithOCR(imageData) {
-    console.log('[OCR] Processing menu photo with OCR');
+    console.log('[OCR] Processing single menu photo with OCR');
     
     const scannerContainer = document.getElementById('menuQRContainer');
     scannerContainer.innerHTML = `
@@ -3651,19 +3848,13 @@ async function processMenuPhotoWithOCR(imageData) {
     `;
     
     try {
-        // Wait for Tesseract to load
         if (typeof Tesseract === 'undefined') {
             throw new Error('OCR kütüphanesi yüklenmedi');
         }
         
-        // Run OCR
         const { data } = await Tesseract.recognize(imageData, 'tur', {
             logger: m => {
                 console.log('[OCR] Progress:', m);
-                if (m.status === 'recognizing') {
-                    const progress = Math.round(m.progress * 100);
-                    console.log('[OCR] Progress:', progress + '%');
-                }
             }
         });
         
@@ -3870,7 +4061,7 @@ function approveMenuOCRResults(totalItems) {
 }
 
 async function updateGroupWithOCRMenu(groupId, menuData) {
-    console.log('[OCR] Updating group with OCR menu');
+    console.log('[OCR] Updating group with OCR menu and locking');
     
     const scannerContainer = document.getElementById('menuQRContainer');
     scannerContainer.innerHTML = `
@@ -3889,7 +4080,8 @@ async function updateGroupWithOCRMenu(groupId, menuData) {
                 'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
-                menu_data: menuData
+                menu_data: menuData,
+                menu_locked: true  // Lock menu after finalization
             })
         });
         
@@ -3898,13 +4090,29 @@ async function updateGroupWithOCRMenu(groupId, menuData) {
         }
         
         const groupData = await response.json();
-        console.log('[OCR] Menu updated successfully');
+        console.log('[OCR] Menu updated and locked successfully');
         
-        // Stop scanner and show menu
+        // Show success and update time
+        const scannerContainer = document.getElementById('menuQRContainer');
+        scannerContainer.innerHTML = `
+            <div style="width: 100%; max-width: 500px; text-align: center;">
+                <div style="font-size: 3em; margin-bottom: 15px; color: #27ae60;">✅</div>
+                <h2 style="color: white; margin-bottom: 10px;">Menü Kaydedildi!</h2>
+                <p style="color: #ccc; margin-bottom: 20px;">Menü artık grubun paylaşımındadır.<br/>Başka bir üye tarafından değiştirilemez.</p>
+                <div style="background: #2c3e50; border-radius: 8px; padding: 15px; margin-bottom: 20px; color: #ccc; font-size: 0.9em;">
+                    <p style="margin: 5px 0;">📌 ${groupData.name}</p>
+                    <p style="margin: 5px 0;">👥 ${groupData.members.length} üye</p>
+                    <p style="margin: 5px 0;">🔒 Menü kilitli</p>
+                </div>
+                <button onclick="stopMenuQRScan()" style="width: 100%; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1.1em;">🎉 Menüyü Göster</button>
+            </div>
+        `;
+        
+        // Close scanner and show menu after 2 seconds
         setTimeout(() => {
             stopMenuQRScan();
             displayMenuUI(groupData);
-        }, 1000);
+        }, 2000);
         
     } catch (error) {
         console.error('[OCR] Error updating menu:', error);
