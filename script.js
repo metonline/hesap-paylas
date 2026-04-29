@@ -989,9 +989,14 @@ function formatPhoneDisplay(phone) {
     if (!phone) return '-';
     // Sadece rakamları al
     const cleaned = phone.replace(/\D/g, '');
-    // Türk telefon formatı: 0XXXX XXX XX XX (11 hane)
-    if (cleaned.length === 11) {
-        return cleaned.replace(/(\d{4})(\d{3})(\d{2})(\d{2})/, '$1 $2 $3 $4');
+    // International format: +90 532 313 3277 (10 digits without country code)
+    if (cleaned.length === 12 && cleaned.startsWith('90')) {
+        // +905323133277 -> +90 532 313 3277
+        const withoutCountryCode = cleaned.substring(2);
+        return '+90 ' + withoutCountryCode.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
+    } else if (cleaned.length === 10) {
+        // 5323133277 -> +90 532 313 3277
+        return '+90 ' + cleaned.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
     }
     return phone;
 }

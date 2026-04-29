@@ -509,15 +509,16 @@ body {
 
 /* Status Message Styling */
 .status-message {
-    padding: 10px 12px;
-    border-radius: 10px;
-    font-size: 13px;
-    margin-bottom: 15px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 12px;
+    margin-bottom: 5px;
     display: none;
     animation: slideDown 0.3s ease-out;
-    line-height: 1.4;
+    line-height: 1.3;
     word-wrap: break-word;
     white-space: normal;
+    min-height: 0;
 }
 
 .status-message.success {

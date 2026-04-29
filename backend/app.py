@@ -256,7 +256,10 @@ db_type = None
 if os.getenv('DATABASE_URL'):
     test_url = os.getenv('DATABASE_URL')
     # Check if we can actually use this database
-    if 'postgres' in test_url.lower():
+    if 'sqlite' in test_url.lower():
+        database_url = test_url
+        db_type = 'SQLite (Local)'
+    elif 'postgres' in test_url.lower():
         # Try to import psycopg2 to check if PostgreSQL is available
         try:
             import psycopg2

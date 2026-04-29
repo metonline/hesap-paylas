@@ -139,68 +139,89 @@
                     <p style="font-size: 1.1em; color: #666; font-style: italic; margin: 8px 0 0 0; font-family: 'Pacifico', 'Brush Script MT', 'Great Vibes', cursive; font-weight: 400; letter-spacing: 0.5px;">tükettiğin kadar öde !</p>
                 </div>
 
-                <div class="signup-section" style="max-width: 380px; margin: 0 auto;">
-                    <!-- Phone PIN Login Form (Inline) -->
+                <div class="signup-section" style="max-width: 100%; margin: 0 auto;">
+                    <!-- Login Form with Tabs -->
                     <div id="loginForm" class="auth-form login-card" style="padding: 0;">
-                        <div class="login-header" style="margin: 20px 20px 20px 20px; text-align: center; color: white; font-size: 18px; font-weight: 600; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 14px; border-radius: 10px; line-height: 1.5;">Telefon No.su ile Girin</div>
+                        
+                        <!-- Tab Buttons -->
+                        <div style="display: flex; gap: 0; margin: 15px 15px 0 15px; border-bottom: 2px solid #ddd;">
+                            <button onclick="switchAuthTab('phone')" id="phoneTabBtn" style="flex: 1; padding: 8px 10px; background: none; border: none; border-bottom: 3px solid #667eea; color: #667eea; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.3s; white-space: nowrap;">📱 Telefon</button>
+                            <button onclick="switchAuthTab('email')" id="emailTabBtn" style="flex: 1; padding: 8px 10px; background: none; border: none; border-bottom: 3px solid transparent; color: #999; font-weight: 600; cursor: pointer; font-size: 13px; transition: all 0.3s; white-space: nowrap;">✉️ E-posta</button>
+                        </div>
                         
                         <!-- Unified Login Form Container -->
-                        <div style="max-width: 340px; margin: 0 auto; padding: 0 20px;">
+                        <div style="max-width: 100%; margin: 0 auto; padding: 0 15px;">
                         
-                            <div id="statusMessageHome" class="status-message"></div>
+                            <div id="statusMessageHome" class="status-message" style="margin-bottom: 5px; font-size: 12px;"></div>
                             
-                            <!-- Phone Input Section -->
-                            <div style="margin-bottom: 20px; display: flex; gap: 8px; align-items: center; min-width: 0;">
-                                <div style="background: #f5f5f5; border: 2px solid #ddd; border-radius: 10px; padding: 12px; font-weight: 600; color: #333; display: flex; align-items: center; justify-content: center; height: 44px; width: 50px; flex-shrink: 0;">+90</div>
-                                <input 
-                                    type="text" 
-                                    id="phoneHome" 
-                                    placeholder="(5xx) 333 22 22"
-                                    style="padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; flex: 1; box-sizing: border-box; min-width: 0;"
-                                    autocomplete="off"
-                                />
-                            </div>
-                            
-                            <!-- PIN Input Section -->
-                            <div style="margin-bottom: 20px;">
-                                <label style="display: block; margin-bottom: 12px; color: #333; font-weight: 600; font-size: 14px; text-align: center;">PIN Kodunuz (4 Rakam)</label>
-                                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                                    <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
-                                    <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
-                                    <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
-                                    <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
+                            <!-- PHONE FORM CONTAINER -->
+                            <div id="phoneFormContainer" style="display: block;">
+                                <!-- Phone Input Section -->
+                                <div style="margin-bottom: 20px; display: flex; gap: 8px; align-items: center; min-width: 0;">
+                                    <div style="background: #f5f5f5; border: 2px solid #ddd; border-radius: 10px; padding: 12px; font-weight: 600; color: #333; display: flex; align-items: center; justify-content: center; height: 44px; width: 50px; flex-shrink: 0;">+90</div>
+                                    <input 
+                                        type="text" 
+                                        id="phoneHome" 
+                                        placeholder="(5xx) 333 22 22"
+                                        style="padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; flex: 1; box-sizing: border-box; min-width: 0;"
+                                        autocomplete="off"
+                                    />
                                 </div>
+                                
+                                <!-- PIN Input Section -->
+                                <div style="margin-bottom: 20px;">
+                                    <label style="display: block; margin-bottom: 12px; color: #333; font-weight: 600; font-size: 14px; text-align: center;">PIN Kodunuz (4 Rakam)</label>
+                                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                                        <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
+                                        <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
+                                        <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
+                                        <input class="pin-input-home" type="text" maxlength="1" style="width: 100%; aspect-ratio: 1/1; border: 2px solid #ddd; border-radius: 8px; text-align: center; font-size: 20px; font-weight: 700; color: #667eea; transition: all 0.3s ease; box-shadow: 0 2px 6px rgba(0,0,0,0.1); background: white;" autocomplete="off" />
+                                    </div>
+                                </div>
+                                
+                                <!-- Login/Register Button -->
+                                <button onclick="submitPhoneForm()" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 12px; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; padding: 14px; box-sizing: border-box;">
+                                    <span id="phoneButtonText">Giriş Yap</span>
+                                </button>
+                                
+                                <!-- PIN Reminder Quick Access Buttons -->
+                                <button id="resetPinBtn" onclick="resetPinBothChannels()" style="padding: 14px; width: 100%; background: linear-gradient(135deg, #25D366 0%, #13b955 100%); color: white; border: none; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; transition: all 0.3s; box-sizing: border-box;">🔑 PIN Hatırlatma Kodu Gönder</button>
                             </div>
                             
-                            <!-- Name Input Section (for new users) -->
-                            <div id="nameSection" style="margin-bottom: 20px; display: none;">
-                                <input 
-                                    type="text" 
-                                    id="userName" 
-                                    placeholder="Adınız (ve Soyadınız)"
-                                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; box-sizing: border-box;"
-                                    autocomplete="off"
-                                />
+                            <!-- EMAIL FORM CONTAINER -->
+                            <div id="emailFormContainer" style="display: none;">
+                                <!-- Email Input Section -->
+                                <div style="margin-bottom: 20px;">
+                                    <input 
+                                        type="email" 
+                                        id="emailHome" 
+                                        placeholder="E-posta Adresi"
+                                        style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; box-sizing: border-box;"
+                                        autocomplete="off"
+                                    />
+                                </div>
+                                
+                                <!-- Password Input Section -->
+                                <div style="margin-bottom: 20px;">
+                                    <input 
+                                        type="password" 
+                                        id="passwordHome" 
+                                        placeholder="Şifre"
+                                        style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; box-sizing: border-box;"
+                                        autocomplete="off"
+                                    />
+                                </div>
+                                
+                                <!-- Email Login/Register Button -->
+                                <div style="margin-bottom: 20px;">
+                                    <button onclick="submitEmailForm()" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; padding: 14px; box-sizing: border-box;">
+                                        Giriş Yap / Kayıt Ol
+                                    </button>
+                                </div>
+                                
+                                <!-- Şifremi Unuttum Link -->
+                                <button onclick="showForgotPasswordModal()" style="padding: 8px; width: 100%; background: none; color: #667eea; border: none; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.3s; text-decoration: underline;">🔑 Şifremi Unuttum</button>
                             </div>
-                            
-                            <!-- Email Input Section (for new users) -->
-                            <div id="emailSection" style="margin-bottom: 20px; display: none;">
-                                <input 
-                                    type="email" 
-                                    id="userEmail" 
-                                    placeholder="E-posta Adresiniz"
-                                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; box-sizing: border-box;"
-                                    autocomplete="off"
-                                />
-                            </div>
-                            
-                            <!-- Login/Register Button -->
-                            <button onclick="submitPhoneForm()" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 12px; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; padding: 14px; box-sizing: border-box;">
-                                <span id="buttonText">Giriş Yap</span>
-                            </button>
-                            
-                            <!-- PIN Reminder Quick Access Buttons -->
-                            <button id="resetPinBtn" onclick="resetPinBothChannels()" style="padding: 14px; width: 100%; background: linear-gradient(135deg, #25D366 0%, #13b955 100%); color: white; border: none; border-radius: 10px; font-size: 1em; font-weight: 700; cursor: pointer; transition: all 0.3s; box-sizing: border-box;">🔑 PIN Hatırlatma Kodu Gönder</button>
                         
                         </div>
                             <script>
@@ -248,6 +269,98 @@
                                     statusEl.className = 'status-message error';
                                     statusEl.style.display = 'block';
                                 }
+                            }
+                            
+                            // Tab Switching Function
+                            function switchAuthTab(tab) {
+                                const phoneForm = document.getElementById('phoneFormContainer');
+                                const emailForm = document.getElementById('emailFormContainer');
+                                const phoneTab = document.getElementById('phoneTabBtn');
+                                const emailTab = document.getElementById('emailTabBtn');
+                                
+                                // Clear status messages
+                                const statusEl = document.getElementById('statusMessageHome');
+                                statusEl.textContent = '';
+                                statusEl.style.display = 'none';
+                                
+                                if (tab === 'phone') {
+                                    phoneForm.style.display = 'block';
+                                    emailForm.style.display = 'none';
+                                    phoneTab.style.borderBottomColor = '#667eea';
+                                    phoneTab.style.color = '#667eea';
+                                    emailTab.style.borderBottomColor = 'transparent';
+                                    emailTab.style.color = '#999';
+                                } else {
+                                    phoneForm.style.display = 'none';
+                                    emailForm.style.display = 'block';
+                                    phoneTab.style.borderBottomColor = 'transparent';
+                                    phoneTab.style.color = '#999';
+                                    emailTab.style.borderBottomColor = '#667eea';
+                                    emailTab.style.color = '#667eea';
+                                }
+                            }
+                            
+                            // Email Form Submit
+                            async function submitEmailForm() {
+                                const email = document.getElementById('emailHome').value.trim();
+                                const password = document.getElementById('passwordHome').value.trim();
+                                const statusEl = document.getElementById('statusMessageHome');
+                                
+                                if (!email || !password) {
+                                    statusEl.textContent = '❌ Lütfen e-posta ve şifre girin';
+                                    statusEl.className = 'status-message error';
+                                    statusEl.style.display = 'block';
+                                    return;
+                                }
+                                
+                                if (!email.includes('@')) {
+                                    statusEl.textContent = '❌ Geçerli bir e-posta adresi girin';
+                                    statusEl.className = 'status-message error';
+                                    statusEl.style.display = 'block';
+                                    return;
+                                }
+                                
+                                try {
+                                    // Use global API_BASE_URL from script.js (correctly points to port 5000)
+                                    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ email: email, password: password })
+                                    });
+                                    
+                                    const data = await response.json();
+                                    
+                                    if (response.ok && data.token) {
+                                        // Save token
+                                        localStorage.setItem('hesapPaylas_token', data.token);
+                                        if (data.user) {
+                                            localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                                        }
+                                        
+                                        statusEl.textContent = '✅ Giriş başarılı! Yönlendiriliyorsunuz...';
+                                        statusEl.className = 'status-message success';
+                                        statusEl.style.display = 'block';
+                                        
+                                        // Redirect to home page
+                                        setTimeout(() => {
+                                            location.reload();
+                                        }, 1000);
+                                    } else {
+                                        statusEl.textContent = '❌ ' + (data.message || data.error || 'Giriş başarısız');
+                                        statusEl.className = 'status-message error';
+                                        statusEl.style.display = 'block';
+                                    }
+                                } catch (error) {
+                                    console.error('Email login error:', error);
+                                    statusEl.textContent = '❌ Bir hata oluştu. Lütfen tekrar deneyin.';
+                                    statusEl.className = 'status-message error';
+                                    statusEl.style.display = 'block';
+                                }
+                            }
+                            
+                            // Forgot Password Modal
+                            function showForgotPasswordModal() {
+                                alert('Şifre sıfırlama bağlantısı kısa süre sonra eklenecek. Lütfen admin\'e başvurun.');
                             }
                             </script>
                     </div>
