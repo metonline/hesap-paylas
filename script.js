@@ -145,6 +145,12 @@ function isHtml5QrcodeReady() {
     return typeof Html5Qrcode !== 'undefined' || window.html5QrcodeLoaded === true;
 }
 
+// ==================== Menu Scanning Lock & State ====================
+// Lock mekanizması: Aynı anda sadece bir kişi menüyü tarayabilir
+let isQRScanningInProgress = false;
+let currentGroupForMenuScan = null;
+let menuQRScannerInstance = null;
+
 // ==================== Sidebar Menu Functions ====================
 
 // Sidebar menüyü aç/kapat
@@ -2641,6 +2647,11 @@ function displayGroups(groups) {
 
 function showGroupDetails(groupId, groupName, groupDesc, groupDate, qrCode) {
     console.log('[GROUP-DETAILS] showGroupDetails called with groupId:', groupId, 'groupName:', groupName);
+    
+    // Set current group ID for menu scanning
+    currentGroupDetailsId = groupId;
+    console.log('[GROUP-DETAILS] Set currentGroupDetailsId to:', currentGroupDetailsId);
+    
     const detailsModal = document.getElementById('groupDetailsModal');
     const groupsPage = document.getElementById('groupsPage');
     
@@ -3064,6 +3075,9 @@ function closeGroupDetailsModal() {
     
     console.log('[GROUP-DETAILS-CLOSE] Closing group details modal');
     
+    // Clear current group ID
+    currentGroupDetailsId = null;
+    
     // Fade-out animasyonu
     detailsModal.classList.add('modal-close');
     detailsModal.classList.remove('modal-open');
@@ -3339,6 +3353,586 @@ function showRestaurantMenu(groupData) {
     // Create a simple menu display page or modal
     displayMenuUI(groupData);
 }
+
+// ==================== Menu QR Scanning Functions (Group Members) ====================
+// Grup üyeleri menüyü tarayabilir - lock mekanizması ile aynı anda sadece bir kişi
+
+function startMenuQRScan() {
+    console.log('[MENU-SCAN] startMenuQRScan called');
+    
+    // Check if another user is already scanning
+    if (isQRScanningInProgress) {
+        alert('⚠️ Başka bir üye zaten menüyü taramakta. Lütfen bitirmesini bekleyin.');
+        return;
+    }
+    
+    // Get current group data from modal
+    const groupDetailsModal = document.getElementById('groupDetailsModal');
+    if (!groupDetailsModal || groupDetailsModal.style.display === 'none') {
+        alert('❌ Grup bilgileri bulunamadı');
+        return;
+    }
+    
+    // Get group ID from current context
+    const groupId = currentGroupDetailsId; // Will be set when showGroupDetails is called
+    if (!groupId) {
+        alert('❌ Grup ID bulunamadı');
+        return;
+    }
+    
+    // Set lock flag
+    isQRScanningInProgress = true;
+    currentGroupForMenuScan = groupId;
+    console.log('[MENU-SCAN] Lock set for group:', groupId);
+    
+    // Close group details modal and open menu scan options
+    closeGroupDetailsModal();
+    
+    // Show menu scan options (QR or Photo)
+    const scannerContainer = document.createElement('div');
+    scannerContainer.id = 'menuQRContainer';
+    scannerContainer.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.95);
+        z-index: 99999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    `;
+    
+    scannerContainer.innerHTML = `
+        <div style="width: 100%; max-width: 500px;">
+            <h2 style="color: white; text-align: center; margin-bottom: 40px;">🎥 Menüyü Nasıl Taratmak İstersiniz?</h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <button id="qrCodeOption" onclick="startQRCodeScan()" style="padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1.1em;">
+                    🔲 QR Kodunu Tarat
+                </button>
+                
+                <button id="photoOption" onclick="startMenuPhotoCapture()" style="padding: 20px; background: linear-gradient(135deg, #FF6B6B 0%, #FF8E72 100%); color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 1.1em;">
+                    📱 Menü Fotoğrafı Çek
+                </button>
+            </div>
+            
+            <button onclick="stopMenuQRScan()" style="width: 100%; padding: 12px; margin-top: 30px; background: #c0392b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">🛑 İptal</button>
+        </div>
+    `;
+    
+    document.body.appendChild(scannerContainer);
+}
+
+function startQRCodeScan() {
+    console.log('[MENU-SCAN] Starting QR code scanner');
+    
+    const scannerContainer = document.getElementById('menuQRContainer');
+    scannerContainer.innerHTML = `
+        <div style="width: 100%; max-width: 500px;">
+            <h2 style="color: white; text-align: center; margin-bottom: 20px;">🔲 QR Kodunu Taratın</h2>
+            <div id="menuQRReader" style="width: 100%; border-radius: 10px; overflow: hidden; background: #000;"></div>
+            <div id="menuQRResults" style="color: white; text-align: center; margin-top: 20px; min-height: 30px; font-size: 1.1em;"></div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="stopMenuQRScan()" style="flex: 1; padding: 12px; background: #c0392b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">🛑 İptal</button>
+                <button onclick="backToMenuScanOptions()" style="flex: 1; padding: 12px; background: #555; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">⬅️ Geri</button>
+            </div>
+        </div>
+    `;
+    
+    // Initialize QR scanner
+    try {
+        if (!isHtml5QrcodeReady()) {
+            alert('❌ QR tarama kütüphanesi yüklenmedi');
+            stopMenuQRScan();
+            return;
+        }
+        
+        menuQRScannerInstance = new Html5Qrcode('menuQRReader');
+        menuQRScannerInstance.start(
+            { facingMode: 'environment' },
+            { fps: 10, qrbox: { width: 250, height: 250 } },
+            onQRCodeScannedForMenu,
+            error => console.log('[QR] Scan error:', error)
+        ).catch(err => {
+            console.error('[MENU-SCAN] Failed to start scanner:', err);
+            alert('❌ Kamera açılamadı');
+            stopMenuQRScan();
+        });
+    } catch (err) {
+        console.error('[MENU-SCAN] Scanner init error:', err);
+        alert('❌ Hata: ' + err.message);
+        stopMenuQRScan();
+    }
+}
+
+function onQRCodeScannedForMenu(decodedText) {
+    console.log('[MENU-SCAN] QR Code scanned:', decodedText);
+    
+    // Extract restaurant name
+    let restaurantName = decodedText;
+    if (decodedText.includes('|')) {
+        restaurantName = decodedText.split('|')[0].trim();
+    }
+    if (decodedText.includes('http')) {
+        restaurantName = decodedText.split(/\s+http/)[0].trim();
+    }
+    
+    console.log('[MENU-SCAN] Extracted restaurant name:', restaurantName);
+    
+    // Validate and display menu for current group
+    validateAndDisplayMenuForGroup(restaurantName);
+}
+
+async function validateAndDisplayMenuForGroup(restaurantName) {
+    try {
+        const resultsDiv = document.getElementById('menuQRResults');
+        if (resultsDiv) resultsDiv.textContent = '⏳ Menü yükleniyor...';
+        
+        // Get current group data
+        const groupId = currentGroupForMenuScan;
+        const token = localStorage.getItem('hesapPaylas_token');
+        
+        // Fetch group details to get restaurant info
+        const groupResponse = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        
+        if (!groupResponse.ok) {
+            throw new Error('Grup bilgileri alınamadı');
+        }
+        
+        const groupData = await groupResponse.json();
+        console.log('[MENU-SCAN] Group data:', groupData);
+        
+        // Check if scanned restaurant matches group's restaurant
+        const groupRestaurantName = groupData.restaurant_name || '';
+        
+        if (restaurantName.toLowerCase() === groupRestaurantName.toLowerCase()) {
+            console.log('[MENU-SCAN] ✅ Restaurant matches!');
+            if (resultsDiv) resultsDiv.textContent = '✅ Menü tarandı!';
+            
+            // Close scanner
+            setTimeout(() => {
+                stopMenuQRScan();
+                // Show menu UI
+                displayMenuUI(groupData);
+            }, 1000);
+        } else {
+            console.log('[MENU-SCAN] ❌ Restaurant mismatch. Scanned:', restaurantName, 'Group:', groupRestaurantName);
+            if (resultsDiv) {
+                resultsDiv.innerHTML = `❌ Bu menü grubunuzun restoranıyla eşleşmiyor!<br/>Grubun Restoran: <strong>${groupRestaurantName}</strong><br/>Taradığınız: <strong>${restaurantName}</strong>`;
+                resultsDiv.style.color = '#e74c3c';
+            }
+            // Unlock and allow retry
+            isQRScanningInProgress = false;
+        }
+    } catch (error) {
+        console.error('[MENU-SCAN] Error:', error);
+        const resultsDiv = document.getElementById('menuQRResults');
+        if (resultsDiv) {
+            resultsDiv.textContent = '❌ Hata: ' + error.message;
+            resultsDiv.style.color = '#e74c3c';
+        }
+        isQRScanningInProgress = false;
+    }
+}
+
+function stopMenuQRScan() {
+    console.log('[MENU-SCAN] Stopping QR scanner');
+    
+    // Stop scanner
+    if (menuQRScannerInstance) {
+        menuQRScannerInstance.stop().then(() => {
+            menuQRScannerInstance = null;
+        }).catch(err => console.log('[MENU-SCAN] Error stopping scanner:', err));
+    }
+    
+    // Remove scanner container
+    const container = document.getElementById('menuQRContainer');
+    if (container) {
+        container.remove();
+    }
+    
+    // Release lock
+    isQRScanningInProgress = false;
+    currentGroupForMenuScan = null;
+    console.log('[MENU-SCAN] Lock released');
+}
+
+// ==================== Menu Photo Capture & OCR Functions ====================
+
+function startMenuPhotoCapture() {
+    console.log('[OCR] Starting menu photo capture');
+    
+    const scannerContainer = document.getElementById('menuQRContainer');
+    scannerContainer.innerHTML = `
+        <div style="width: 100%; max-width: 500px;">
+            <h2 style="color: white; text-align: center; margin-bottom: 20px;">📱 Menü Fotoğrafı</h2>
+            <div id="menuVideoPreview" style="width: 100%; border-radius: 10px; overflow: hidden; background: #000; position: relative;">
+                <video id="menuVideoFeed" style="width: 100%; height: auto; transform: scaleX(-1); display: block;"></video>
+            </div>
+            <div id="photoCaptureMessage" style="color: white; text-align: center; margin-top: 15px; font-size: 0.95em;">Resmi çekmek için basın</div>
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button onclick="captureMenuPhoto()" style="flex: 1; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">📸 Resmi Çek</button>
+                <button onclick="backToMenuScanOptions()" style="flex: 1; padding: 12px; background: #555; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">⬅️ Geri</button>
+            </div>
+            <button onclick="stopMenuQRScan()" style="width: 100%; padding: 12px; margin-top: 10px; background: #c0392b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">🛑 İptal</button>
+        </div>
+    `;
+    
+    // Start video stream
+    const video = document.getElementById('menuVideoFeed');
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+        .then(stream => {
+            video.srcObject = stream;
+            video.play();
+            window.menuPhotoStream = stream; // Store stream for later
+        })
+        .catch(err => {
+            console.error('[OCR] Camera error:', err);
+            alert('❌ Kamera açılamadı: ' + err.message);
+            stopMenuQRScan();
+        });
+}
+
+function captureMenuPhoto() {
+    console.log('[OCR] Capturing menu photo');
+    
+    const video = document.getElementById('menuVideoFeed');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    // Flip image to correct mirror effect
+    ctx.scale(-1, 1);
+    ctx.drawImage(video, -canvas.width, 0);
+    
+    // Stop video stream
+    if (window.menuPhotoStream) {
+        window.menuPhotoStream.getTracks().forEach(track => track.stop());
+    }
+    
+    // Get image data
+    const imageData = canvas.toDataURL('image/jpeg', 0.9);
+    window.capturedMenuImage = imageData;
+    
+    // Show processing UI
+    processMenuPhotoWithOCR(imageData);
+}
+
+async function processMenuPhotoWithOCR(imageData) {
+    console.log('[OCR] Processing menu photo with OCR');
+    
+    const scannerContainer = document.getElementById('menuQRContainer');
+    scannerContainer.innerHTML = `
+        <div style="width: 100%; max-width: 500px;">
+            <h2 style="color: white; text-align: center; margin-bottom: 20px;">⏳ Menü Okunuyor...</h2>
+            <div style="text-align: center; color: #ccc; margin-bottom: 20px;">
+                <div style="font-size: 3em; margin-bottom: 10px;">🔄</div>
+                <p>Fotoğraf analiz ediliyor, lütfen bekleyin...</p>
+                <p style="font-size: 0.9em; color: #999;">Bu işlem 30-60 saniye alabilir</p>
+            </div>
+            <div id="ocrProgressBar" style="width: 100%; height: 4px; background: #444; border-radius: 2px; overflow: hidden; margin-top: 15px;">
+                <div style="height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); animation: progress 2s infinite; border-radius: 2px;"></div>
+            </div>
+        </div>
+        <style>
+            @keyframes progress {
+                0% { width: 0%; }
+                50% { width: 100%; }
+                100% { width: 100%; }
+            }
+        </style>
+    `;
+    
+    try {
+        // Wait for Tesseract to load
+        if (typeof Tesseract === 'undefined') {
+            throw new Error('OCR kütüphanesi yüklenmedi');
+        }
+        
+        // Run OCR
+        const { data } = await Tesseract.recognize(imageData, 'tur', {
+            logger: m => {
+                console.log('[OCR] Progress:', m);
+                if (m.status === 'recognizing') {
+                    const progress = Math.round(m.progress * 100);
+                    console.log('[OCR] Progress:', progress + '%');
+                }
+            }
+        });
+        
+        console.log('[OCR] Raw text:', data.text);
+        
+        // Parse OCR text to menu items
+        const menuItems = parseMenuFromOCRText(data.text);
+        console.log('[OCR] Parsed items:', menuItems);
+        
+        // Show results for editing
+        showMenuOCRResults(menuItems);
+        
+    } catch (error) {
+        console.error('[OCR] Error:', error);
+        const container = document.getElementById('menuQRContainer');
+        if (container) {
+            container.innerHTML = `
+                <div style="width: 100%; max-width: 500px;">
+                    <h2 style="color: white; text-align: center; margin-bottom: 20px;">❌ Hata</h2>
+                    <p style="color: white; text-align: center; margin-bottom: 20px;">${error.message}</p>
+                    <button onclick="stopMenuQRScan()" style="width: 100%; padding: 12px; background: #c0392b; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">🛑 Kapat</button>
+                </div>
+            `;
+        }
+    }
+}
+
+function parseMenuFromOCRText(text) {
+    console.log('[OCR-PARSE] Parsing text to menu items');
+    
+    // Split text into lines
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    
+    const items = [];
+    let currentCategory = 'Diğer';
+    
+    for (const line of lines) {
+        // Detect category (usually all caps or followed by items)
+        if (line.length < 30 && line === line.toUpperCase() && line.length > 3) {
+            currentCategory = line;
+            console.log('[OCR-PARSE] Found category:', currentCategory);
+            continue;
+        }
+        
+        // Try to extract item name and price
+        // Look for price patterns: "₺XX.XX", "XX,XX TL", "XX.XX ₺"
+        const priceMatch = line.match(/[₺\$]?\s*(\d+[.,]\d{2})\s*[₺TL]?|(\d+[.,]\d{2})\s*[₺TL]?/);
+        
+        if (priceMatch) {
+            // Extract price
+            const priceStr = priceMatch[0];
+            const priceValue = parseFloat(priceStr.replace(/[^\d.,]/g, '').replace(',', '.'));
+            
+            // Extract item name (everything before price)
+            const itemName = line.substring(0, priceMatch.index).trim();
+            
+            if (itemName.length > 2) {
+                items.push({
+                    name: itemName,
+                    price: priceValue,
+                    category: currentCategory,
+                    emoji: '🍽️'
+                });
+                console.log('[OCR-PARSE] Found item:', itemName, '-', priceValue);
+            }
+        }
+    }
+    
+    console.log('[OCR-PARSE] Total items found:', items.length);
+    return items;
+}
+
+function showMenuOCRResults(items) {
+    console.log('[OCR-RESULTS] Showing OCR results for editing');
+    
+    const scannerContainer = document.getElementById('menuQRContainer');
+    
+    if (items.length === 0) {
+        scannerContainer.innerHTML = `
+            <div style="width: 100%; max-width: 500px;">
+                <h2 style="color: white; text-align: center; margin-bottom: 20px;">⚠️ Menü Okunamadı</h2>
+                <p style="color: #ccc; text-align: center; margin-bottom: 20px;">Lütfen menüyü daha net bir şekilde fotoğrafla veya QR kodsuz girin.</p>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="startMenuPhotoCapture()" style="flex: 1; padding: 12px; background: #FF6B6B; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">📸 Tekrar Çek</button>
+                    <button onclick="backToMenuScanOptions()" style="flex: 1; padding: 12px; background: #555; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">⬅️ Geri</button>
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Group items by category
+    const categories = {};
+    items.forEach(item => {
+        if (!categories[item.category]) {
+            categories[item.category] = [];
+        }
+        categories[item.category].push(item);
+    });
+    
+    // Show editable menu
+    let html = `
+        <div style="width: 100%; max-width: 600px; max-height: 80vh; overflow-y: auto;">
+            <h2 style="color: white; text-align: center; margin-bottom: 20px;">✅ Menü Bulundu - Düzenleme</h2>
+            <div style="background: white; border-radius: 10px; padding: 20px;">
+    `;
+    
+    let itemIndex = 0;
+    for (const [category, categoryItems] of Object.entries(categories)) {
+        html += `
+            <div style="margin-bottom: 20px;">
+                <h3 style="color: #333; margin: 0 0 10px 0; font-size: 1.1em;">📂 ${category}</h3>
+                <div style="background: #f9f9f9; border-radius: 8px; padding: 10px;">
+        `;
+        
+        categoryItems.forEach(item => {
+            html += `
+                <div style="display: grid; grid-template-columns: 2fr 1fr 60px; gap: 10px; margin-bottom: 10px; padding: 8px; background: white; border-radius: 6px;">
+                    <input type="text" id="itemName_${itemIndex}" value="${item.name}" placeholder="Ürün adı" style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em;">
+                    <input type="number" id="itemPrice_${itemIndex}" value="${item.price}" step="0.01" placeholder="Fiyat" style="padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9em;">
+                    <button onclick="removeOCRItem(${itemIndex})" style="background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: 600; font-size: 0.8em;">Sil</button>
+                </div>
+            `;
+            itemIndex++;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    html += `
+                <div style="margin-top: 20px; padding: 15px; background: #e8f4f8; border-radius: 8px; border-left: 4px solid #00bcd4;">
+                    <p style="margin: 0; color: #00796b; font-size: 0.9em;">💡 İstiseniz, ürün adı veya fiyatları düzenleyebilir, ya da istemeyen ürünleri silebilirsiniz.</p>
+                </div>
+                
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button onclick="approveMenuOCRResults(${itemIndex})" style="flex: 1; padding: 12px; background: #27ae60; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">✅ Menüyü Onayla</button>
+                    <button onclick="backToMenuScanOptions()" style="flex: 1; padding: 12px; background: #555; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">⬅️ Geri</button>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    scannerContainer.innerHTML = html;
+    window.totalOCRItems = itemIndex;
+}
+
+function removeOCRItem(index) {
+    console.log('[OCR] Removing item:', index);
+    const nameInput = document.getElementById('itemName_' + index);
+    const priceInput = document.getElementById('itemPrice_' + index);
+    if (nameInput && priceInput) {
+        nameInput.style.display = 'none';
+        priceInput.style.display = 'none';
+        nameInput.parentElement.style.display = 'none';
+    }
+}
+
+function approveMenuOCRResults(totalItems) {
+    console.log('[OCR] Approving menu results');
+    
+    // Collect approved items
+    const approvedItems = [];
+    const categories = {};
+    
+    for (let i = 0; i < totalItems; i++) {
+        const nameInput = document.getElementById('itemName_' + i);
+        const priceInput = document.getElementById('itemPrice_' + i);
+        
+        if (nameInput && priceInput && nameInput.style.display !== 'none') {
+            const name = nameInput.value.trim();
+            const price = parseFloat(priceInput.value);
+            
+            if (name && !isNaN(price) && price > 0) {
+                approvedItems.push({ name, price });
+            }
+        }
+    }
+    
+    if (approvedItems.length === 0) {
+        alert('❌ Lütfen en az bir ürün seçin');
+        return;
+    }
+    
+    console.log('[OCR] Approved items:', approvedItems);
+    
+    // Create menu structure
+    const groupId = currentGroupForMenuScan;
+    const token = localStorage.getItem('hesapPaylas_token');
+    
+    // Simple menu structure
+    const menuData = {
+        categories: {
+            'OCR ile Okunan': approvedItems
+        }
+    };
+    
+    console.log('[OCR] Generated menu data:', menuData);
+    
+    // Update group with OCR menu
+    updateGroupWithOCRMenu(groupId, menuData);
+}
+
+async function updateGroupWithOCRMenu(groupId, menuData) {
+    console.log('[OCR] Updating group with OCR menu');
+    
+    const scannerContainer = document.getElementById('menuQRContainer');
+    scannerContainer.innerHTML = `
+        <div style="width: 100%; max-width: 500px; text-align: center;">
+            <div style="font-size: 2em; margin-bottom: 10px; color: white;">⏳</div>
+            <p style="color: white;">Menü kaydediliyor...</p>
+        </div>
+    `;
+    
+    try {
+        const token = localStorage.getItem('hesapPaylas_token');
+        const response = await fetch(`${API_BASE_URL}/groups/${groupId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                menu_data: menuData
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error('Menü kaydedilemedi');
+        }
+        
+        const groupData = await response.json();
+        console.log('[OCR] Menu updated successfully');
+        
+        // Stop scanner and show menu
+        setTimeout(() => {
+            stopMenuQRScan();
+            displayMenuUI(groupData);
+        }, 1000);
+        
+    } catch (error) {
+        console.error('[OCR] Error updating menu:', error);
+        alert('❌ Menü kaydedilemedi: ' + error.message);
+    }
+}
+
+function backToMenuScanOptions() {
+    console.log('[MENU-SCAN] Going back to menu scan options');
+    
+    // Stop video stream if any
+    if (window.menuPhotoStream) {
+        window.menuPhotoStream.getTracks().forEach(track => track.stop());
+        window.menuPhotoStream = null;
+    }
+    
+    // Stop QR scanner if any
+    if (menuQRScannerInstance) {
+        menuQRScannerInstance.stop().catch(e => console.log(e));
+        menuQRScannerInstance = null;
+    }
+    
+    // Show menu scan options again
+    startMenuQRScan();
+}
+
+// Store current group details ID for menu scanning
+let currentGroupDetailsId = null;
 
 function displayMenuUI(groupData) {
     const menuHTML = `

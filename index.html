@@ -30,6 +30,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
     
+    <!-- Tesseract.js for OCR -->
+    <script async src="https://cdn.jsdelivr.net/npm/tesseract.js@v2.1.5/dist/tesseract.min.js"></script>
+    
     <!-- DEBUG PANEL - TEMPORARY -->
     <style>
         #debugPanel {
@@ -1128,6 +1131,13 @@
                             <span id="detailGroupDate" style="color: #333; font-weight: 600; font-size: 0.9em;">-</span>
                         </div>
                     </div>
+                </div>
+
+                <!-- Menüyü Tarat - Herhangi bir üye tarayabilir -->
+                <div style="margin-bottom: 20px;">
+                    <button id="scanMenuBtn" onclick="startMenuQRScan()" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #FF6B6B 0%, #FF8E72 100%); color: white; border: none; border-radius: 10px; font-size: 0.95em; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);">
+                        🎥 Menüyü Tarat
+                    </button>
                 </div>
 
                 <!-- Hesap Özeti/Siparişler - Opens Modal -->

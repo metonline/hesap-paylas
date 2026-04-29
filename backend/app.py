@@ -2111,6 +2111,47 @@ def get_group(group_id):
         } for o in group.orders]
     }), 200
 
+@app.route('/api/groups/<int:group_id>', methods=['PUT'])
+@token_required
+def update_group(group_id):
+    """Update group menu data (OCR results)"""
+    try:
+        group = Group.query.get_or_404(group_id)
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({'error': 'Invalid request data'}), 400
+        
+        # Check if user is a group member
+        user = User.query.get(request.user_id)
+        if user not in group.members:
+            return jsonify({'error': 'Not a group member'}), 403
+        
+        # Update menu_data if provided
+        if 'menu_data' in data:
+            group.menu_data = data['menu_data']
+            print(f"[GROUP] Updated menu for group {group_id}")
+        
+        db.session.commit()
+        
+        return jsonify({
+            'id': group.id,
+            'name': group.name,
+            'description': group.description,
+            'category': group.category,
+            'code': group.code,
+            'code_formatted': format_group_code(group.code),
+            'restaurant_id': group.restaurant_id,
+            'restaurant_name': group.restaurant_name,
+            'menu_data': group.menu_data,
+            'created_at': group.created_at.isoformat(),
+            'members': [u.to_dict() for u in group.members]
+        }), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Failed to update group: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/groups/join', methods=['POST'])
 @token_required
 def join_group():
