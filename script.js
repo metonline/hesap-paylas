@@ -3205,37 +3205,187 @@ function startQRScannerForJoin() {
 function onQRCodeScannedForJoin(decodedText) {
     console.log('[QR] Code scanned:', decodedText);
     
-    // Try to extract group code from QR
-    // Could be a URL or just the code
-    let groupCode = decodedText;
+    // Try to extract restaurant name from QR
+    // Could be: "OBLOMOV", "DEVELİ NİŞANTAŞI | FineDine Menu https://..."
+    let restaurantName = decodedText;
     
-    // If it's a URL, try to extract the code parameter
-    if (decodedText.includes('code=')) {
-        const url = new URL(decodedText);
-        groupCode = url.searchParams.get('code') || decodedText;
+    // If it contains pipe separator, get the first part
+    if (decodedText.includes('|')) {
+        restaurantName = decodedText.split('|')[0].trim();
     }
     
-    // Clean code - remove any formatting
-    let cleanCode = groupCode.replace(/[^\d]/g, '');
+    // If it's a URL, extract the restaurant name (assuming it's at the start)
+    if (decodedText.includes('http')) {
+        restaurantName = decodedText.split(/\s+http/)[0].trim();
+    }
     
-    if (cleanCode.length === 6) {
+    console.log('[QR] Extracted restaurant name:', restaurantName);
+    
+    // Search for restaurant in local data or fetch from server
+    findRestaurantAndCreateGroup(restaurantName);
+}
+
+async function findRestaurantAndCreateGroup(restaurantName) {
+    try {
+        const resultsDiv = document.getElementById('qr-reader-results');
+        if (resultsDiv) resultsDiv.textContent = '⏳ Restoran aranıyor...';
+        
+        // Fetch restaurants data
+        const response = await fetch('/restaurants.json');
+        const allRestaurants = await response.json();
+        
+        // Search for restaurant by name (case-insensitive)
+        let restaurantId = null;
+        let restaurantData = null;
+        
+        for (const [id, data] of Object.entries(allRestaurants)) {
+            if (data.name.toLowerCase() === restaurantName.toLowerCase()) {
+                restaurantId = id;
+                restaurantData = data;
+                break;
+            }
+        }
+        
+        if (!restaurantId) {
+            if (resultsDiv) resultsDiv.textContent = `❌ Restoran bulunamadı: ${restaurantName}`;
+            return;
+        }
+        
+        console.log('[QR] Found restaurant:', restaurantId, restaurantData.name);
+        
+        // Check if user is logged in
+        const token = localStorage.getItem('hesapPaylas_token');
+        if (!token) {
+            // Save pending restaurant info and redirect to login
+            localStorage.setItem('pendingRestaurant', JSON.stringify({
+                id: restaurantId,
+                name: restaurantData.name
+            }));
+            if (resultsDiv) resultsDiv.textContent = '✅ Giriş yap ve grup oluştur...';
+            setTimeout(() => {
+                closeJoinGroupModal();
+                showLoginPage();
+            }, 1500);
+            return;
+        }
+        
+        // User is logged in - create group directly with restaurant
+        createGroupWithRestaurant(restaurantId, restaurantData);
+        
+    } catch (error) {
+        console.error('[QR] Error finding restaurant:', error);
+        const resultsDiv = document.getElementById('qr-reader-results');
+        if (resultsDiv) resultsDiv.textContent = '❌ Hata oluştu. Tekrar deneyin.';
+    }
+}
+
+async function createGroupWithRestaurant(restaurantId, restaurantData) {
+    try {
+        const resultsDiv = document.getElementById('qr-reader-results');
+        if (resultsDiv) resultsDiv.textContent = '⏳ Grup oluşturuluyor...';
+        
+        const token = localStorage.getItem('hesapPaylas_token');
+        
+        const response = await fetch(`${API_BASE_URL}/groups`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                name: restaurantData.name,
+                description: `${restaurantData.name} - Grup Siparişi`,
+                category: 'Restoran',
+                restaurant_id: restaurantId,
+                menu_data: restaurantData
+            })
+        });
+        
+        if (!response.ok) {
+            throw new Error(`Failed to create group: ${response.statusText}`);
+        }
+        
+        const groupData = await response.json();
+        console.log('[QR] Group created:', groupData.group);
+        
+        // Close QR scanner and show success
         stopQRScanner();
+        if (resultsDiv) resultsDiv.textContent = `✅ "${restaurantData.name}" grubu oluşturuldu!`;
         
-        // Show success and auto-redirect to login with code
-        document.getElementById('qr-reader-results').textContent = `✅ Kod bulundu: ${cleanCode.slice(0,3)}-${cleanCode.slice(3)}`;
-        document.getElementById('qr-reader-results').style.color = '#27ae60';
-        
-        // Auto-redirect to login with group code after 1.5 seconds
+        // Show menu after 1.5 seconds
         setTimeout(() => {
             closeJoinGroupModal();
-            // Set pending code and go to login
-            localStorage.setItem('pendingGroupCode', cleanCode);
-            showLoginPage();
+            showRestaurantMenu(groupData.group);
         }, 1500);
-    } else {
-        document.getElementById('qr-reader-results').textContent = '❌ Geçersiz QR kodu';
-        document.getElementById('qr-reader-results').style.color = '#e74c3c';
+        
+    } catch (error) {
+        console.error('[QR] Error creating group:', error);
+        const resultsDiv = document.getElementById('qr-reader-results');
+        if (resultsDiv) resultsDiv.textContent = '❌ Grup oluşturulamadı. Tekrar deneyin.';
     }
+}
+
+function showRestaurantMenu(groupData) {
+    console.log('[MENU] Showing menu for group:', groupData);
+    
+    if (!groupData.menu_data) {
+        alert('❌ Menü verisi bulunamadı!');
+        return;
+    }
+    
+    // Store current group in localStorage
+    localStorage.setItem('currentGroup', JSON.stringify(groupData));
+    
+    // Create a simple menu display page or modal
+    displayMenuUI(groupData);
+}
+
+function displayMenuUI(groupData) {
+    const menuHTML = `
+        <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 9999; overflow-y: auto; padding-top: 50px;">
+            <button onclick="closeMenu()" style="position: fixed; top: 10px; right: 10px; z-index: 10000; padding: 10px 15px; background: #e74c3c; color: white; border: none; border-radius: 5px; cursor: pointer;">✕ Kapat</button>
+            
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2>🍽️ ${groupData.restaurant_name || groupData.name}</h2>
+                <p style="color: #666;">Grup Kodu: <strong>${groupData.code_formatted || groupData.code}</strong></p>
+                
+                <div id="menuCategories" style="margin-top: 20px;">
+                    ${Object.entries(groupData.menu_data.categories || {})
+                        .map(([category, items]) => `
+                            <div style="margin-bottom: 30px;">
+                                <h3 style="color: #667eea; border-bottom: 2px solid #667eea; padding-bottom: 10px;">${category}</h3>
+                                <div style="display: grid; gap: 15px;">
+                                    ${items.map(item => `
+                                        <div style="border: 1px solid #ddd; border-radius: 8px; padding: 12px; cursor: pointer;" onclick="addItemToOrder('${item.name}', ${item.price})">
+                                            <div style="display: flex; justify-content: space-between; align-items: start;">
+                                                <div>
+                                                    <span style="font-size: 20px;">${item.emoji || '🍽️'}</span>
+                                                    <strong style="margin-left: 10px;">${item.name}</strong>
+                                                </div>
+                                                <span style="color: #667eea; font-weight: bold; font-size: 14px;">₺${item.price.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `).join('')}
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', menuHTML);
+}
+
+function closeMenu() {
+    const menuDiv = document.querySelector('div[style*="position: fixed"][style*="z-index: 9999"]');
+    if (menuDiv) menuDiv.remove();
+}
+
+function addItemToOrder(itemName, price) {
+    console.log(`[ORDER] Adding: ${itemName} - ₺${price}`);
+    // TODO: Implement order adding logic
+    alert(`✅ "${itemName}" sepete eklendi! (₺${price})`);
 }
 
 // Keep old function for backwards compatibility

@@ -90,5 +90,40 @@
         {"name": "Ayran", "price": 8.00, "emoji": "🥛", "image": "https://example.com/images/ayran.jpg"}
       ]
     }
+  },
+  "rest_004": {
+    "name": "OBLOMOV",
+    "phone": "0212-xxx-xxxx",
+    "website": "https://example.com/oblomov",
+    "google_menu_url": "https://share.google/AAmVRzZoWgbK0tFDr",
+    "categories": {
+      "Başlangıçlar": [
+        {"name": "Hummus", "price": 25.00, "emoji": "🥜", "image": "https://example.com/images/hummus.jpg"},
+        {"name": "Mücver", "price": 28.00, "emoji": "🥒", "image": "https://example.com/images/mucver.jpg"},
+        {"name": "Tavuk Şiş", "price": 35.00, "emoji": "🍗", "image": "https://example.com/images/tavuk-sis.jpg"}
+      ],
+      "Ana Yemekler": [
+        {"name": "Lüle Kebap", "price": 65.00, "emoji": "🍖", "image": "https://example.com/images/lule-kebap.jpg"},
+        {"name": "İskender", "price": 60.00, "emoji": "🍖", "image": "https://example.com/images/iskender.jpg"},
+        {"name": "Pide Fırında", "price": 55.00, "emoji": "🍞", "image": "https://example.com/images/pide.jpg"},
+        {"name": "Balık Pilaü", "price": 75.00, "emoji": "🐟", "image": "https://example.com/images/balik-pilau.jpg"}
+      ],
+      "Salatalar": [
+        {"name": "Çoban Salatası", "price": 20.00, "emoji": "🥗", "image": "https://example.com/images/coban-salata.jpg"},
+        {"name": "Roka Salatası", "price": 22.00, "emoji": "🥬", "image": "https://example.com/images/roka-salata.jpg"},
+        {"name": "Yeşil Salata", "price": 18.00, "emoji": "🥗", "image": "https://example.com/images/yesil-salata.jpg"}
+      ],
+      "Tatlılar": [
+        {"name": "Baklava", "price": 22.00, "emoji": "🍯", "image": "https://example.com/images/baklava.jpg"},
+        {"name": "Künefe", "price": 28.00, "emoji": "🧡", "image": "https://example.com/images/kunefe.jpg"},
+        {"name": "Fırın Sütlaç", "price": 20.00, "emoji": "🥣", "image": "https://example.com/images/sutlac.jpg"}
+      ],
+      "İçecekler": [
+        {"name": "Çay", "price": 5.00, "emoji": "🍵", "image": "https://example.com/images/cay.jpg"},
+        {"name": "Türk Kahvesi", "price": 10.00, "emoji": "☕", "image": "https://example.com/images/turk-kahvesi.jpg"},
+        {"name": "Ayran", "price": 8.00, "emoji": "🥛", "image": "https://example.com/images/ayran.jpg"},
+        {"name": "Şarap (Kırmızı)", "price": 45.00, "emoji": "🍷", "image": "https://example.com/images/sarap.jpg"}
+      ]
+    }
   }
 }
