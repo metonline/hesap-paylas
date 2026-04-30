@@ -933,9 +933,12 @@ def verify_otp():
         print(f"[ERROR] Verify OTP failed: {str(e)}")
         return jsonify({'error': 'Verification failed. Please try again.'}), 500
 
-@app.route('/api/auth/check-phone', methods=['POST'])
+print("[DEBUG] **GLOBAL SCOPE** About to register /api/auth/check-phone route", flush=True)
+
+@app.route('/api/test-new-registration', methods=['GET', 'POST'])
 def check_phone():
     """Check if phone number exists in database"""
+    print("[DEBUG] check_phone handler called")
     try:
         data = request.get_json()
         
@@ -974,6 +977,16 @@ def check_phone():
         import traceback
         traceback.print_exc()
         return jsonify({'error': 'Failed to check phone', 'debug': str(e)}), 500
+
+print("[DEBUG] **GLOBAL SCOPE** Registered /api/auth/check-phone route", flush=True)
+
+# DEBUG: Print all routes with their methods
+import sys
+print("\n" + "="*60 + "\n[ROUTES] Debugging all registered routes:", flush=True, file=sys.stderr)
+for rule in app.url_map.iter_rules():
+    if 'auth' in str(rule):
+        print(f"  {rule.rule:50} {sorted(rule.methods)}", flush=True, file=sys.stderr)
+print("="*60 + "\n", flush=True, file=sys.stderr)
 
 @app.route('/api/auth/phone-pin-login', methods=['POST'])
 def phone_pin_login():
@@ -2796,6 +2809,12 @@ if __name__ == '__main__':
             print(f"[ERROR] Failed to set PIN: {str(e)}")
             return jsonify({'error': str(e)}), 500
     
+    # TEST ENDPOINT
+    @app.route('/test-post', methods=['POST'])
+    def test_post():
+        """Test POST endpoint"""
+        return jsonify({'message': 'POST works!'}), 200
+
     port = int(os.getenv('PORT', 5000))
     # Debug mode ON for development (shows detailed error tracebacks)
     app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)

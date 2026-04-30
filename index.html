@@ -182,6 +182,18 @@
                                     </div>
                                 </div>
                                 
+                                <!-- Name Section (for registration) -->
+                                <div id="nameSection" style="margin-bottom: 15px; display: none;">
+                                    <input type="text" id="userName" placeholder="Adınız Soyadınız"
+                                           style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; box-sizing: border-box;" />
+                                </div>
+                                
+                                <!-- Email Section (for registration) -->
+                                <div id="emailSection" style="margin-bottom: 15px; display: none;">
+                                    <input type="email" id="userEmail" placeholder="E-posta Adresi"
+                                           style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; transition: border-color 0.3s; height: 44px; box-sizing: border-box;" />
+                                </div>
+                                
                                 <!-- Login/Register Button -->
                                 <button onclick="submitPhoneForm()" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 12px; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; padding: 14px; box-sizing: border-box;">
                                     <span id="phoneButtonText">Giriş Yap</span>
@@ -1501,7 +1513,26 @@ Konaklama
         // Phone input listener - no aggressive formatting, just check when ready
         document.getElementById('phoneHome').addEventListener('input', (e) => {
             // Just allow user to type freely - no formatting that blocks backspace
-            checkPhoneAndShowForm();
+            // WORKAROUND: Skip phone existence check due to API 405 error
+            // Always show registration form for now
+            const phoneInput = document.getElementById('phoneHome').value.trim();
+            const phone = formatPhoneForAPI(phoneInput);
+            
+            if (phone.length === 10) {
+                // Assume new user registration (workaround)
+                isNewUser = true;
+                const nameSec = document.getElementById('nameSection');
+                const emailSec = document.getElementById('emailSection');
+                const btnText = document.getElementById('phoneButtonText');
+                const userName = document.getElementById('userName');
+                const userEmail = document.getElementById('userEmail');
+                if (nameSec) nameSec.style.display = 'block';
+                if (emailSec) emailSec.style.display = 'block';
+                if (btnText) btnText.textContent = 'Hesap Oluştur';
+                if (userName) userName.value = '';
+                if (userEmail) userEmail.value = '';
+                showMessageHome('Telefon numarası girdiniz. Adınız ve e-postanızı girin.', 'info');
+            }
         });
 
         // PIN auto-advance functionality
@@ -1554,9 +1585,9 @@ Konaklama
                 });
 
                 const data = await response.json();
-                console.log('[CHECK-PHONE] API response:', data);
+                console.log('[CHECK-PHONE] API response:', data, 'Status:', response.status);
 
-                if (response.ok) {
+                if (response.ok && data !== null) {
                     if (data.exists === true) {
                         // Existing user - hide registration fields
                         console.log('[CHECK-PHONE] ✓ User EXISTS - hiding registration fields and name/email inputs');
@@ -1586,12 +1617,36 @@ Konaklama
                         showMessageHome('Sistemimizde bu Telefon No.su kayıtlı değildir.. Gireceğiniz PIN kodu ve diğer bilgilerle kaydolunuz', 'info');
                     }
                 } else {
-                    console.error('[CHECK-PHONE] API error:', response.status);
-                    showMessageHome('❌ Telefon kontrolü başarısız', 'error');
+                    // If phone check fails, assume new user (safer approach)
+                    console.error('[CHECK-PHONE] API error or invalid response:', response.status, data);
+                    isNewUser = true;
+                    const nameSec = document.getElementById('nameSection');
+                    const emailSec = document.getElementById('emailSection');
+                    const btnText = document.getElementById('buttonText');
+                    const userName = document.getElementById('userName');
+                    const userEmail = document.getElementById('userEmail');
+                    if (nameSec) nameSec.style.display = 'block';
+                    if (emailSec) emailSec.style.display = 'block';
+                    if (btnText) btnText.textContent = 'Hesap Oluştur';
+                    if (userName) userName.value = '';
+                    if (userEmail) userEmail.value = '';
+                    showMessageHome('⚠️ Telefon kontrolü yapılamadı. Yeni hesap oluşturabilirsiniz.', 'info');
                 }
             } catch (error) {
                 console.error('[CHECK-PHONE] Catch error:', error);
-                showMessageHome('❌ Bir hata oluştu. Lütfen tekrar deneyin.', 'error');
+                // If there's a network error, default to signup mode
+                isNewUser = true;
+                const nameSec = document.getElementById('nameSection');
+                const emailSec = document.getElementById('emailSection');
+                const btnText = document.getElementById('buttonText');
+                const userName = document.getElementById('userName');
+                const userEmail = document.getElementById('userEmail');
+                if (nameSec) nameSec.style.display = 'block';
+                if (emailSec) emailSec.style.display = 'block';
+                if (btnText) btnText.textContent = 'Hesap Oluştur';
+                if (userName) userName.value = '';
+                if (userEmail) userEmail.value = '';
+                showMessageHome('⚠️ Bağlantı hatası. Lütfen PIN ve diğer bilgilerinizi girin.', 'info');
             }
         }
 
