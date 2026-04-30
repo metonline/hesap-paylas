@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMS Verification Test - Hesap Paylaş</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .subtitle {
+            color: #999;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ecf0f1;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .phone-format {
+            color: #999;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            display: none;
+            font-size: 14px;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .message.active {
+            display: block;
+        }
+
+        .step-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            display: none;
+        }
+
+        .step.active {
+            display: block;
+        }
+
+        .step-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .code-display {
+            background: white;
+            border: 2px dashed #667eea;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: #667eea;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .back-button {
+            background: #ecf0f1;
+            color: #333;
+            margin-top: 10px;
+        }
+
+        .back-button:hover {
+            background: #bdc3c7;
+        }
+
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #0c3475;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🥄 SMS Verification Test</h1>
+        <p class="subtitle">Test Twilio SMS sending for Hesap Paylaş</p>
+
+        <div id="message" class="message"></div>
+
+        <!-- Step 1: Enter Phone -->
+        <div id="step1" class="step-container step active">
+            <div class="step-title">Step 1: Enter Your Phone Number</div>
+            <div class="info-box">
+                📱 Enter a phone number starting with 0 (e.g., 0532 313 3277) or +90 format
+            </div>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" id="phoneInput" placeholder="0532 313 3277" maxlength="20">
+                <div class="phone-format">Format: Turkish number starting with 0 or +90</div>
+            </div>
+            <button onclick="requestOTP()">📲 Send SMS Code</button>
+        </div>
+
+        <!-- Step 2: Enter Code -->
+        <div id="step2" class="step-container step" style="display: none;">
+            <div class="step-title">Step 2: Enter Verification Code</div>
+            <div class="info-box">
+                ✉️ Check your SMS for the 6-digit code and enter it below
+            </div>
+            <div class="form-group">
+                <label>Verification Code</label>
+                <input type="text" id="codeInput" placeholder="000000" maxlength="6">
+                <div class="phone-format">6-digit code from SMS</div>
+            </div>
+            <button onclick="verifyOTP()">✅ Verify Code</button>
+            <button class="back-button" onclick="goBackToPhone()">← Back</button>
+        </div>
+
+        <!-- Step 3: Success -->
+        <div id="step3" class="step-container step" style="display: none;">
+            <div class="step-title">✅ Verification Successful!</div>
+            <div class="info-box">
+                Your phone number has been verified successfully. SMS verification is working! 🎉
+            </div>
+            <div id="userInfo" style="background: white; padding: 15px; border-radius: 6px; margin-bottom: 15px;"></div>
+            <button onclick="startOver()">🔄 Test Another Number</button>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.location.origin + '/api';
+        let currentPhone = '';
+        let verificationSid = '';
+
+        function showMessage(msg, type) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = msg;
+            messageEl.className = `message ${type} active`;
+            setTimeout(() => messageEl.classList.remove('active'), 6000);
+        }
+
+        async function requestOTP() {
+            const phoneInput = document.getElementById('phoneInput').value.trim();
+            
+            if (!phoneInput) {
+                showMessage('❌ Please enter a phone number', 'error');
+                return;
+            }
+
+            currentPhone = phoneInput;
+            
+            // Clean phone
+            let cleanPhone = phoneInput.replace(/\D/g, '');
+            
+            try {
+                document.querySelector('button').disabled = true;
+                showMessage('📱 Sending SMS code...', 'info');
+
+                const response = await fetch(`${API_BASE}/auth/request-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: cleanPhone })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    verificationSid = data.verification_sid;
+                    showMessage(`✅ SMS sent to phone ending in ${data.phone_masked}!`, 'success');
+                    
+                    // Move to step 2
+                    document.getElementById('step1').classList.remove('active');
+                    document.getElementById('step2').classList.add('active');
+                    document.getElementById('codeInput').focus();
+                } else {
+                    showMessage(`❌ Error: ${data.error || 'Failed to send SMS'}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            } finally {
+                document.querySelector('button').disabled = false;
+            }
+        }
+
+        async function verifyOTP() {
+            const code = document.getElementById('codeInput').value.trim();
+            
+            if (!code || code.length !== 6) {
+                showMessage('❌ Please enter a valid 6-digit code', 'error');
+                return;
+            }
+
+            let cleanPhone = currentPhone.replace(/\D/g, '');
+            
+            try {
+                showMessage('🔍 Verifying code...', 'info');
+
+                const response = await fetch(`${API_BASE}/auth/verify-otp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        phone: cleanPhone,
+                        code: code,
+                        verification_sid: verificationSid
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showMessage('✅ Phone verified successfully!', 'success');
+                    
+                    // Save token
+                    if (data.token) {
+                        localStorage.setItem('hesapPaylas_token', data.token);
+                        localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                    }
+                    
+                    // Move to step 3
+                    document.getElementById('step2').classList.remove('active');
+                    document.getElementById('step3').classList.add('active');
+                    
+                    // Show user info
+                    const userInfo = document.getElementById('userInfo');
+                    userInfo.innerHTML = `
+                        <p><strong>User:</strong> ${data.user.first_name} ${data.user.last_name || ''}</p>
+                        <p><strong>Phone:</strong> ${data.user.phone}</p>
+                        <p><strong>Email:</strong> ${data.user.email}</p>
+                        <p><strong>Account Type:</strong> ${data.is_new_user ? '🆕 New User' : '👤 Existing User'}</p>
+                    `;
+                } else {
+                    showMessage(`❌ Invalid code: ${data.error || 'Please try again'}`, 'error');
+                }
+            } catch (error) {
+                showMessage(`❌ Error: ${error.message}`, 'error');
+            }
+        }
+
+        function goBackToPhone() {
+            document.getElementById('step2').classList.remove('active');
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('phoneInput').focus();
+        }
+
+        function startOver() {
+            document.getElementById('step3').classList.remove('active');
+            document.getElementById('step1').classList.add('active');
+            document.getElementById('phoneInput').value = '';
+            document.getElementById('codeInput').value = '';
+            document.getElementById('message').classList.remove('active');
+            document.getElementById('phoneInput').focus();
+        }
+
+        // Focus phone input on load
+        window.onload = function() {
+            document.getElementById('phoneInput').focus();
+        };
+
+        // Allow Enter key
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const step2 = document.getElementById('step2');
+                if (step2.classList.contains('active')) {
+                    verifyOTP();
+                } else {
+                    requestOTP();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
