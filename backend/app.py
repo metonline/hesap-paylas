@@ -56,15 +56,21 @@ print(f"[INIT] Flask app created successfully", flush=True)
 @app.before_request
 def enforce_https():
     """Force HTTP → HTTPS redirect in production"""
+    # DEBUG: Log the request details
+    print(f"[HTTPS] Host: {request.host}, Scheme: {request.scheme}, URL: {request.url[:50]}", flush=True)
+    
     # Only redirect on production domain
     if request.host in ['hesappaylas.com', 'www.hesappaylas.com']:
         # Check scheme (works better with proxies than checking request.url)
         if request.scheme == 'http':
+            print(f"[HTTPS] REDIRECTING http→https", flush=True)
             # Reconstruct URL with HTTPS
             url = f"https://{request.host}{request.full_path}"
             if request.query_string:
                 url += f"?{request.query_string.decode()}"
             return redirect(url, code=301)
+        else:
+            print(f"[HTTPS] Already HTTPS, no redirect needed", flush=True)
 
 # ==================== PHONE NORMALIZATION UTILITY ====================
 def normalize_phone(phone):
