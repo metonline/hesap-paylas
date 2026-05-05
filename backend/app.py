@@ -18,7 +18,7 @@ from email.mime.multipart import MIMEMultipart
 from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory, redirect
 from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -51,6 +51,17 @@ print(f"[APP] Files in BASE_DIR: {sorted([f.name for f in BASE_DIR.glob('*') if 
 print(f"[INIT] Creating Flask app", flush=True)
 app = Flask(__name__)
 print(f"[INIT] Flask app created successfully", flush=True)
+
+# ==================== HTTPS REDIRECT MIDDLEWARE ====================
+@app.before_request
+def enforce_https():
+    """Force HTTP → HTTPS redirect in production"""
+    # Only redirect on production domain
+    if request.host in ['hesappaylas.com', 'www.hesappaylas.com']:
+        # Check if request is HTTP (not HTTPS)
+        if request.url.startswith('http://'):
+            url = request.url.replace('http://', 'https://', 1)
+            return redirect(url, code=301)
 
 # ==================== PHONE NORMALIZATION UTILITY ====================
 def normalize_phone(phone):
@@ -2814,6 +2825,34 @@ if __name__ == '__main__':
     def test_post():
         """Test POST endpoint"""
         return jsonify({'message': 'POST works!'}), 200
+
+    # Admin endpoint to update script.js
+    @app.route('/api/admin/update-script', methods=['POST'])
+    def update_script():
+        """Update script.js on server"""
+        try:
+            # Get the file content from request
+            data = request.get_json(force=True, silent=True)
+            if not data:
+                return jsonify({'error': 'Invalid JSON'}), 400
+            
+            script_content = data.get('content', '')
+            
+            if not script_content:
+                return jsonify({'error': 'No content provided'}), 400
+            
+            # Write to public_html/script.js
+            script_path = Path('/home/hes20caylascom/public_html/script.js')
+            with open(script_path, 'w', encoding='utf-8') as f:
+                f.write(script_content)
+            
+            print(f"[ADMIN] script.js updated successfully ({len(script_content)} bytes)", flush=True)
+            return jsonify({'success': True, 'message': 'script.js updated'}), 200
+        except Exception as e:
+            print(f"[ERROR] Failed to update script.js: {str(e)}", flush=True)
+            import traceback
+            traceback.print_exc()
+            return jsonify({'error': str(e)}), 500
 
     port = int(os.getenv('PORT', 5000))
     # Debug mode ON for development (shows detailed error tracebacks)
