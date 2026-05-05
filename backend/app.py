@@ -58,9 +58,12 @@ def enforce_https():
     """Force HTTP → HTTPS redirect in production"""
     # Only redirect on production domain
     if request.host in ['hesappaylas.com', 'www.hesappaylas.com']:
-        # Check if request is HTTP (not HTTPS)
-        if request.url.startswith('http://'):
-            url = request.url.replace('http://', 'https://', 1)
+        # Check scheme (works better with proxies than checking request.url)
+        if request.scheme == 'http':
+            # Reconstruct URL with HTTPS
+            url = f"https://{request.host}{request.full_path}"
+            if request.query_string:
+                url += f"?{request.query_string.decode()}"
             return redirect(url, code=301)
 
 # ==================== PHONE NORMALIZATION UTILITY ====================
