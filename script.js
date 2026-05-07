@@ -104,8 +104,8 @@ const API_BASE_URL = (() => {
         return `${protocol}//${hostname}:5000/api`;
     }
     
-    // Production: Always HTTPS
-    return `https://${hostname}/api`;
+    // Production: Always HTTPS (via PHP proxy)
+    return `https://${hostname}/api.php/`;
 })();
 console.log('[API] Base URL:', API_BASE_URL);
 
