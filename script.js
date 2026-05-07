@@ -99,20 +99,14 @@ const API_BASE_URL = (() => {
     const hostname = window.location.hostname;
     const port = window.location.port;
     
-    // Local development detection
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        // Local: Frontend runs on Live Server (usually port 5500 or 3000)
-        // Backend runs on Flask (port 5000)
-        // Always use backend's actual port
         console.log('[API] Local environment detected - using Flask backend on port 5000');
         return `${protocol}//${hostname}:5000/api`;
     }
     
-    // Production: API is on same server/port (via nginx proxy)
-    const baseUrl = port ? `${protocol}//${hostname}:${port}` : `${protocol}//${hostname}`;
-    return `${baseUrl}/api`;
+    // Production: Always HTTPS
+    return `https://${hostname}/api`;
 })();
-
 console.log('[API] Base URL:', API_BASE_URL);
 
 // Helper function to get base URL for API
@@ -513,9 +507,11 @@ const api = {
             }
         };
 
+        let url = `${API_BASE_URL}${endpoint}`;
         const token = localStorage.getItem('hesapPaylas_token');
         if (token) {
-            options.headers['Authorization'] = `Bearer ${token}`;
+            const sep = endpoint.includes('?') ? '&' : '?';
+            url = `${API_BASE_URL}${endpoint}${sep}token=${encodeURIComponent(token)}`;
         }
 
         if (data) {
@@ -523,7 +519,7 @@ const api = {
         }
 
         try {
-            const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
+            const response = await fetch(url, options);
             
             if (!response.ok) {
                 const contentType = response.headers.get('content-type');
@@ -828,12 +824,8 @@ function handleManualLogin(event) {
             // IMPORTANT: Start with button hidden - let loadActiveGroups() decide
             document.getElementById('activeGroupButton').style.display = 'none';
             
-            fetch(`${API_BASE_URL}/user/groups`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-            .then(response => response.json())
+            // Use api.request to send token as query parameter
+            api.request('GET', '/user/groups')
             .then(groups => {
                 // loadActiveGroups() will show/hide button based on groups
                 loadActiveGroups();
@@ -4620,19 +4612,12 @@ function createNewGroup() {
     messageDiv.textContent = '⏳ Grup oluşturuluyor...';
     messageDiv.style.color = '#f39c12';
     
-    fetch(`${baseURL}/api/groups`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-            name: groupName,
-            description: groupDescription || null,
-            category: groupCategory
-        })
+    // Use api.request() to send token as query parameter
+    api.request('POST', '/groups', {
+        name: groupName,
+        description: groupDescription || null,
+        category: groupCategory
     })
-    .then(response => response.json())
     .then(data => {
         if (data.success) {
             const newGroup = data.group;
@@ -4740,14 +4725,8 @@ function loadActiveGroups() {
     const token = localStorage.getItem('hesapPaylas_token');
     if (!token) return Promise.resolve();
     
-    loadActiveGroupsInProgress = true;
-    const baseURL = getBaseURL();
-    return fetch(`${baseURL}/api/user/groups`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(response => response.json())
+    // Use api.request() to send token as query parameter instead of Authorization header
+    return api.request('GET', '/user/groups')
     .then(groups => {
         console.log('[GROUPS] API returned:', groups.length, 'groups', groups);
         const listContainer = document.getElementById('activeGroupsFloatingList');
