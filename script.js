@@ -104,8 +104,8 @@ const API_BASE_URL = (() => {
         return `${protocol}//${hostname}:5000/api`;
     }
     
-    // Production: Always HTTPS (via PHP proxy)
-    return `https://${hostname}/api.php/`;
+    // Production: Use Gunicorn on port 8000
+    return `https://${hostname}:8000/api`;
 })();
 console.log('[API] Base URL:', API_BASE_URL);
 
