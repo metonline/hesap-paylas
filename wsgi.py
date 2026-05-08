@@ -5,6 +5,7 @@ import os
 import sys
 import traceback
 from pathlib import Path
+from dotenv import load_dotenv
 
 print("[WSGI] ===== WSGI INITIALIZATION START =====", flush=True)
 print(f"[WSGI] Python: {sys.version}", flush=True)
