@@ -1195,7 +1195,7 @@ def reset_pin():
                 'phone': user.phone,
                 'exp': datetime.utcnow() + timedelta(days=30)
             },
-            os.getenv('JWT_SECRET', 'dev-secret'),
+            app.config['JWT_SECRET'],
             algorithm='HS256'
         )
         
