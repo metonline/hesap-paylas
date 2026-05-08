@@ -2,7 +2,7 @@ services:
   - type: web
     name: hesap-paylas-api
     env: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: pip install -r requirements.txt && echo "Build timestamp $(date)" 
     startCommand: sh start.sh
     envVars:
       - key: DATABASE_URL
