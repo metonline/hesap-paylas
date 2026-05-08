@@ -26,6 +26,15 @@ from dotenv import load_dotenv
 from google.auth.transport import requests as google_requests
 from google.oauth2 import id_token
 
+# Check for psycopg2 availability for PostgreSQL
+try:
+    import psycopg2
+    HAS_PSYCOPG2 = True
+    print("[IMPORT] ✅ psycopg2 available for PostgreSQL", flush=True)
+except ImportError:
+    HAS_PSYCOPG2 = False
+    print("[IMPORT] ⚠️  psycopg2 NOT available - PostgreSQL disabled", flush=True)
+
 # Load env
 load_dotenv()
 
@@ -276,38 +285,42 @@ db_type = None
 # Try to use DATABASE_URL if available and valid
 if os.getenv('DATABASE_URL'):
     test_url = os.getenv('DATABASE_URL')
+    print(f"[DB] DATABASE_URL detected: {test_url[:50]}...", flush=True)
     # Check if we can actually use this database
     if 'sqlite' in test_url.lower():
         database_url = test_url
         db_type = 'SQLite (Local)'
+        print(f"[DB] Detected SQLite database", flush=True)
     elif 'postgres' in test_url.lower():
+        print(f"[DB] Detected PostgreSQL database - HAS_PSYCOPG2={HAS_PSYCOPG2}", flush=True)
         # Try to import psycopg2 to check if PostgreSQL is available
-        try:
-            import psycopg2
+        if HAS_PSYCOPG2:
+            print(f"[DB] ✅ Using PostgreSQL", flush=True)
             database_url = test_url
             if database_url.startswith('postgres://'):
                 database_url = database_url.replace('postgres://', 'postgresql://', 1)
             db_type = 'PostgreSQL (Render)'
-        except ImportError:
+        else:
             # psycopg2 not installed - will fall back to SQLite below
-            print("[WARN] psycopg2 not installed - falling back to SQLite")
-            pass
+            print(f"[DB] ❌ psycopg2 not available - falling back to SQLite", flush=True)
     elif 'mysql' in test_url.lower():
         database_url = test_url
         db_type = 'MySQL (cPanel)'
+        print(f"[DB] Detected MySQL database", flush=True)
 
 if not database_url:
     # Check RENDER_DATABASE_URL as backup
     if os.getenv('RENDER_DATABASE_URL'):
         test_url = os.getenv('RENDER_DATABASE_URL')
-        try:
-            import psycopg2
+        print(f"[DB] RENDER_DATABASE_URL detected (DATABASE_URL was empty) - HAS_PSYCOPG2={HAS_PSYCOPG2}", flush=True)
+        if HAS_PSYCOPG2:
+            print(f"[DB] ✅ Using PostgreSQL from RENDER_DATABASE_URL", flush=True)
             database_url = test_url
             if database_url.startswith('postgres://'):
                 database_url = database_url.replace('postgres://', 'postgresql://', 1)
             db_type = 'PostgreSQL (Render)'
-        except ImportError:
-            print("[WARN] psycopg2 not installed, RENDER_DATABASE_URL ignored")
+        else:
+            print(f"[DB] ❌ psycopg2 not available - RENDER_DATABASE_URL ignored", flush=True)
             pass
 
 if not database_url:
@@ -317,6 +330,7 @@ if not database_url:
     db_path = os.path.join(instance_path, 'hesap_paylas.db')
     database_url = f'sqlite:///{db_path}'
     db_type = 'SQLite (Local)'
+    print(f"[DB] No DATABASE_URL set - using local SQLite", flush=True)
 
 # Log database selection
 print(f"\n{'='*60}")
