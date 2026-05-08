@@ -8,10 +8,15 @@ echo "📦 Installing dependencies..."
 pip install -r requirements.txt
 
 echo "🌱 Seeding database..."
-python seed_render.py || {
-    echo "⚠️ Seed script failed, but continuing with Gunicorn..."
-    echo "Database may be already seeded or will be created on first request"
+python seed_render.py 2>&1 | tee /tmp/seed_output.log || {
+    SEED_EXIT=$?
+    echo "⚠️ Seed script exited with code $SEED_EXIT"
+    echo "⚠️ Full output saved to /tmp/seed_output.log"
+    echo "⚠️ Continuing with Gunicorn anyway..."
 }
 
+# Give database time to be ready
+sleep 2
+
 echo "🚀 Starting Gunicorn..."
-gunicorn --bind 0.0.0.0:$PORT wsgi:application
+exec gunicorn --bind 0.0.0.0:$PORT wsgi:application

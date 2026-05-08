@@ -8,11 +8,23 @@ import os
 import sys
 from pathlib import Path
 
+print("[SEED] Starting seed script...", flush=True)
+print(f"[SEED] DATABASE_URL: {os.getenv('DATABASE_URL', 'NOT SET')}", flush=True)
+print(f"[SEED] RENDER_DATABASE_URL: {os.getenv('RENDER_DATABASE_URL', 'NOT SET')}", flush=True)
+
 # Add backend to path
 backend_path = Path(__file__).parent / 'backend'
 sys.path.insert(0, str(backend_path))
 
-from app import app, db, User
+try:
+    print("[SEED] Importing Flask app...", flush=True)
+    from app import app, db, User
+    print("[SEED] ✓ Flask app imported", flush=True)
+except Exception as e:
+    print(f"[SEED] ❌ Failed to import Flask app: {e}", flush=True)
+    import traceback
+    traceback.print_exc()
+    sys.exit(1)
 
 def seed_database():
     """Create test users in database"""
@@ -20,10 +32,14 @@ def seed_database():
     with app.app_context():
         # Create tables
         try:
+            print("[SEED] Creating database tables...", flush=True)
             db.create_all()
-            print("✅ Database tables created")
+            print("[SEED] ✅ Database tables created", flush=True)
         except Exception as e:
-            print(f"⚠️  Error creating tables: {e}")
+            print(f"[SEED] ❌ Error creating tables: {e}", flush=True)
+            import traceback
+            traceback.print_exc()
+            return False
         
         # Test users to create
         test_users = [
@@ -73,6 +89,7 @@ def seed_database():
         
         # Create users if they don't exist
         created_count = 0
+        print(f"[SEED] Processing {len(test_users)} test users...", flush=True)
         for user_data in test_users:
             try:
                 existing = User.query.filter_by(email=user_data['email']).first()
@@ -86,30 +103,44 @@ def seed_database():
                     user.set_password(user_data['password'])
                     db.session.add(user)
                     created_count += 1
-                    print(f"  ➕ Creating {user_data['email']}")
+                    print(f"[SEED]   ➕ Creating {user_data['email']}", flush=True)
                 else:
-                    print(f"  ✓ {user_data['email']} already exists")
+                    print(f"[SEED]   ✓ {user_data['email']} already exists", flush=True)
             except Exception as e:
-                print(f"  ❌ Error creating {user_data['email']}: {e}")
+                print(f"[SEED]   ❌ Error creating {user_data['email']}: {e}", flush=True)
         
+        print(f"[SEED] Committing {created_count} new users to database...", flush=True)
         try:
             db.session.commit()
-            print(f"\n✅ Database seeded! Created {created_count} new users")
+            print(f"[SEED] ✅ Database seeded! Created {created_count} new users", flush=True)
             
             # Verify
             all_users = User.query.all()
-            print(f"📊 Total users in database: {len(all_users)}")
+            print(f"[SEED] 📊 Total users in database: {len(all_users)}", flush=True)
             for user in all_users:
-                print(f"   - {user.email} ({user.first_name} {user.last_name})")
+                print(f"[SEED]    - {user.email} ({user.first_name} {user.last_name})", flush=True)
                 
         except Exception as e:
-            print(f"❌ Error committing seed data: {e}")
+            print(f"[SEED] ❌ Error committing seed data: {e}", flush=True)
+            import traceback
+            traceback.print_exc()
             db.session.rollback()
             return False
     
     return True
 
 if __name__ == '__main__':
-    print("🌱 Seeding Render database...")
-    success = seed_database()
-    sys.exit(0 if success else 1)
+    print("[SEED] 🌱 Seeding Render database...", flush=True)
+    try:
+        success = seed_database()
+        if success:
+            print("[SEED] ✅ Seed script completed successfully", flush=True)
+            sys.exit(0)
+        else:
+            print("[SEED] ⚠️  Seed script completed with errors", flush=True)
+            sys.exit(0)  # Don't fail startup
+    except Exception as e:
+        print(f"[SEED] ❌ Seed script failed with exception: {e}", flush=True)
+        import traceback
+        traceback.print_exc()
+        sys.exit(0)  # Don't fail startup - database might auto-initialize later
