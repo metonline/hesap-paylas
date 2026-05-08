@@ -4982,6 +4982,184 @@ function showGroupMembersModal(groupId) {
             
             membersList.appendChild(membersContainer);
         }
+
+// ===== EMAIL LOGIN/SIGNUP COMBINED FUNCTION =====
+async function submitEmailForm() {
+    const email = document.getElementById('emailHome')?.value?.trim();
+    const password = document.getElementById('passwordHome')?.value;
+    
+    if (!email || !password) {
+        alert('Lütfen e-posta ve şifre giriniz!');
+        return;
+    }
+    
+    // Email validasyonu
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Geçerli bir e-posta adresi giriniz!');
+        return;
+    }
+    
+    try {
+        // Önce login dene
+        const loginResponse = await api.login(email, password);
+        
+        // Login başarılı
+        localStorage.setItem('hesapPaylas_token', loginResponse.token);
+        localStorage.setItem('hesapPaylas_user', JSON.stringify(loginResponse.user));
+        app.currentUser = loginResponse.user;
+        
+        // Formu temizle
+        document.getElementById('emailHome').value = '';
+        document.getElementById('passwordHome').value = '';
+        
+        // Ana sayfaya git
+        showHomePage();
+        updateHomePageProfile();
+        
+        console.log('[LOGIN] ✅ Login successful:', loginResponse.user.email);
+        
+    } catch (error) {
+        // Login başarısız - signup'a dönüş yap
+        const errorStr = (error.message || error.toString()).toLowerCase();
+        
+        if (errorStr.includes('not found') || errorStr.includes('invalid') || errorStr.includes('401')) {
+            console.log('[EMAIL FORM] Login başarısız, signup dene...');
+            
+            // Signup için modal aç
+            showSignupModal(email);
+        } else {
+            // Başka bir hata
+            alert('Hata: ' + (error.message || 'Bir hata oluştu'));
+        }
+    }
+}
+
+// Signup modal göster
+function showSignupModal(prefilledEmail = '') {
+    // Modal HTML oluştur
+    const modal = document.createElement('div');
+    modal.id = 'signupModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease-out;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        width: 90%;
+        max-width: 400px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        animation: slideUp 0.3s ease-out;
+    `;
+    
+    content.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #333; margin: 0 0 10px 0;">Hesap Oluştur</h2>
+            <p style="color: #999; font-size: 14px; margin: 0;">Hesap Paylaş'a katılın</p>
+        </div>
+        
+        <form id="manualSignupForm" style="width: 100%;">
+            <div style="margin-bottom: 15px;">
+                <input 
+                    type="text" 
+                    id="signupFirstName" 
+                    placeholder="Ad"
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
+                    autocomplete="off"
+                    required
+                />
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <input 
+                    type="text" 
+                    id="signupLastName" 
+                    placeholder="Soyadı"
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
+                    autocomplete="off"
+                    required
+                />
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <input 
+                    type="email" 
+                    id="email" 
+                    placeholder="E-posta"
+                    value="${prefilledEmail}"
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
+                    autocomplete="off"
+                    required
+                />
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <input 
+                    type="tel" 
+                    id="phone" 
+                    placeholder="Telefon (05323332222)"
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
+                    autocomplete="off"
+                    required
+                />
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Şifre"
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
+                    autocomplete="off"
+                    required
+                />
+            </div>
+            
+            <button type="submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer;">
+                Kayıt Ol
+            </button>
+        </form>
+        
+        <button onclick="closeSignupModal()" style="width: 100%; padding: 10px; margin-top: 10px; background: #f0f0f0; color: #333; border: none; border-radius: 10px; font-size: 14px; cursor: pointer;">
+            İptal
+        </button>
+    `;
+    
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    // Form submit handler
+    document.getElementById('manualSignupForm').addEventListener('submit', handleManualSignup);
+    
+    // Modal kapatma - backdrop
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closeSignupModal();
+        }
+    });
+}
+
+function closeSignupModal() {
+    const modal = document.getElementById('signupModal');
+    if (modal) {
+        modal.remove();
+    }
+}
         
         // Sipariş / Harcama Butonu
         const orderBtn = document.createElement('button');
