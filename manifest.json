@@ -1,6 +1,6 @@
 {
-  "name": "Hesap Paylaş - Turnuva Paneli",
-  "short_name": "Turnuva Paneli",
+  "name": "Hesap Paylaş",
+  "short_name": "Hesap Paylaş",
   "description": "Hızlı ve adil hesap bölüştürme uygulaması",
   "start_url": "/index.html",
   "scope": "/",
