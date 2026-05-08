@@ -19,10 +19,24 @@ try:
     sys.path.insert(0, str(project_root))
     print(f"[WSGI] Project root: {project_root}", flush=True)
     
-    # Load environment variables
-    from dotenv import load_dotenv
+    # Load environment variables - BUT preserve Render's settings
     print("[WSGI] Loading .env...", flush=True)
+    
+    # Save Render's environment variables BEFORE loading .env
+    render_database_url = os.getenv('DATABASE_URL')
+    render_render_database_url = os.getenv('RENDER_DATABASE_URL')
+    
+    # Load .env file
     load_dotenv()
+    
+    # RESTORE Render's environment variables (they take priority over .env)
+    if render_database_url:
+        os.environ['DATABASE_URL'] = render_database_url
+        print(f"[WSGI] ✓ Restored Render's DATABASE_URL from environment (overrides .env)", flush=True)
+    if render_render_database_url:
+        os.environ['RENDER_DATABASE_URL'] = render_render_database_url
+        print(f"[WSGI] ✓ Restored Render's RENDER_DATABASE_URL from environment", flush=True)
+    
     print(f"[WSGI] DATABASE_URL set: {bool(os.getenv('DATABASE_URL'))}", flush=True)
     
     # Import Flask app - this is where errors usually happen
