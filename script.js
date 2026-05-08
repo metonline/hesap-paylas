@@ -1720,7 +1720,10 @@ function closeAccountPrompt() {
         return;
     }
     
-    // Direkt kapatma (popup olmadan)
+    const confirmed = confirm('Hesabınızı kapatmak istediğinizden emin misiniz?\n\n⚠️ Hesap kapatıldığında:\n- Aktif olmaktan çıkacak\n- Tüm verileriniz korunacak\n- Daha sonra tekrar açabilirsiniz');
+    
+    if (!confirmed) return;
+    
     const token = localStorage.getItem('hesapPaylas_token');
     fetch(`${API_BASE_URL}/user/close-account`, {
         method: 'POST',
@@ -1734,7 +1737,7 @@ function closeAccountPrompt() {
         if (data.error) {
             alert('❌ Hata: ' + data.error);
         } else {
-            // Sessizce logout
+            alert('✅ Hesabınız başarıyla kapatıldı.\nTüm verileriniz güvende.')
             logout();
         }
     })
@@ -1751,8 +1754,12 @@ function deleteAccountPrompt() {
         return;
     }
     
+    const confirmed = confirm('⚠️ DİKKAT! Hesabınızı SİLMEK istediğinizden emin misiniz?\n\n🗑️ Hesap silme sırasında:\n- Hesapınız ve tüm verileri kalıcı olarak silinecek\n- Bu işlem GERİ ALINMAZ\n- Kapalı hesaplar silinemez\n\nEmin misiniz?');
+    
+    if (!confirmed) return;
+    
     // Onay için şifre iste
-    const password = prompt('Hesabınızı silmek için şifrenizi girin:');
+    const password = prompt('Şifrenizi girin (onay için):');
     if (!password) return;
     
     const token = localStorage.getItem('hesapPaylas_token');
@@ -1769,7 +1776,7 @@ function deleteAccountPrompt() {
         if (data.error) {
             alert('❌ Hata: ' + data.error);
         } else {
-            // Sessizce logout
+            alert('🗑️ Hesabınız kalıcı olarak silinmiştir.\nTüm verileriniz kaldırılmıştır.');
             logout();
         }
     })
@@ -3047,7 +3054,9 @@ function closeGroupAccount() {
     const groupId = window.currentGroupId;
     if (!groupId) return;
     
-    // Direkt kapat (popup olmadan)
+    const confirmed = confirm('Grup hesabını kapatmak istediğinizden emin misiniz?\nGrup kapatıldığında tüm veriler korunacak.');
+    if (!confirmed) return;
+    
     const token = localStorage.getItem('hesapPaylas_token');
     fetch(`${API_BASE_URL}/groups/${groupId}/close`, {
         method: 'POST',
@@ -3058,7 +3067,7 @@ function closeGroupAccount() {
     })
     .then(r => r.json())
     .then(data => {
-        // Sessizce kapat
+        alert('✅ Grup başarıyla kapatıldı');
         closeGroupDetailsModal();
         loadUserGroups();
     })
