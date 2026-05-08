@@ -15,34 +15,64 @@ if (isProduction) {
     console.info = () => {};
     console.error = () => {};
     
+    // Disable right-click context menu
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+        return false;
+    }, false);
+    
     // Disable F12 and other DevTools shortcuts
     document.addEventListener('keydown', function(e) {
         // F12
         if (e.keyCode === 123) {
             e.preventDefault();
+            e.stopPropagation();
             return false;
         }
         // Ctrl+Shift+I (Inspector)
         if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
             e.preventDefault();
+            e.stopPropagation();
             return false;
         }
         // Ctrl+Shift+J (Console)
         if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
             e.preventDefault();
+            e.stopPropagation();
             return false;
         }
         // Ctrl+Shift+C (Element Picker)
         if (e.ctrlKey && e.shiftKey && e.keyCode === 67) {
             e.preventDefault();
+            e.stopPropagation();
             return false;
         }
         // Ctrl+U (View Source)
         if (e.ctrlKey && e.keyCode === 85) {
             e.preventDefault();
+            e.stopPropagation();
             return false;
         }
     }, false);
+    
+    // Detect and close DevTools if opened
+    let devtoolsOpen = false;
+    const threshold = 160;
+    
+    setInterval(() => {
+        if (window.outerHeight - window.innerHeight > threshold ||
+            window.outerWidth - window.innerWidth > threshold) {
+            if (!devtoolsOpen) {
+                devtoolsOpen = true;
+                // Try to close devtools by reloading page
+                setTimeout(() => {
+                    window.location.reload();
+                }, 100);
+            }
+        } else {
+            devtoolsOpen = false;
+        }
+    }, 500);
 }
 
 // SERVICE WORKER COMPLETELY DISABLED
