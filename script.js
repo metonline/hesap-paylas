@@ -1,9 +1,9 @@
 /**
  * Hesap Paylaş - Main Application Script
- * Version: 2.0.8-devtools-auto-close
- * Last Updated: 2026-01-11 14:30:00
+ * Version: 2.0.9-fix-signup-modal
+ * Last Updated: 2026-01-11 14:45:00
  * NOTE: Service Worker disabled - Using HTTP headers for cache control only
- * BUILD: Added DevTools auto-detection and page reload
+ * BUILD: Fixed signup modal animation, removed DevTools auto-reload
  */
 
 // PRODUCTION MODE - Disable debug logs and DevTools
@@ -47,23 +47,6 @@ if (isProduction) {
     
     document.addEventListener('keydown', keyBlocker, true);
     window.addEventListener('keydown', keyBlocker, true);
-    
-    // Detect if DevTools is open and reload page to close it
-    let lastCheck = 0;
-    setInterval(() => {
-        const now = Date.now();
-        if (now - lastCheck > 2000) { // Check every 2 seconds
-            lastCheck = now;
-            const heightDiff = Math.abs(window.outerHeight - window.innerHeight);
-            const widthDiff = Math.abs(window.outerWidth - window.innerWidth);
-            
-            // If height/width difference is significant, DevTools is likely open
-            if (heightDiff > 200 || widthDiff > 200) {
-                console.log('[DevTools Detected] Reloading page...');
-                window.location.reload();
-            }
-        }
-    }, 500);
 }
 
 // SERVICE WORKER COMPLETELY DISABLED
@@ -5123,7 +5106,7 @@ function showSignupModal(prefilledEmail = '') {
         max-height: 90vh;
         overflow-y: auto;
         box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        animation: slideUp 0.3s ease-out;
+        animation: slideUpModal 0.3s ease-out;
     `;
     
     content.innerHTML = `
@@ -5347,7 +5330,7 @@ function showPhoneSignupModal(phone, pin) {
         max-height: 90vh;
         overflow-y: auto;
         box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-        animation: slideUp 0.3s ease-out;
+        animation: slideUpModal 0.3s ease-out;
     `;
     
     content.innerHTML = `
