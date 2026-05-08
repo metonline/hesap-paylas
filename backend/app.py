@@ -282,8 +282,21 @@ def init_db():
 database_url = None
 db_type = None
 
-# Try to use DATABASE_URL if available and valid
-if os.getenv('DATABASE_URL'):
+# Priority 1: Check RENDER_DATABASE_URL (Render's PostgreSQL - highest priority)
+if os.getenv('RENDER_DATABASE_URL'):
+    test_url = os.getenv('RENDER_DATABASE_URL')
+    print(f"[DB] RENDER_DATABASE_URL detected: {test_url[:50]}...", flush=True)
+    if HAS_PSYCOPG2:
+        print(f"[DB] ✅ Using RENDER_DATABASE_URL with PostgreSQL", flush=True)
+        database_url = test_url
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        db_type = 'PostgreSQL (Render)'
+    else:
+        print(f"[DB] ⚠️  psycopg2 not available - cannot use RENDER_DATABASE_URL", flush=True)
+
+# Priority 2: Check DATABASE_URL environment variable
+if not database_url and os.getenv('DATABASE_URL'):
     test_url = os.getenv('DATABASE_URL')
     print(f"[DB] DATABASE_URL detected: {test_url[:50]}...", flush=True)
     # Check if we can actually use this database
@@ -292,10 +305,10 @@ if os.getenv('DATABASE_URL'):
         db_type = 'SQLite (Local)'
         print(f"[DB] Detected SQLite database", flush=True)
     elif 'postgres' in test_url.lower():
-        print(f"[DB] Detected PostgreSQL database - HAS_PSYCOPG2={HAS_PSYCOPG2}", flush=True)
+        print(f"[DB] Detected PostgreSQL in DATABASE_URL - HAS_PSYCOPG2={HAS_PSYCOPG2}", flush=True)
         # Try to import psycopg2 to check if PostgreSQL is available
         if HAS_PSYCOPG2:
-            print(f"[DB] ✅ Using PostgreSQL", flush=True)
+            print(f"[DB] ✅ Using PostgreSQL from DATABASE_URL", flush=True)
             database_url = test_url
             if database_url.startswith('postgres://'):
                 database_url = database_url.replace('postgres://', 'postgresql://', 1)
@@ -309,22 +322,7 @@ if os.getenv('DATABASE_URL'):
         print(f"[DB] Detected MySQL database", flush=True)
 
 if not database_url:
-    # Check RENDER_DATABASE_URL as backup
-    if os.getenv('RENDER_DATABASE_URL'):
-        test_url = os.getenv('RENDER_DATABASE_URL')
-        print(f"[DB] RENDER_DATABASE_URL detected (DATABASE_URL was empty) - HAS_PSYCOPG2={HAS_PSYCOPG2}", flush=True)
-        if HAS_PSYCOPG2:
-            print(f"[DB] ✅ Using PostgreSQL from RENDER_DATABASE_URL", flush=True)
-            database_url = test_url
-            if database_url.startswith('postgres://'):
-                database_url = database_url.replace('postgres://', 'postgresql://', 1)
-            db_type = 'PostgreSQL (Render)'
-        else:
-            print(f"[DB] ❌ psycopg2 not available - RENDER_DATABASE_URL ignored", flush=True)
-            pass
-
-if not database_url:
-    # Fall back to local SQLite
+    # Priority 3: Fall back to local SQLite
     instance_path = os.path.join(BASE_DIR, 'backend', 'instance')
     os.makedirs(instance_path, exist_ok=True)
     db_path = os.path.join(instance_path, 'hesap_paylas.db')
