@@ -40,12 +40,6 @@ except Exception as e:
     print("[WSGI] Flask app will NOT be available!", flush=True)
     sys.exit(1)
 
-# Local testing only
-if __name__ == '__main__':
-    port = int(os.getenv('PORT', 5000))
-    print(f"[WSGI] Starting Flask on port {port}")
-    app.run(host='0.0.0.0', port=port, debug=False)
-
 # Gunicorn entry point
 application = app
 
