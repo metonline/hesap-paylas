@@ -1465,7 +1465,7 @@ Konaklama
     <!-- QR Code Libraries - With fallback -->
     <script src="qr-scanner.js?ver=1.0.14"></script>
     
-    <script src="script.js?ver=1.0.23"></script>
+    <script src="script.js?ver=1.0.24"></script>
     
     <script>
         // ===== PHONE LOGIN HOME PAGE FUNCTIONS =====
@@ -1537,146 +1537,31 @@ Konaklama
                     }
                 });
             });
-        });
-
-        // Check phone existence and show appropriate form
-        async function checkPhoneAndShowForm() {
-            const phoneInput = document.getElementById('phoneHome').value.trim();
-            const phone = formatPhoneForAPI(phoneInput);
-
-            console.log('[CHECK-PHONE] phoneInput:', phoneInput, 'formatted:', phone, 'length:', phone.length);
-
-            if (phone.length !== 10) {
-                console.log('[CHECK-PHONE] Skipping - phone length is', phone.length, 'need 10');
-                return;
-            }
-
-            try {
-                const API_BASE = window.location.origin;
-                const API_BASE_URL = API_BASE + '/api';
-                
-                console.log('[CHECK-PHONE] Calling API with phone:', phone);
-                const response = await fetch(`${API_BASE_URL}/auth/check-phone`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phone })
+        // PIN auto-advance functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const pinInputsHome = document.querySelectorAll('.pin-input-home');
+            pinInputsHome.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    // Only allow digits
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    
+                    if (e.target.value.length === 1) {
+                        if (index < pinInputsHome.length - 1) {
+                            pinInputsHome[index + 1].focus();
+                        }
+                    }
                 });
 
-                const data = await response.json();
-                console.log('[CHECK-PHONE] API response:', data, 'Status:', response.status);
-
-                if (response.ok && data !== null) {
-                    if (data.exists === true) {
-                        // Existing user - hide registration fields
-                        console.log('[CHECK-PHONE] ✓ User EXISTS - hiding registration fields and name/email inputs');
-                        isNewUser = false;
-                        const nameSec = document.getElementById('nameSection');
-                        const emailSec = document.getElementById('emailSection');
-                        const btnText = document.getElementById('buttonText');
-                        if (nameSec) nameSec.style.display = 'none';
-                        if (emailSec) emailSec.style.display = 'none';
-                        if (btnText) btnText.textContent = 'Giriş Yap';
-                        showMessageHome('');
-                    } else if (data.exists === false) {
-                        // New user - show registration fields and message
-                        console.log('[CHECK-PHONE] ✗ User NOT FOUND - showing registration fields');
-                        isNewUser = true;
-                        const nameSec = document.getElementById('nameSection');
-                        const emailSec = document.getElementById('emailSection');
-                        const btnText = document.getElementById('buttonText');
-                        const userName = document.getElementById('userName');
-                        const userEmail = document.getElementById('userEmail');
-                        if (nameSec) nameSec.style.display = 'block';
-                        if (emailSec) emailSec.style.display = 'block';
-                        if (btnText) btnText.textContent = 'Hesap Oluştur';
-                        // Clear any previous values in name and email fields
-                        if (userName) userName.value = '';
-                        if (userEmail) userEmail.value = '';
-                        showMessageHome('Sistemimizde bu Telefon No.su kayıtlı değildir.. Gireceğiniz PIN kodu ve diğer bilgilerle kaydolunuz', 'info');
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        pinInputsHome[index - 1].focus();
                     }
-                } else {
-                    // If phone check fails, assume new user (safer approach)
-                    console.error('[CHECK-PHONE] API error or invalid response:', response.status, data);
-                    isNewUser = true;
-                    const nameSec = document.getElementById('nameSection');
-                    const emailSec = document.getElementById('emailSection');
-                    const btnText = document.getElementById('buttonText');
-                    const userName = document.getElementById('userName');
-                    const userEmail = document.getElementById('userEmail');
-                    if (nameSec) nameSec.style.display = 'block';
-                    if (emailSec) emailSec.style.display = 'block';
-                    if (btnText) btnText.textContent = 'Hesap Oluştur';
-                    if (userName) userName.value = '';
-                    if (userEmail) userEmail.value = '';
-                    showMessageHome('⚠️ Telefon kontrolü yapılamadı. Yeni hesap oluşturabilirsiniz.', 'info');
-                }
-            } catch (error) {
-                console.error('[CHECK-PHONE] Catch error:', error);
-                // If there's a network error, default to signup mode
-                isNewUser = true;
-                const nameSec = document.getElementById('nameSection');
-                const emailSec = document.getElementById('emailSection');
-                const btnText = document.getElementById('buttonText');
-                const userName = document.getElementById('userName');
-                const userEmail = document.getElementById('userEmail');
-                if (nameSec) nameSec.style.display = 'block';
-                if (emailSec) emailSec.style.display = 'block';
-                if (btnText) btnText.textContent = 'Hesap Oluştur';
-                if (userName) userName.value = '';
-                if (userEmail) userEmail.value = '';
-                showMessageHome('⚠️ Bağlantı hatası. Lütfen PIN ve diğer bilgilerinizi girin.', 'info');
-            }
-        }
-
-        // Check phone on blur
-        document.getElementById('phoneHome').addEventListener('blur', () => {
-            const phoneInput = document.getElementById('phoneHome').value.trim();
-            if (phoneInput.length >= 14) { // (5xx) 333 22 22
-                checkPhoneAndShowForm();
-            }
+                    if (e.key === 'Enter') {
+                        submitPhoneForm();
+                    }
+                });
+            });
         });
-
-        // Main submit function - handles both login and signup
-        async function submitPhoneForm() {
-            const phoneInput = document.getElementById('phoneHome').value.trim();
-            const phone = formatPhoneForAPI(phoneInput);
-            
-            // Collect PIN from the 4 boxes
-            const pinInputsHome = document.querySelectorAll('.pin-input-home');
-            const pin = Array.from(pinInputsHome).map(input => input.value).join('').trim();
-
-            if (phone.length !== 10) {
-                showMessageHome('⚠️ Telefon numarası 10 haneli olmalıdır', 'error');
-                return;
-            }
-
-            if (pin.length !== 4 || !/^\d+$/.test(pin)) {
-                showMessageHome('⚠️ PIN 4 haneli rakam olmalıdır', 'error');
-                return;
-            }
-
-            // Validate registration fields if new user
-            if (isNewUser) {
-                const name = document.getElementById('userName').value.trim();
-                const email = document.getElementById('userEmail').value.trim();
-
-                if (!name || name.length < 2) {
-                    showMessageHome('⚠️ Adınız en az 2 karakter olmalıdır', 'error');
-                    return;
-                }
-
-                if (!email || !email.includes('@')) {
-                    showMessageHome('⚠️ Geçerli bir e-posta adresi girin', 'error');
-                    return;
-                }
-
-                // Ensure phone is just 10 digits (remove leading 90 if present)
-                const cleanPhone = phone.length > 10 ? phone.slice(-10) : phone;
-                registerNewUser(cleanPhone, pin, name, email);
-            } else {
-                loginExistingUser(phone, pin);
-            }
-        }
 
         // Login existing user
         async function loginExistingUser(phone, pin) {

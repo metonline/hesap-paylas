@@ -1,9 +1,9 @@
 /**
  * Hesap Paylaş - Main Application Script
- * Version: 2.0.9-fix-signup-modal
- * Last Updated: 2026-01-11 14:45:00
+ * Version: 2.0.10-remove-duplicate-phone-system
+ * Last Updated: 2026-01-11 15:00:00
  * NOTE: Service Worker disabled - Using HTTP headers for cache control only
- * BUILD: Fixed signup modal animation, removed DevTools auto-reload
+ * BUILD: Removed duplicate phone signup system from index.html, using script.js modal only
  */
 
 // PRODUCTION MODE - Disable debug logs and DevTools
