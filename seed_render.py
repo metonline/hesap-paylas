@@ -47,6 +47,27 @@ def seed_database():
                 'first_name': 'Test',
                 'last_name': 'User2',
                 'phone': '05559876543'
+            },
+            {
+                'email': 'aaa@test.com',
+                'password': '123',
+                'first_name': 'Test',
+                'last_name': 'AAA',
+                'phone': '05551111111'
+            },
+            {
+                'email': 'bbb@test.com',
+                'password': '123',
+                'first_name': 'Test',
+                'last_name': 'BBB',
+                'phone': '05552222222'
+            },
+            {
+                'email': 'ccc@test.com',
+                'password': '123',
+                'first_name': 'Test',
+                'last_name': 'CCC',
+                'phone': '05553333333'
             }
         ]
         
