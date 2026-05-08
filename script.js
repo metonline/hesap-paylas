@@ -23,9 +23,9 @@ if (isProduction) {
     
     // Disable F12 and other DevTools shortcuts BEFORE they can trigger
     const keyBlocker = function(e) {
-        const blocked = [123, 9]; // F12, Tab
+        const blocked = [123]; // F12 ONLY
         
-        // Single key presses
+        // Single key presses - only F12
         if (blocked.includes(e.keyCode)) {
             e.preventDefault();
             e.stopPropagation();
@@ -33,7 +33,7 @@ if (isProduction) {
             return false;
         }
         
-        // Ctrl/Cmd combinations
+        // Ctrl/Cmd combinations - but allow Tab and other important keys
         if ((e.ctrlKey || e.metaKey) && (
             (e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I, J, C
             (e.keyCode === 85) // Ctrl+U
@@ -693,9 +693,9 @@ function handleManualSignup(event) {
     
     const firstName = document.getElementById('signupFirstName').value.trim();
     const lastName = document.getElementById('signupLastName').value.trim();
-    const phone = document.getElementById('phone').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
+    const phone = document.getElementById('signupPhone').value.trim();
+    const email = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
     
     // Validasyon
     if (!firstName || !lastName || !phone || !email || !password) {
@@ -726,15 +726,14 @@ function handleManualSignup(event) {
             
             app.currentUser = response.user;
             
-            // Formu temizle
-            document.getElementById('manualSignupForm').reset();
+            // Modal kapat
+            closeSignupModal();
             
             // Complete signup (checks for pending group code and joins if needed)
             completeSignup(response.user);
             updateHomePageProfile();
         })
         .catch(error => {
-            console.error('Signup error:', error);
             let errorMsg = 'Kayıt sırasında hata oluştu';
             const errorStr = error.message || error.toString();
             if (errorStr.includes('already exists') || errorStr.includes('Email already exists')) {
@@ -5142,7 +5141,7 @@ function showSignupModal(prefilledEmail = '') {
             <div style="margin-bottom: 15px;">
                 <input 
                     type="email" 
-                    id="email" 
+                    id="signupEmail" 
                     placeholder="E-posta"
                     value="${prefilledEmail}"
                     style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
@@ -5154,7 +5153,7 @@ function showSignupModal(prefilledEmail = '') {
             <div style="margin-bottom: 15px;">
                 <input 
                     type="tel" 
-                    id="phone" 
+                    id="signupPhone" 
                     placeholder="Telefon (05323332222)"
                     style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
                     autocomplete="off"
@@ -5165,7 +5164,7 @@ function showSignupModal(prefilledEmail = '') {
             <div style="margin-bottom: 20px;">
                 <input 
                     type="password" 
-                    id="password" 
+                    id="signupPassword" 
                     placeholder="Şifre"
                     style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
                     autocomplete="off"
