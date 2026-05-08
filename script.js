@@ -6,13 +6,43 @@
  * BUILD: Forced Render redeploy - Timestamp marker to verify deployment
  */
 
-// PRODUCTION MODE - Disable debug logs
+// PRODUCTION MODE - Disable debug logs and DevTools
 const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
 if (isProduction) {
     console.log = () => {};
     console.debug = () => {};
     console.warn = () => {};
     console.info = () => {};
+    console.error = () => {};
+    
+    // Disable F12 and other DevTools shortcuts
+    document.addEventListener('keydown', function(e) {
+        // F12
+        if (e.keyCode === 123) {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+I (Inspector)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 73) {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+J (Console)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 74) {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+Shift+C (Element Picker)
+        if (e.ctrlKey && e.shiftKey && e.keyCode === 67) {
+            e.preventDefault();
+            return false;
+        }
+        // Ctrl+U (View Source)
+        if (e.ctrlKey && e.keyCode === 85) {
+            e.preventDefault();
+            return false;
+        }
+    }, false);
 }
 
 // SERVICE WORKER COMPLETELY DISABLED
