@@ -20,6 +20,10 @@ try:
     sys.path.insert(0, str(project_root))
     print(f"[WSGI] Project root: {project_root}", flush=True)
     
+    # Detect if running on Render
+    is_render = bool(os.getenv('RENDER'))
+    print(f"[WSGI] Running on Render: {is_render}", flush=True)
+    
     # Load environment variables - BUT preserve Render's settings
     print("[WSGI] Loading .env...", flush=True)
     
@@ -27,16 +31,20 @@ try:
     render_database_url = os.getenv('DATABASE_URL')
     render_render_database_url = os.getenv('RENDER_DATABASE_URL')
     
-    # Load .env file
-    load_dotenv()
+    # Load .env file (except on Render, where we trust env vars)
+    if not is_render:
+        load_dotenv()
+        print("[WSGI] .env loaded (local development)", flush=True)
+    else:
+        print("[WSGI] Skipping .env on Render - using only environment variables", flush=True)
     
     # RESTORE Render's environment variables (they take priority over .env)
     if render_database_url:
         os.environ['DATABASE_URL'] = render_database_url
-        print(f"[WSGI] ✓ Restored Render's DATABASE_URL from environment (overrides .env)", flush=True)
+        print(f"[WSGI] ✓ Using Render's DATABASE_URL from environment", flush=True)
     if render_render_database_url:
         os.environ['RENDER_DATABASE_URL'] = render_render_database_url
-        print(f"[WSGI] ✓ Restored Render's RENDER_DATABASE_URL from environment", flush=True)
+        print(f"[WSGI] ✓ Using Render's RENDER_DATABASE_URL from environment", flush=True)
     
     print(f"[WSGI] DATABASE_URL set: {bool(os.getenv('DATABASE_URL'))}", flush=True)
     
