@@ -1,9 +1,9 @@
 /**
  * Hesap Paylaş - Main Application Script
- * Version: 2.0.12-phone-signup-working
- * Last Updated: 2026-01-11 15:30:00
+ * Version: 2.0.13-fix-api-port
+ * Last Updated: 2026-01-11 15:45:00
  * NOTE: Service Worker disabled - Using HTTP headers for cache control only
- * BUILD: All inline HTML code removed, phone signup modal only via script.js
+ * BUILD: Fixed API port detection for Render deployment
  */
 
 // PRODUCTION MODE - Disable debug logs and DevTools
@@ -147,8 +147,11 @@ const API_BASE_URL = (() => {
         return `${protocol}//${hostname}:5000/api`;
     }
     
-    // Production: Use Gunicorn on port 8000
-    return `https://${hostname}:8000/api`;
+    // Production: Use same host as page (Render will route correctly)
+    if (port) {
+        return `${protocol}//${hostname}:${port}/api`;
+    }
+    return `${protocol}//${hostname}/api`;
 })();
 console.log('[API] Base URL:', API_BASE_URL);
 
