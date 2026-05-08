@@ -35,6 +35,9 @@ except ImportError:
     HAS_PSYCOPG2 = False
     print("[IMPORT] ⚠️  psycopg2 NOT available - PostgreSQL disabled", flush=True)
 
+# Cache-busting marker for Render deployments (forces clean rebuild)
+_RENDER_CACHE_BUST = "2026-05-08-22:59-v2-prioritize-render-db"
+
 # Load env
 load_dotenv()
 
