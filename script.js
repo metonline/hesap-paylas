@@ -1,9 +1,9 @@
 /**
  * Hesap Paylaş - Main Application Script
- * Version: 2.0.11-debug-phone-signup
- * Last Updated: 2026-01-11 15:15:00
+ * Version: 2.0.12-phone-signup-working
+ * Last Updated: 2026-01-11 15:30:00
  * NOTE: Service Worker disabled - Using HTTP headers for cache control only
- * BUILD: Added debug logging for phone signup modal
+ * BUILD: All inline HTML code removed, phone signup modal only via script.js
  */
 
 // PRODUCTION MODE - Disable debug logs and DevTools
