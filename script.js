@@ -6,6 +6,15 @@
  * BUILD: Forced Render redeploy - Timestamp marker to verify deployment
  */
 
+// PRODUCTION MODE - Disable debug logs
+const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
+if (isProduction) {
+    console.log = () => {};
+    console.debug = () => {};
+    console.warn = () => {};
+    console.info = () => {};
+}
+
 // SERVICE WORKER COMPLETELY DISABLED
 // Browser will use HTTP Cache-Control headers from backend
 // This is more reliable than Service Worker caching
