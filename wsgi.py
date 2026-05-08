@@ -46,6 +46,9 @@ if __name__ == '__main__':
     print(f"[WSGI] Starting Flask on port {port}")
     app.run(host='0.0.0.0', port=port, debug=False)
 
+# Gunicorn entry point
+application = app
+
 
 
 
