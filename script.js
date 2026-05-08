@@ -1,9 +1,9 @@
 /**
  * Hesap Paylaş - Main Application Script
- * Version: 2.0.10-remove-duplicate-phone-system
- * Last Updated: 2026-01-11 15:00:00
+ * Version: 2.0.11-debug-phone-signup
+ * Last Updated: 2026-01-11 15:15:00
  * NOTE: Service Worker disabled - Using HTTP headers for cache control only
- * BUILD: Removed duplicate phone signup system from index.html, using script.js modal only
+ * BUILD: Added debug logging for phone signup modal
  */
 
 // PRODUCTION MODE - Disable debug logs and DevTools
@@ -5275,6 +5275,7 @@ async function submitPhoneForm() {
             
         } else if (loginResponse.status === 404 && loginData.error === 'user_not_found') {
             // User yoksa - signup modal'ını aç
+            console.log('[PHONE] User not found - opening signup modal');
             statusEl.textContent = '';
             statusEl.style.display = 'none';
             
@@ -5282,6 +5283,7 @@ async function submitPhoneForm() {
             
         } else {
             // Hata
+            console.log('[PHONE] Error response - Status:', loginResponse.status, 'Data:', loginData);
             statusEl.textContent = '❌ ' + (loginData.message || loginData.error || 'Hata oluştu');
             statusEl.className = 'status-message error';
             statusEl.style.display = 'block';
