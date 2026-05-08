@@ -1,9 +1,9 @@
 /**
  * Hesap Paylaş - Main Application Script
- * Version: 2.0.13-fix-api-port
- * Last Updated: 2026-01-11 15:45:00
+ * Version: 2.0.14-fix-token-header
+ * Last Updated: 2026-01-11 15:50:00
  * NOTE: Service Worker disabled - Using HTTP headers for cache control only
- * BUILD: Fixed API port detection for Render deployment
+ * BUILD: Fixed token delivery - now uses Authorization header instead of query param
  */
 
 // PRODUCTION MODE - Disable debug logs and DevTools
@@ -556,8 +556,7 @@ const api = {
         let url = `${API_BASE_URL}${endpoint}`;
         const token = localStorage.getItem('hesapPaylas_token');
         if (token) {
-            const sep = endpoint.includes('?') ? '&' : '?';
-            url = `${API_BASE_URL}${endpoint}${sep}token=${encodeURIComponent(token)}`;
+            options.headers['Authorization'] = `Bearer ${token}`;
         }
 
         if (data) {
