@@ -287,10 +287,10 @@ db_type = None
 
 # DEBUG: Log all environment variables that might contain database info
 print("\n[DB] ===== DATABASE ENVIRONMENT DEBUG =====", flush=True)
-print(f"[DB] RENDER_DATABASE_URL: {os.getenv('RENDER_DATABASE_URL', 'NOT SET')}", flush=True)
-print(f"[DB] DATABASE_URL: {os.getenv('DATABASE_URL', 'NOT SET')}", flush=True)
 print(f"[DB] RENDER: {os.getenv('RENDER', 'NOT SET')}", flush=True)
-print(f"[DB] All env keys with 'DB' or 'DATABASE' or 'POSTGRES':", flush=True)
+print(f"[DB] RENDER_DATABASE_URL: {os.getenv('RENDER_DATABASE_URL', 'NOT SET')[:80] if os.getenv('RENDER_DATABASE_URL') else 'NOT SET'}", flush=True)
+print(f"[DB] DATABASE_URL: {os.getenv('DATABASE_URL', 'NOT SET')[:80] if os.getenv('DATABASE_URL') else 'NOT SET'}", flush=True)
+print(f"[DB] Checking all env vars with 'DB' or 'DATABASE' or 'POSTGRES':", flush=True)
 for key in sorted(os.environ.keys()):
     if any(x in key.upper() for x in ['DB', 'DATABASE', 'POSTGRES', 'SQL']):
         value = os.getenv(key)
@@ -300,7 +300,7 @@ for key in sorted(os.environ.keys()):
             print(f"[DB]   {key}: {value}", flush=True)
 print("[DB] ==========================================\n", flush=True)
 
-# Priority 1: Check RENDER_DATABASE_URL (Render's PostgreSQL - highest priority)
+# Priority 1: Check RENDER_DATABASE_URL (Render's PostgreSQL - HIGHEST PRIORITY)
 if os.getenv('RENDER_DATABASE_URL'):
     test_url = os.getenv('RENDER_DATABASE_URL')
     print(f"[DB] RENDER_DATABASE_URL detected: {test_url[:50]}...", flush=True)
@@ -309,37 +309,31 @@ if os.getenv('RENDER_DATABASE_URL'):
         database_url = test_url
         if database_url.startswith('postgres://'):
             database_url = database_url.replace('postgres://', 'postgresql://', 1)
-        db_type = 'PostgreSQL (Render)'
-    else:
-        print(f"[DB] ⚠️  psycopg2 not available - cannot use RENDER_DATABASE_URL", flush=True)
+        db_type = 'PostgreSQL (Render RENDER_DATABASE_URL)'
 
-# Priority 2: Check DATABASE_URL environment variable
-if not database_url and os.getenv('DATABASE_URL'):
+# Priority 2: If no RENDER_DATABASE_URL, check if DATABASE_URL is PostgreSQL
+elif os.getenv('DATABASE_URL'):
     test_url = os.getenv('DATABASE_URL')
     print(f"[DB] DATABASE_URL detected: {test_url[:50]}...", flush=True)
-    # Check if we can actually use this database
-    if 'sqlite' in test_url.lower():
-        database_url = test_url
-        db_type = 'SQLite (Local)'
-        print(f"[DB] Detected SQLite database", flush=True)
-    elif 'postgres' in test_url.lower():
-        print(f"[DB] Detected PostgreSQL in DATABASE_URL - HAS_PSYCOPG2={HAS_PSYCOPG2}", flush=True)
-        # Try to import psycopg2 to check if PostgreSQL is available
+    
+    # If we're on Render and got PostgreSQL in DATABASE_URL, use it
+    if 'postgres' in test_url.lower() and os.getenv('RENDER'):
         if HAS_PSYCOPG2:
-            print(f"[DB] ✅ Using PostgreSQL from DATABASE_URL", flush=True)
+            print(f"[DB] ✅ Detected PostgreSQL in DATABASE_URL on Render", flush=True)
             database_url = test_url
             if database_url.startswith('postgres://'):
                 database_url = database_url.replace('postgres://', 'postgresql://', 1)
-            db_type = 'PostgreSQL (Render)'
+            db_type = 'PostgreSQL (Render DATABASE_URL)'
         else:
-            # psycopg2 not installed - will fall back to SQLite below
-            print(f"[DB] ❌ psycopg2 not available - falling back to SQLite", flush=True)
-    elif 'mysql' in test_url.lower():
+            print(f"[DB] ⚠️  PostgreSQL in DATABASE_URL but psycopg2 not available", flush=True)
+    # If it's SQLite, use it
+    elif 'sqlite' in test_url.lower():
         database_url = test_url
-        db_type = 'MySQL (cPanel)'
-        print(f"[DB] Detected MySQL database", flush=True)
+        db_type = 'SQLite (Local)'
+        print(f"[DB] Detected SQLite database", flush=True)
 
-if not database_url:
+# Priority 3: Fall back to local SQLite if we're NOT on Render
+if not database_url and not os.getenv('RENDER'):
     # Priority 3: Fall back to local SQLite
     instance_path = os.path.join(BASE_DIR, 'backend', 'instance')
     os.makedirs(instance_path, exist_ok=True)
