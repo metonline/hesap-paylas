@@ -5169,6 +5169,284 @@ function closeSignupModal() {
         modal.remove();
     }
 }
+
+// ===== PHONE + PIN LOGIN/SIGNUP FUNCTION =====
+async function submitPhoneForm() {
+    const phoneHome = document.getElementById('phoneHome').value.trim();
+    const pinInputs = document.querySelectorAll('.pin-input-home');
+    const pin = Array.from(pinInputs).map(input => input.value).join('');
+    const statusEl = document.getElementById('statusMessageHome');
+    
+    // Validasyon
+    if (!phoneHome || !phoneHome.replace(/\D/g, '')) {
+        statusEl.textContent = '❌ Lütfen telefon numarası girin';
+        statusEl.className = 'status-message error';
+        statusEl.style.display = 'block';
+        return;
+    }
+    
+    if (pin.length !== 4 || !pin.match(/^\d{4}$/)) {
+        statusEl.textContent = '❌ PIN 4 haneli rakam olmalıdır';
+        statusEl.className = 'status-message error';
+        statusEl.style.display = 'block';
+        return;
+    }
+    
+    try {
+        statusEl.textContent = '⏳ Doğrulanıyor...';
+        statusEl.className = 'status-message info';
+        statusEl.style.display = 'block';
+        
+        // Telefon numarasını normalize et: +90XXXXXXXXXX
+        let phone = phoneHome.replace(/\D/g, '');
+        if (phone.startsWith('0')) {
+            phone = phone.substring(1);
+        }
+        if (!phone.startsWith('90')) {
+            phone = '90' + phone;
+        }
+        phone = '+' + phone;
+        
+        // Login denemesi (var olan user)
+        const loginResponse = await fetch(`${API_BASE_URL}/auth/phone-pin-login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                phone: phone,
+                pin: pin,
+                is_signup: false
+            })
+        });
+        
+        const loginData = await loginResponse.json();
+        
+        if (loginResponse.ok && loginData.token) {
+            // Login başarılı
+            localStorage.setItem('hesapPaylas_token', loginData.token);
+            localStorage.setItem('hesapPaylas_user', JSON.stringify(loginData.user));
+            app.currentUser = loginData.user;
+            
+            statusEl.textContent = '✅ Giriş başarılı!';
+            statusEl.className = 'status-message success';
+            statusEl.style.display = 'block';
+            
+            // Formu temizle
+            document.getElementById('phoneHome').value = '';
+            pinInputs.forEach(input => input.value = '');
+            
+            // Ana sayfaya git
+            setTimeout(() => {
+                showHomePage();
+                updateHomePageProfile();
+            }, 500);
+            
+        } else if (loginResponse.status === 404 && loginData.error === 'user_not_found') {
+            // User yoksa - signup modal'ını aç
+            statusEl.textContent = '';
+            statusEl.style.display = 'none';
+            
+            showPhoneSignupModal(phone, pin);
+            
+        } else {
+            // Hata
+            statusEl.textContent = '❌ ' + (loginData.message || loginData.error || 'Hata oluştu');
+            statusEl.className = 'status-message error';
+            statusEl.style.display = 'block';
+        }
+        
+    } catch (error) {
+        statusEl.textContent = '❌ Bir hata oluştu. Lütfen tekrar deneyin.';
+        statusEl.className = 'status-message error';
+        statusEl.style.display = 'block';
+        console.error('[PHONE FORM] Error:', error);
+    }
+}
+
+// ===== PHONE SIGNUP MODAL =====
+function showPhoneSignupModal(phone, pin) {
+    // Mevcut modal varsa kapat
+    const existingModal = document.getElementById('phoneSignupModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Modal HTML oluştur
+    const modal = document.createElement('div');
+    modal.id = 'phoneSignupModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease-out;
+    `;
+    
+    const content = document.createElement('div');
+    content.style.cssText = `
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        width: 90%;
+        max-width: 400px;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        animation: slideUp 0.3s ease-out;
+    `;
+    
+    content.innerHTML = `
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #333; margin: 0 0 10px 0;">Hesap Oluştur</h2>
+            <p style="color: #999; font-size: 14px; margin: 0;">Hesap Paylaş'a katılın</p>
+        </div>
+        
+        <form id="phoneSignupForm" style="width: 100%;">
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; font-size: 12px; color: #666; margin-bottom: 5px;">Telefon</label>
+                <input 
+                    type="text" 
+                    id="phoneSignupDisplay" 
+                    value="${phone}"
+                    disabled
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; background: #f5f5f5; color: #999;"
+                />
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <input 
+                    type="text" 
+                    id="phoneSignupFirstName" 
+                    placeholder="Adınız"
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
+                    autocomplete="off"
+                    required
+                />
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <input 
+                    type="text" 
+                    id="phoneSignupLastName" 
+                    placeholder="Soyadınız"
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
+                    autocomplete="off"
+                    required
+                />
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <input 
+                    type="email" 
+                    id="phoneSignupEmail" 
+                    placeholder="E-posta Adresi"
+                    style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box;"
+                    autocomplete="off"
+                    required
+                />
+            </div>
+            
+            <button type="submit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; margin-bottom: 10px;">
+                Hesap Oluştur
+            </button>
+        </form>
+        
+        <button onclick="closePhoneSignupModal()" style="width: 100%; padding: 10px; background: #f0f0f0; color: #333; border: none; border-radius: 10px; font-size: 14px; cursor: pointer;">
+            İptal
+        </button>
+    `;
+    
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    // Form submit handler
+    document.getElementById('phoneSignupForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const firstName = document.getElementById('phoneSignupFirstName').value.trim();
+        const lastName = document.getElementById('phoneSignupLastName').value.trim();
+        const email = document.getElementById('phoneSignupEmail').value.trim();
+        
+        if (!firstName || !lastName || !email) {
+            alert('Lütfen tüm alanları doldurunuz!');
+            return;
+        }
+        
+        if (!email.includes('@')) {
+            alert('Geçerli bir e-posta adresi girin!');
+            return;
+        }
+        
+        try {
+            // Signup isteği - is_signup=true ile
+            const signupResponse = await fetch(`${API_BASE_URL}/auth/phone-pin-login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    phone: phone,
+                    pin: pin,
+                    is_signup: true,
+                    first_name: firstName,
+                    last_name: lastName,
+                    email: email
+                })
+            });
+            
+            const signupData = await signupResponse.json();
+            
+            if (signupResponse.ok && signupData.token) {
+                // Signup başarılı
+                localStorage.setItem('hesapPaylas_token', signupData.token);
+                localStorage.setItem('hesapPaylas_user', JSON.stringify(signupData.user));
+                app.currentUser = signupData.user;
+                
+                // Modal kapat
+                closePhoneSignupModal();
+                
+                // Status message
+                const statusEl = document.getElementById('statusMessageHome');
+                statusEl.textContent = '✅ Hesap oluşturuldu!';
+                statusEl.className = 'status-message success';
+                statusEl.style.display = 'block';
+                
+                // Formu temizle
+                document.getElementById('phoneHome').value = '';
+                document.querySelectorAll('.pin-input-home').forEach(input => input.value = '');
+                
+                // Ana sayfaya git
+                setTimeout(() => {
+                    showHomePage();
+                    updateHomePageProfile();
+                }, 500);
+            } else {
+                alert('Hata: ' + (signupData.message || signupData.error || 'Hesap oluşturulamadı'));
+            }
+            
+        } catch (error) {
+            alert('Bir hata oluştu: ' + error.message);
+            console.error('[PHONE SIGNUP] Error:', error);
+        }
+    });
+    
+    // Modal kapatma - backdrop
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            closePhoneSignupModal();
+        }
+    });
+}
+
+function closePhoneSignupModal() {
+    const modal = document.getElementById('phoneSignupModal');
+    if (modal) {
+        modal.remove();
+    }
+}
         
         // Sipariş / Harcama Butonu
         const orderBtn = document.createElement('button');
