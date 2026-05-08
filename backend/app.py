@@ -285,6 +285,21 @@ def init_db():
 database_url = None
 db_type = None
 
+# DEBUG: Log all environment variables that might contain database info
+print("\n[DB] ===== DATABASE ENVIRONMENT DEBUG =====", flush=True)
+print(f"[DB] RENDER_DATABASE_URL: {os.getenv('RENDER_DATABASE_URL', 'NOT SET')}", flush=True)
+print(f"[DB] DATABASE_URL: {os.getenv('DATABASE_URL', 'NOT SET')}", flush=True)
+print(f"[DB] RENDER: {os.getenv('RENDER', 'NOT SET')}", flush=True)
+print(f"[DB] All env keys with 'DB' or 'DATABASE' or 'POSTGRES':", flush=True)
+for key in sorted(os.environ.keys()):
+    if any(x in key.upper() for x in ['DB', 'DATABASE', 'POSTGRES', 'SQL']):
+        value = os.getenv(key)
+        if value and len(value) > 100:
+            print(f"[DB]   {key}: {value[:100]}...", flush=True)
+        else:
+            print(f"[DB]   {key}: {value}", flush=True)
+print("[DB] ==========================================\n", flush=True)
+
 # Priority 1: Check RENDER_DATABASE_URL (Render's PostgreSQL - highest priority)
 if os.getenv('RENDER_DATABASE_URL'):
     test_url = os.getenv('RENDER_DATABASE_URL')
@@ -672,6 +687,19 @@ def login():
         'user': user.to_dict(),
         'token': token
     }), 200
+
+@app.route('/api/auth/debug-env', methods=['GET'])
+def debug_env():
+    """Debug endpoint - show environment and database configuration"""
+    env_info = {
+        'RENDER': os.getenv('RENDER', 'NOT SET'),
+        'RENDER_DATABASE_URL': os.getenv('RENDER_DATABASE_URL', 'NOT SET')[:80] if os.getenv('RENDER_DATABASE_URL') else 'NOT SET',
+        'DATABASE_URL': os.getenv('DATABASE_URL', 'NOT SET')[:80] if os.getenv('DATABASE_URL') else 'NOT SET',
+        'HAS_PSYCOPG2': str(HAS_PSYCOPG2),
+        'app.config_SQLALCHEMY_DATABASE_URI': str(app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET'))[:80],
+        'detected_database_type': db_type,
+    }
+    return jsonify(env_info), 200
 
 @app.route('/api/auth/debug-users', methods=['GET'])
 def debug_users():
