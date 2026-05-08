@@ -1,53 +1,10 @@
 /**
  * Hesap Paylaş - Main Application Script
- * Version: 2.0.14-fix-token-header
- * Last Updated: 2026-01-11 15:50:00
+ * Version: 2.0.15-enable-devtools
+ * Last Updated: 2026-01-12 10:00:00
  * NOTE: Service Worker disabled - Using HTTP headers for cache control only
- * BUILD: Fixed token delivery - now uses Authorization header instead of query param
+ * BUILD: Removed F12 DevTools blocking - now allows development debugging
  */
-
-// PRODUCTION MODE - Disable debug logs and DevTools
-const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-if (isProduction) {
-    console.log = () => {};
-    console.debug = () => {};
-    console.warn = () => {};
-    console.info = () => {};
-    console.error = () => {};
-    
-    // Disable right-click context menu
-    document.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        return false;
-    }, false);
-    
-    // Disable F12 and other DevTools shortcuts BEFORE they can trigger
-    const keyBlocker = function(e) {
-        const blocked = [123]; // F12 ONLY
-        
-        // Single key presses - only F12
-        if (blocked.includes(e.keyCode)) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            return false;
-        }
-        
-        // Ctrl/Cmd combinations - but allow Tab and other important keys
-        if ((e.ctrlKey || e.metaKey) && (
-            (e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || // Ctrl+Shift+I, J, C
-            (e.keyCode === 85) // Ctrl+U
-        )) {
-            e.preventDefault();
-            e.stopPropagation();
-            e.stopImmediatePropagation();
-            return false;
-        }
-    };
-    
-    document.addEventListener('keydown', keyBlocker, true);
-    window.addEventListener('keydown', keyBlocker, true);
-}
 
 // SERVICE WORKER COMPLETELY DISABLED
 // Browser will use HTTP Cache-Control headers from backend
