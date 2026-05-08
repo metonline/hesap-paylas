@@ -1,5 +1,6 @@
 """
 WSGI entry point for Flask - Render Production
+Version: 1fc57da-enhanced (2026-05-09 02:30 UTC)
 """
 import os
 import sys
@@ -7,7 +8,7 @@ import traceback
 from pathlib import Path
 from dotenv import load_dotenv
 
-print("[WSGI] ===== WSGI INITIALIZATION START =====", flush=True)
+print("[WSGI] ===== WSGI INITIALIZATION START (v1fc57da-enhanced) =====", flush=True)
 print(f"[WSGI] Python: {sys.version}", flush=True)
 print(f"[WSGI] CWD: {os.getcwd()}", flush=True)
 
