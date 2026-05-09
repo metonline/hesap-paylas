@@ -2789,16 +2789,22 @@ def serve_v2():
 
 @app.errorhandler(404)
 def not_found(error):
-    """Handle 404 by serving index.html for SPA routing"""
+    """Handle 404 by serving index.html for SPA routing (but NOT for API routes)"""
     try:
-        # First check if it's a real static file that exists
         requested_path = request.path.lstrip('/')
-        if requested_path and not requested_path.startswith('api/'):
+        
+        # NEVER serve index.html for API routes - return proper 404
+        if requested_path.startswith('api/'):
+            print(f"[API-404] API route not found: {request.path}", flush=True)
+            return jsonify({'error': 'Endpoint not found'}), 404
+        
+        # For non-API routes, check if it's a real static file
+        if requested_path:
             file_path = BASE_DIR / requested_path
             if file_path.exists() and file_path.is_file():
                 return send_from_directory(str(BASE_DIR), requested_path)
         
-        # Otherwise serve index.html for SPA routing
+        # Otherwise serve index.html for SPA routing (only for non-API routes)
         index_file = BASE_DIR / 'index.html'
         if index_file.exists():
             print(f"[SPA-404] Serving index.html for path: {request.path}", flush=True)
