@@ -47,6 +47,25 @@ try:
         os.environ['RENDER_DATABASE_URL'] = render_render_database_url
         print(f"[WSGI] ✓ Using Render's RENDER_DATABASE_URL from environment", flush=True)
     
+    # WORKAROUND: If on Render but DATABASE_URL not set, construct from component variables
+    if is_render and not os.getenv('DATABASE_URL'):
+        print("[WSGI] ⚠️  DATABASE_URL not set, checking for component database variables...", flush=True)
+        
+        # Check for Render's component-based DB variables
+        db_host = os.getenv('DATABASE_URL_HOST') or os.getenv('POSTGRES_HOST') or "hesap-paylas-db.render.internal"
+        db_port = os.getenv('DATABASE_URL_PORT') or os.getenv('POSTGRES_PORT') or "5432"
+        db_user = os.getenv('DATABASE_URL_USER') or os.getenv('POSTGRES_USER') or "postgres"
+        db_pass = os.getenv('DATABASE_URL_PASSWORD') or os.getenv('POSTGRES_PASSWORD') or os.getenv('PGPASSWORD', '')
+        db_name = os.getenv('DATABASE_URL_DATABASE') or os.getenv('POSTGRES_DB') or "hesap_paylas"
+        
+        if db_host and db_user and db_name:
+            database_url = f"postgresql://{db_user}"
+            if db_pass:
+                database_url += f":{db_pass}"
+            database_url += f"@{db_host}:{db_port}/{db_name}"
+            os.environ['DATABASE_URL'] = database_url
+            print(f"[WSGI] ✓ Constructed DATABASE_URL from components", flush=True)
+    
     print(f"[WSGI] DATABASE_URL set: {bool(os.getenv('DATABASE_URL'))}", flush=True)
     
     # Import Flask app - this is where errors usually happen
