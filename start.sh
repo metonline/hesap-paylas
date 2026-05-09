@@ -10,6 +10,12 @@ echo "================================"
 echo "📦 Render Deployment Starting"
 echo "================================"
 
+# DEBUG: Log all environment variables containing 'DATABASE' or 'POSTGRES' or 'RENDER'
+echo ""
+echo "[DEBUG] Environment Variables:"
+env | grep -i -E 'database|postgres|render' || echo "[DEBUG] No DB/Postgres/Render env vars found!"
+echo ""
+
 echo "🔧 Python version:"
 python3 --version
 
