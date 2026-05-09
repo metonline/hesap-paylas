@@ -64,28 +64,8 @@ except Exception as e:
     print("[WSGI] Flask app will NOT be available!", flush=True)
     sys.exit(1)
 
-# Gunicorn entry point - wrap with error handler
-class ApplicationWrapper:
-    def __init__(self, app):
-        self.app = app
-        self.initialized = False
-    
-    def __call__(self, environ, start_response):
-        try:
-            if not self.initialized:
-                print("[WSGI] First request received, app is live!", flush=True)
-                self.initialized = True
-            return self.app(environ, start_response)
-        except Exception as e:
-            print(f"[WSGI] ERROR in application: {e}", flush=True)
-            traceback.print_exc(file=sys.stdout)
-            # Return 500 error
-            status = '500 Internal Server Error'
-            headers = [('Content-Type', 'text/plain')]
-            start_response(status, headers)
-            return [b'Internal Server Error']
-
-application = ApplicationWrapper(app)
+# Gunicorn entry point
+application = app
 
 
 

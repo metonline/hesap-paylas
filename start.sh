@@ -21,12 +21,15 @@ echo "✅ Dependencies installed"
 echo ""
 
 echo "🌱 Seeding database..."
-python3 seed_render.py 2>&1 | tee /tmp/seed_output.log || {
-    SEED_EXIT=$?
-    echo "⚠️ Seed script exited with code $SEED_EXIT"
-    echo "⚠️ Full output saved to /tmp/seed_output.log"
-    echo "⚠️ Continuing with Gunicorn anyway..."
-}
+python3 seed_render.py 2>&1 | tee /tmp/seed_output.log
+SEED_EXIT=$?
+if [ $SEED_EXIT -ne 0 ]; then
+    echo ""
+    echo "⚠️  Seed script exited with code $SEED_EXIT"
+    echo "⚠️  Full output saved to /tmp/seed_output.log"
+    echo "⚠️  BUT CONTINUING WITH GUNICORN ANYWAY..."
+    echo ""
+fi
 
 # Give database time to be ready
 sleep 2

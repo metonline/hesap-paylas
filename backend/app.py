@@ -684,16 +684,25 @@ def login():
 
 @app.route('/api/auth/debug-env', methods=['GET'])
 def debug_env():
-    """Debug endpoint - show environment and database configuration"""
-    env_info = {
+    """Debug endpoint - show ALL environment variables"""
+    # Get all env vars
+    all_env = {}
+    for key in sorted(os.environ.keys()):
+        if len(os.environ[key]) < 200:  # Avoid huge values
+            all_env[key] = os.environ[key]
+    
+    # Show first 20
+    env_list = sorted(all_env.items())[:50]
+    return jsonify({
+        'total_env_vars': len(os.environ),
         'RENDER': os.getenv('RENDER', 'NOT SET'),
-        'RENDER_DATABASE_URL': os.getenv('RENDER_DATABASE_URL', 'NOT SET')[:80] if os.getenv('RENDER_DATABASE_URL') else 'NOT SET',
-        'DATABASE_URL': os.getenv('DATABASE_URL', 'NOT SET')[:80] if os.getenv('DATABASE_URL') else 'NOT SET',
+        'RENDER_DATABASE_URL': os.getenv('RENDER_DATABASE_URL', 'NOT SET')[:80],
+        'DATABASE_URL': os.getenv('DATABASE_URL', 'NOT SET')[:80],
         'HAS_PSYCOPG2': str(HAS_PSYCOPG2),
-        'app.config_SQLALCHEMY_DATABASE_URI': str(app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET'))[:80],
+        'app_sqlalchemy_uri': str(app.config.get('SQLALCHEMY_DATABASE_URI', 'NOT SET'))[:80],
         'detected_database_type': db_type,
-    }
-    return jsonify(env_info), 200
+        'sample_env_vars': dict(env_list)
+    }), 200
 
 @app.route('/api/auth/debug-users', methods=['GET'])
 def debug_users():
