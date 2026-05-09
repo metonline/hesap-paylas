@@ -38,8 +38,14 @@ except ImportError:
 # Cache-busting marker for Render deployments (forces clean rebuild)
 _RENDER_CACHE_BUST = "2026-05-08-22:59-v2-prioritize-render-db"
 
-# Load env
-load_dotenv()
+# Load env - BUT ONLY IF NOT ON RENDER
+# On Render, environment variables are provided by render.yaml
+is_render = bool(os.getenv('RENDER'))
+if not is_render:
+    load_dotenv()
+    print("[APP] .env loaded (local development)", flush=True)
+else:
+    print("[APP] Skipping .env on Render - using only environment variables", flush=True)
 
 # Get parent directory (main project root)
 # On Render, working directory is /app, so this will resolve to /app
