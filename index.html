@@ -293,64 +293,6 @@
                                 }
                             }
                             
-                            // Email Form Submit
-                            async function submitEmailForm() {
-                                const email = document.getElementById('emailHome').value.trim();
-                                const password = document.getElementById('passwordHome').value.trim();
-                                const statusEl = document.getElementById('statusMessageHome');
-                                
-                                if (!email || !password) {
-                                    statusEl.textContent = '❌ Lütfen e-posta ve şifre girin';
-                                    statusEl.className = 'status-message error';
-                                    statusEl.style.display = 'block';
-                                    return;
-                                }
-                                
-                                if (!email.includes('@')) {
-                                    statusEl.textContent = '❌ Geçerli bir e-posta adresi girin';
-                                    statusEl.className = 'status-message error';
-                                    statusEl.style.display = 'block';
-                                    return;
-                                }
-                                
-                                try {
-                                    // Use global API_BASE_URL from script.js (correctly points to port 5000)
-                                    const response = await fetch(`${API_BASE_URL}/auth/login`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({ email: email, password: password })
-                                    });
-                                    
-                                    const data = await response.json();
-                                    
-                                    if (response.ok && data.token) {
-                                        // Save token
-                                        localStorage.setItem('hesapPaylas_token', data.token);
-                                        if (data.user) {
-                                            localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
-                                        }
-                                        
-                                        statusEl.textContent = '✅ Giriş başarılı! Yönlendiriliyorsunuz...';
-                                        statusEl.className = 'status-message success';
-                                        statusEl.style.display = 'block';
-                                        
-                                        // Redirect to home page
-                                        setTimeout(() => {
-                                            location.reload();
-                                        }, 1000);
-                                    } else {
-                                        statusEl.textContent = '❌ ' + (data.message || data.error || 'Giriş başarısız');
-                                        statusEl.className = 'status-message error';
-                                        statusEl.style.display = 'block';
-                                    }
-                                } catch (error) {
-                                    console.error('Email login error:', error);
-                                    statusEl.textContent = '❌ Bir hata oluştu. Lütfen tekrar deneyin.';
-                                    statusEl.className = 'status-message error';
-                                    statusEl.style.display = 'block';
-                                }
-                            }
-                            
                             // Forgot Password Modal
                             function showForgotPasswordModal() {
                                 alert('Şifre sıfırlama bağlantısı kısa süre sonra eklenecek. Lütfen admin\'e başvurun.');
