@@ -46,6 +46,13 @@ if not is_render:
     print("[APP] .env loaded (local development)", flush=True)
 else:
     print("[APP] Skipping .env on Render - using only environment variables", flush=True)
+    # DEBUG: Show what Render gave us
+    print("[APP] ========== RENDER ENVIRONMENT DEBUG ==========", flush=True)
+    for key in sorted(os.environ.keys()):
+        if len(os.environ[key]) < 500:
+            if any(x in key.upper() for x in ['RENDER', 'DB', 'DATABASE', 'POSTGRES', 'HOST', 'USER', 'PASS', 'PORT']):
+                print(f"[APP] {key}={os.environ[key]}", flush=True)
+    print("[APP] =============================================", flush=True)
 
 # Get parent directory (main project root)
 # On Render, working directory is /app, so this will resolve to /app
