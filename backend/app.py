@@ -632,6 +632,9 @@ def sync_to_render_after_request(response):
 @cross_origin(origins="*", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], allow_headers=["Content-Type", "Authorization"])
 def signup():
     """User signup"""
+    if request.method == 'OPTIONS':
+        return '', 200
+    
     try:
         data = request.get_json()
         

@@ -1421,14 +1421,12 @@ Konaklama
                 return;
             }
             
-            // For now, show signup modal immediately to test  
-            // TODO: Replace with actual backend call
-            window.showSignupModal(email);
-            return;
-            
-            /*
             try {
-                const resp = await fetch('http://localhost:5001/api/auth/login', {
+                const API_BASE_URL = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:5000'
+                    : `${window.location.protocol}//${window.location.hostname}`;
+                
+                const resp = await fetch(`${API_BASE_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -1438,7 +1436,7 @@ Konaklama
                 
                 if (!resp.ok) {
                     // Check if user not found
-                    if (data.error && data.error.includes('not found')) {
+                    if (data.error && (data.error.includes('not found') || data.error.includes('user_not_found'))) {
                         window.showSignupModal(email);
                     } else {
                         alert('Hata: ' + (data.error || resp.statusText));
@@ -1449,9 +1447,8 @@ Konaklama
                     window.location.reload();
                 }
             } catch (e) {
-                alert('Hata: ' + e.message);
+                alert('Bağlantı hatası: ' + e.message);
             }
-            */
         };
         
         // Inline signup modal creator
@@ -1536,7 +1533,7 @@ Konaklama
             try {
                 // Determine API base URL
                 const API_BASE_URL = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:5001'
+                    ? 'http://localhost:5000'
                     : `${window.location.protocol}//${window.location.hostname}`;
                 
                 const resp = await fetch(`${API_BASE_URL}/api/auth/signup`, {
