@@ -1,44 +1,39 @@
 #!/bin/bash
-# Render startup script
-# 1. Install dependencies
-# 2. Seed database
-# 3. Start Gunicorn
-
-set -e  # Exit on any error
+# Render startup script - simplified for reliability
+set -e
 
 echo "================================"
-echo "📦 Render Deployment Starting"
+echo "🚀 Render Deployment Starting"
 echo "================================"
 
-# DEBUG: Log all environment variables containing 'DATABASE' or 'POSTGRES' or 'RENDER'
-echo ""
-echo "[DEBUG] Environment Variables:"
-env | grep -i -E 'database|postgres|render' || echo "[DEBUG] No DB/Postgres/Render env vars found!"
-echo ""
+# Ensure PORT is set
+PORT=${PORT:-10000}
+echo "[START] PORT: $PORT"
+echo "[START] Python: $(python3 --version)"
 
-echo "🔧 Python version:"
-python3 --version
+# Install dependencies
+echo "[START] Installing dependencies..."
+python3 -m pip install --quiet --upgrade pip setuptools wheel
+python3 -m pip install --quiet -r requirements.txt
+echo "[START] ✓ Dependencies installed"
 
-echo "📦 Installing dependencies..."
-python3 -m pip install --upgrade pip setuptools wheel
-python3 -m pip install -r requirements.txt
+# Try seeding, but don't fail if it errors
+echo "[START] Attempting to seed database (non-fatal)..."
+python3 seed_render.py 2>&1 || echo "[START] ⚠️  Seed failed but continuing..."
 
-echo "✅ Dependencies installed"
-echo ""
-
-echo "🌱 Seeding database..."
-python3 seed_render.py 2>&1 | tee /tmp/seed_output.log
-SEED_EXIT=$?
-if [ $SEED_EXIT -ne 0 ]; then
-    echo ""
-    echo "⚠️  Seed script exited with code $SEED_EXIT"
-    echo "⚠️  Full output saved to /tmp/seed_output.log"
-    echo "⚠️  BUT CONTINUING WITH GUNICORN ANYWAY..."
-    echo ""
-fi
-
-# Give database time to be ready
+# Give database a moment
 sleep 2
 
-echo "🚀 Starting Gunicorn on port $PORT..."
-exec python3 -m gunicorn --bind 0.0.0.0:$PORT wsgi:application
+# Start Gunicorn with explicit configuration
+echo "[START] Starting Gunicorn on 0.0.0.0:$PORT..."
+exec python3 -m gunicorn \
+    --bind 0.0.0.0:$PORT \
+    --workers 1 \
+    --threads 4 \
+    --worker-class sync \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    --log-level debug \
+    wsgi:application
+
