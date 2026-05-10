@@ -1814,6 +1814,21 @@ def token_required(f):
             return jsonify({'error': f'Server error: {str(e)}'}), 500
     return decorated
 
+def require_auth():
+    """Check admin authentication for admin endpoints (can be empty for now)"""
+    # TODO: Implement proper admin authentication
+    # For now, just return (allow access in development)
+    # In production, check for admin token or require special auth
+    admin_token = os.getenv('ADMIN_TOKEN')
+    auth_header = request.headers.get('Authorization', '')
+    
+    if admin_token:
+        # If admin token is configured, require it
+        if not auth_header or not auth_header.endswith(admin_token):
+            raise Exception('Admin authentication required')
+    # If no admin token configured, allow access (development mode)
+    return True
+
 # ==================== User Routes ====================
 
 @app.route('/api/debug/token-test', methods=['GET'])
@@ -2624,17 +2639,16 @@ def admin_stats():
         total_groups = Group.query.count()
         active_groups = Group.query.filter_by(is_active=True).count()
         
-        # Calculate total expenses across all groups
-        total_expenses = 0
-        for group in Group.query.all():
-            expenses = Expense.query.filter_by(group_id=group.id).all()
-            total_expenses += sum(e.amount for e in expenses)
+        # Calculate total order amounts across all groups (using Order model instead of Expense)
+        total_orders = Order.query.count()
+        total_amount = sum(o.total_amount for o in Order.query.all()) if Order.query.count() > 0 else 0
         
         return jsonify({
             'total_users': total_users,
             'total_groups': total_groups,
             'active_groups': active_groups,
-            'total_expenses': float(total_expenses)
+            'total_orders': total_orders,
+            'total_amount': float(total_amount)
         }), 200
     except Exception as e:
         print(f"[ADMIN] Error getting stats: {str(e)}")
@@ -2813,6 +2827,76 @@ def not_found(error):
         print(f"[ERROR-404] Exception: {e}", flush=True)
         return jsonify({'error': 'Server Error'}), 500
 
+# ==================== Debug/Dev Routes (Available in both __main__ and WSGI) ====================
+
+# DEBUG: Endpoint to set PIN for a phone number (temporary - for testing only)
+@app.route('/api/debug/set-pin', methods=['POST'])
+def debug_set_pin():
+    """TEMPORARY DEBUG ENDPOINT: Set PIN for a phone number"""
+    try:
+        data = request.get_json()
+        phone = data.get('phone', '').strip()
+        pin = data.get('pin', '').strip()
+        
+        if not phone or not pin:
+            return jsonify({'error': 'Phone and PIN required'}), 400
+        
+        if not pin.isdigit() or len(pin) != 4:
+            return jsonify({'error': 'PIN must be 4 digits'}), 400
+        
+        # Normalize phone
+        if not phone.startswith('+'):
+            phone = '+90' + phone.lstrip('0')
+        
+        user = User.query.filter_by(phone=phone).first()
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+        
+        # Set the PIN
+        user.set_password(pin)
+        db.session.commit()
+        
+        print(f"[DEBUG] PIN set for {phone}: {pin}")
+        return jsonify({'message': 'PIN set successfully', 'phone': phone, 'pin': pin}), 200
+    except Exception as e:
+        db.session.rollback()
+        print(f"[ERROR] Failed to set PIN: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+# TEST ENDPOINT
+@app.route('/test-post', methods=['POST'])
+def test_post():
+    """Test POST endpoint"""
+    return jsonify({'message': 'POST works!'}), 200
+
+# Admin endpoint to update script.js
+@app.route('/api/admin/update-script', methods=['POST'])
+def update_script():
+    """Update script.js on server"""
+    try:
+        # Get the file content from request
+        data = request.get_json(force=True, silent=True)
+        if not data:
+            return jsonify({'error': 'Invalid JSON'}), 400
+        
+        script_content = data.get('content', '')
+        
+        if not script_content:
+            return jsonify({'error': 'No content provided'}), 400
+        
+        # Write to public_html/script.js
+        script_path = Path('/home/hes20caylascom/public_html/script.js')
+        with open(script_path, 'w', encoding='utf-8') as f:
+            f.write(script_content)
+        
+        print(f"[ADMIN] script.js updated successfully ({len(script_content)} bytes)", flush=True)
+        return jsonify({'success': True, 'message': 'script.js updated'}), 200
+    except Exception as e:
+        print(f"[ERROR] Failed to update script.js: {str(e)}", flush=True)
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
+
 # Print registered routes for debugging
 print(f"[INIT] Flask app fully initialized", flush=True)
 print_routes()
@@ -2854,74 +2938,6 @@ if __name__ == '__main__':
         # else:
         print(f"[INIT] Database ready - {User.query.count()} users, {Group.query.count()} groups")
     
-    # DEBUG: Endpoint to set PIN for a phone number (temporary - for testing only)
-    @app.route('/api/debug/set-pin', methods=['POST'])
-    def debug_set_pin():
-        """TEMPORARY DEBUG ENDPOINT: Set PIN for a phone number"""
-        try:
-            data = request.get_json()
-            phone = data.get('phone', '').strip()
-            pin = data.get('pin', '').strip()
-            
-            if not phone or not pin:
-                return jsonify({'error': 'Phone and PIN required'}), 400
-            
-            if not pin.isdigit() or len(pin) != 4:
-                return jsonify({'error': 'PIN must be 4 digits'}), 400
-            
-            # Normalize phone
-            if not phone.startswith('+'):
-                phone = '+90' + phone.lstrip('0')
-            
-            user = User.query.filter_by(phone=phone).first()
-            if not user:
-                return jsonify({'error': 'User not found'}), 404
-            
-            # Set the PIN
-            user.set_password(pin)
-            db.session.commit()
-            
-            print(f"[DEBUG] PIN set for {phone}: {pin}")
-            return jsonify({'message': 'PIN set successfully', 'phone': phone, 'pin': pin}), 200
-        except Exception as e:
-            db.session.rollback()
-            print(f"[ERROR] Failed to set PIN: {str(e)}")
-            return jsonify({'error': str(e)}), 500
-    
-    # TEST ENDPOINT
-    @app.route('/test-post', methods=['POST'])
-    def test_post():
-        """Test POST endpoint"""
-        return jsonify({'message': 'POST works!'}), 200
-
-    # Admin endpoint to update script.js
-    @app.route('/api/admin/update-script', methods=['POST'])
-    def update_script():
-        """Update script.js on server"""
-        try:
-            # Get the file content from request
-            data = request.get_json(force=True, silent=True)
-            if not data:
-                return jsonify({'error': 'Invalid JSON'}), 400
-            
-            script_content = data.get('content', '')
-            
-            if not script_content:
-                return jsonify({'error': 'No content provided'}), 400
-            
-            # Write to public_html/script.js
-            script_path = Path('/home/hes20caylascom/public_html/script.js')
-            with open(script_path, 'w', encoding='utf-8') as f:
-                f.write(script_content)
-            
-            print(f"[ADMIN] script.js updated successfully ({len(script_content)} bytes)", flush=True)
-            return jsonify({'success': True, 'message': 'script.js updated'}), 200
-        except Exception as e:
-            print(f"[ERROR] Failed to update script.js: {str(e)}", flush=True)
-            import traceback
-            traceback.print_exc()
-            return jsonify({'error': str(e)}), 500
-
     port = int(os.getenv('PORT', 5000))
     # Debug mode ON for development (shows detailed error tracebacks)
     app.run(host='0.0.0.0', port=port, debug=True, use_reloader=False)
