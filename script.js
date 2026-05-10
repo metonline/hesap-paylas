@@ -753,21 +753,38 @@ function checkExistingUser() {
     if (token && storedUser) {
         try {
             app.currentUser = JSON.parse(storedUser);
-            // Token varsa API'ye authenticate et
+            console.log('[AUTH] User loaded from localStorage:', app.currentUser);
+            
+            // Token varsa API'ye authenticate et, ama başarısız olsa bile user'ı use et
             api.getProfile()
                 .then(profile => {
                     app.currentUser = profile;
                     localStorage.setItem('hesapPaylas_user', JSON.stringify(profile));
+                    console.log('[AUTH] Profile updated from API');
                     showPage('homePage');
                 })
                 .catch(error => {
-                    // Token geçersiz, logout yap
-                    console.log('Token invalid:', error);
-                    logout();
+                    // API başarısız olsa bile, token varsa ve localStorage'da user varsa devam et
+                    console.log('[AUTH] getProfile failed but using localStorage user:', error);
+                    showPage('homePage');
                 });
         } catch (e) {
+            console.log('[AUTH] Error parsing stored user:', e);
             logout();
         }
+    } else if (token) {
+        // Token var ama user yok, try API
+        api.getProfile()
+            .then(profile => {
+                app.currentUser = profile;
+                localStorage.setItem('hesapPaylas_user', JSON.stringify(profile));
+                console.log('[AUTH] Profile loaded from API');
+                showPage('homePage');
+            })
+            .catch(error => {
+                console.log('[AUTH] Token invalid, logging out:', error);
+                logout();
+            });
     } else {
         showPage('onboardingPage');
     }

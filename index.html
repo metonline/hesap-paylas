@@ -1408,7 +1408,7 @@ Konaklama
 
     <script defer src="qr-scanner.js?ver=1.0.14"></script>
     
-    <script defer src="script.js?ver=1.0.29"></script>
+    <script defer src="script.js?ver=1.0.30"></script>
     
     <script>
         // Inline email login handler - doesn't depend on script.js
@@ -1443,6 +1443,9 @@ Konaklama
                     }
                 } else {
                     localStorage.setItem('hesapPaylas_token', data.token);
+                    if (data.user) {
+                        localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                    }
                     alert('Giriş başarılı!');
                     window.location.reload();
                 }
@@ -1548,6 +1551,9 @@ Konaklama
                     alert('Hesap oluşturma hatası: ' + (data.error || resp.statusText));
                 } else {
                     localStorage.setItem('hesapPaylas_token', data.token);
+                    if (data.user) {
+                        localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+                    }
                     alert('Hesap başarıyla oluşturuldu!');
                     document.getElementById('signupModalOverlay').remove();
                     window.location.reload();
