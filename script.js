@@ -5022,16 +5022,36 @@ async function submitEmailForm() {
         
     } catch (error) {
         // Login başarısız - signup'a dönüş yap
-        const errorStr = (error.message || error.toString()).toLowerCase();
+        console.log('[EMAIL FORM] Error caught:', error);
         
-        if (errorStr.includes('not found') || errorStr.includes('invalid') || errorStr.includes('401')) {
+        // Check if error is the JSON object from API or Error object
+        let shouldShowSignup = false;
+        let errorMessage = 'Bir hata oluştu';
+        
+        if (error && typeof error === 'object') {
+            // Check if it's JSON response with error field
+            if (error.error) {
+                errorMessage = error.error;
+                if (error.error.toLowerCase().includes('not_found') || error.error.toLowerCase().includes('not found')) {
+                    shouldShowSignup = true;
+                }
+            } else if (error.message) {
+                // Check if it's Error object with message
+                errorMessage = error.message;
+                const errorStr = error.message.toLowerCase();
+                if (errorStr.includes('not found') || errorStr.includes('invalid') || errorStr.includes('401')) {
+                    shouldShowSignup = true;
+                }
+            }
+        }
+        
+        if (shouldShowSignup) {
             console.log('[EMAIL FORM] Login başarısız, signup dene...');
-            
             // Signup için modal aç
             showSignupModal(email);
         } else {
             // Başka bir hata
-            alert('Hata: ' + (error.message || 'Bir hata oluştu'));
+            alert('Hata: ' + errorMessage);
         }
     }
 }
