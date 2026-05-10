@@ -175,7 +175,7 @@
                                 </div>
                                 
                                 <!-- Login/Register Button -->
-                                <button onclick="submitPhoneForm()" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 12px; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; padding: 14px; box-sizing: border-box;">
+                                <button class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin-bottom: 12px; color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; padding: 14px; box-sizing: border-box;">
                                     <span id="phoneButtonText">Giriş Yap</span>
                                 </button>
                                 
@@ -209,7 +209,7 @@
                                 
                                 <!-- Email Login/Register Button -->
                                 <div style="margin-bottom: 20px;">
-                                    <button onclick="submitEmailForm()" class="login-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; padding: 14px; box-sizing: border-box;">
+                                    <button class="login-btn" onclick="handleEmailLogin()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; width: 100%; padding: 14px; box-sizing: border-box;">
                                         Giriş Yap / Kayıt Ol
                                     </button>
                                 </div>
@@ -1406,10 +1406,46 @@ Konaklama
         </div>
     </div>
 
-    <!-- QR Code Libraries - With fallback -->
-    <script src="qr-scanner.js?ver=1.0.14"></script>
+    <script defer src="qr-scanner.js?ver=1.0.14"></script>
     
-    <script src="script.js?ver=1.0.29"></script>
+    <script defer src="script.js?ver=1.0.29"></script>
     
+    <script>
+        // Inline email login handler - doesn't depend on script.js
+        window.handleEmailLogin = async function() {
+            const email = document.getElementById('emailHome')?.value?.trim();
+            const password = document.getElementById('passwordHome')?.value;
+            
+            if (!email || !password) {
+                alert('Email ve şifre gerekli');
+                return;
+            }
+            
+            try {
+                const resp = await fetch('http://localhost:5000/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                if (!resp.ok) {
+                    const data = await resp.json();
+                    if (data.error && data.error.includes('not found')) {
+                        // Show signup modal
+                        alert('Kullanıcı bulunamadı. Lütfen kaydolun: ' + email);
+                    } else {
+                        alert('Hata: ' + (data.error || resp.statusText));
+                    }
+                } else {
+                    const data = await resp.json();
+                    localStorage.setItem('hesapPaylas_token', data.token);
+                    alert('Giriş başarılı!');
+                    window.location.reload();
+                }
+            } catch (e) {
+                alert('Hata: ' + e.message);
+            }
+        };
+    </script>
 </body>
 </html>

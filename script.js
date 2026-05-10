@@ -5455,6 +5455,50 @@ function showPhoneSignupModal(phone, pin) {
     });
 }
 
+// ========== GLOBAL INITIALIZATION ==========
+// Called from HTML after all scripts load
+function appInit() {
+    console.log('[INIT] Initializing application - attaching event handlers');
+    
+    // Attach click handlers to all buttons with onclick attributes
+    const buttons = document.querySelectorAll('[onclick]');
+    console.log(`[INIT] Found ${buttons.length} elements with onclick attributes`);
+    
+    buttons.forEach(btn => {
+        const onclickAttr = btn.getAttribute('onclick');
+        if (!onclickAttr) return;
+        
+        const match = onclickAttr.match(/^(\w+)\(/);
+        if (!match) return;
+        
+        const funcName = match[1];
+        const func = window[funcName];
+        
+        if (typeof func === 'function') {
+            btn.removeAttribute('onclick');
+            btn.addEventListener('click', (e) => {
+                const argsMatch = onclickAttr.match(/\(([^)]*)\)/);
+                const args = [];
+                if (argsMatch && argsMatch[1]) {
+                    argsMatch[1].split(',').forEach(arg => {
+                        arg = arg.trim();
+                        if ((arg.startsWith("'") && arg.endsWith("'")) || 
+                            (arg.startsWith('"') && arg.endsWith('"'))) {
+                            args.push(arg.slice(1, -1));
+                        } else {
+                            args.push(arg);
+                        }
+                    });
+                }
+                func.apply(this, args);
+            });
+            console.log(`[INIT] Attached listener for ${funcName}`);
+        }
+    });
+    
+    console.log('[INIT] Initialization complete');
+}
+
 function closePhoneSignupModal() {
     const modal = document.getElementById('phoneSignupModal');
     if (modal) {
