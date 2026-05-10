@@ -100,8 +100,8 @@ const API_BASE_URL = (() => {
     const port = window.location.port;
     
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        console.log('[API] Local environment detected - using Flask backend on port 5000');
-        return `${protocol}//${hostname}:5000/api`;
+        console.log('[API] Local environment detected - using Flask backend on port 8001');
+        return `${protocol}//${hostname}:8001/api`;
     }
     
     // Production: Use same host as page (Render will route correctly)
@@ -125,7 +125,7 @@ function getAppURL() {
     
     // Local development: use Flask backend
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
-        return `${protocol}//${hostname}:5000`;
+        return `${protocol}//${hostname}:8001`;
     }
     
     // Production: use current domain
