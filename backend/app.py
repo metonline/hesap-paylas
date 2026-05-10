@@ -256,43 +256,19 @@ def print_routes():
 # print_routes() is called later in the code
 
 # CORS configuration for GitHub Pages and local development
-# TEMPORARILY DISABLED FOR TESTING
-# CORS(app, resources={
-#     r"/api/*": {
-#         "origins": ["*"],
-#         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-#         "allow_headers": ["Content-Type", "Authorization"],
-#         "supports_credentials": False,
-#         "max_age": 3600
-#     }
-# })
+CORS(app, resources={
+    r"/api/*": {
+        "origins": ["*"],
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"],
+        "supports_credentials": False,
+        "max_age": 3600
+    }
+})
 
 # ==================== Database Initialization ====================
-# Initialize database on first startup
-@app.before_request
-def init_db():
-    """Initialize database if needed (runs once per process)"""
-    if not hasattr(app, '_db_initialized'):
-        try:
-            db.create_all()
-            # Ensure default user exists
-            user = User.query.filter_by(email='metonline@gmail.com').first()
-            if not user:
-                user = User(
-                    first_name='Metin',
-                    last_name='Güven',
-                    email='metonline@gmail.com',
-                    phone='05323332222'
-                )
-                user.set_password('test123')
-                db.session.add(user)
-                db.session.commit()
-            app._db_initialized = True
-            print("[DB] Database initialized on first request", flush=True)
-        except Exception as e:
-            print(f"[DB] Initialization error: {e}", flush=True)
-            # Don't crash, just log the error
-            pass
+# NOTE: Removed @app.before_request hook that was causing timeout issues
+# Database is now initialized once at startup in __main__ block
 
 # Config
 # ABSOLUTE path for database - avoid path conflicts

@@ -1423,7 +1423,7 @@ Konaklama
             
             try {
                 const API_BASE_URL = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:5000'
+                    ? 'http://localhost:8001'
                     : `${window.location.protocol}//${window.location.hostname}`;
                 
                 const resp = await fetch(`${API_BASE_URL}/api/auth/login`, {
@@ -1533,7 +1533,7 @@ Konaklama
             try {
                 // Determine API base URL
                 const API_BASE_URL = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:5000'
+                    ? 'http://localhost:8001'
                     : `${window.location.protocol}//${window.location.hostname}`;
                 
                 const resp = await fetch(`${API_BASE_URL}/api/auth/signup`, {
