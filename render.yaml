@@ -2,7 +2,7 @@ services:
   - type: web
     name: hesap-paylas
     env: python
-    # Force rebuild with timestamp - should trigger fresh deploy
+    # Force rebuild with timestamp - updated to trigger deployment
     buildCommand: echo "Build ID $(date +%s%N)" && pip install -r requirements.txt
     startCommand: sh start.sh
     envVars:
