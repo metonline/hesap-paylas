@@ -1533,11 +1533,13 @@ Konaklama
                 return;
             }
             
-            // TODO: Send to backend
-            alert('Form submitted: ' + firstName + ' ' + lastName + ' (' + email + ')');
-            /*
             try {
-                const resp = await fetch('http://localhost:5000/api/auth/signup', {
+                // Determine API base URL
+                const API_BASE_URL = window.location.hostname === 'localhost' 
+                    ? 'http://localhost:5000'
+                    : `${window.location.protocol}//${window.location.hostname}`;
+                
+                const resp = await fetch(`${API_BASE_URL}/api/auth/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ firstName, lastName, email, phone, password })
@@ -1556,7 +1558,6 @@ Konaklama
             } catch (e) {
                 alert('Bağlantı hatası: ' + e.message);
             }
-            */
         };
     </script>
 </body>

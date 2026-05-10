@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory, redirect
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
@@ -256,15 +256,16 @@ def print_routes():
 # print_routes() is called later in the code
 
 # CORS configuration for GitHub Pages and local development
-CORS(app, resources={
-    r"/api/*": {
-        "origins": ["*"],
-        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-        "allow_headers": ["Content-Type", "Authorization"],
-        "supports_credentials": False,
-        "max_age": 3600
-    }
-})
+# TEMPORARILY DISABLED FOR TESTING
+# CORS(app, resources={
+#     r"/api/*": {
+#         "origins": ["*"],
+#         "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+#         "allow_headers": ["Content-Type", "Authorization"],
+#         "supports_credentials": False,
+#         "max_age": 3600
+#     }
+# })
 
 # ==================== Database Initialization ====================
 # Initialize database on first startup
@@ -627,7 +628,8 @@ def sync_to_render_after_request(response):
 
 # ==================== Auth Routes ====================
 
-@app.route('/api/auth/signup', methods=['POST'])
+@app.route('/api/auth/signup', methods=['POST', 'OPTIONS'])
+@cross_origin(origins="*", methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"], allow_headers=["Content-Type", "Authorization"])
 def signup():
     """User signup"""
     try:
