@@ -1408,7 +1408,7 @@ Konaklama
 
     <script defer src="qr-scanner.js?ver=1.0.15"></script>
     
-    <script defer src="script.js?ver=1.0.31"></script>
+    <script defer src="script.js?ver=1.0.33"></script>
     
     <script>
         // Inline email login handler - doesn't depend on script.js
@@ -1422,9 +1422,14 @@ Konaklama
             }
             
             try {
-                const API_BASE_URL = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:8001'
-                    : `${window.location.protocol}//${window.location.hostname}`;
+                let API_BASE_URL;
+                if (window.location.hostname === 'localhost') {
+                    API_BASE_URL = 'http://localhost:8001';
+                } else if (window.location.hostname === 'metonline.github.io') {
+                    API_BASE_URL = 'https://hesap-paylas-api.onrender.com';
+                } else {
+                    API_BASE_URL = `${window.location.protocol}//${window.location.hostname}`;
+                }
                 
                 const resp = await fetch(`${API_BASE_URL}/api/auth/login`, {
                     method: 'POST',
@@ -1535,9 +1540,14 @@ Konaklama
             
             try {
                 // Determine API base URL
-                const API_BASE_URL = window.location.hostname === 'localhost' 
-                    ? 'http://localhost:8001'
-                    : `${window.location.protocol}//${window.location.hostname}`;
+                let API_BASE_URL;
+                if (window.location.hostname === 'localhost') {
+                    API_BASE_URL = 'http://localhost:8001';
+                } else if (window.location.hostname === 'metonline.github.io') {
+                    API_BASE_URL = 'https://hesap-paylas-api.onrender.com';
+                } else {
+                    API_BASE_URL = `${window.location.protocol}//${window.location.hostname}`;
+                }
                 
                 const resp = await fetch(`${API_BASE_URL}/api/auth/signup`, {
                     method: 'POST',
