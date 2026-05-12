@@ -123,6 +123,110 @@ function getBaseURL() {
     return API_BASE_URL.replace('/api', '');
 }
 
+// ===== Simple Signup Form (Fallback) =====
+function showSimpleSignupForm(prefilledPhone = '') {
+    // Remove existing modal if any
+    const existing = document.getElementById('signupModalOverlay');
+    if (existing) existing.remove();
+    
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'signupModalOverlay';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    `;
+    
+    // Create modal content
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        max-width: 400px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    `;
+    
+    modal.innerHTML = `
+        <h2 style="text-align: center; color: #333; margin-top: 0;">Hesap Oluştur</h2>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Ad</label>
+            <input id="simpleSignupFirstName" type="text" placeholder="Adınız" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px;" />
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Soyadı</label>
+            <input id="simpleSignupLastName" type="text" placeholder="Soyadınız" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px;" />
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">E-posta</label>
+            <input id="simpleSignupEmail" type="email" placeholder="ornek@email.com" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px;" />
+        </div>
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Telefon</label>
+            <input id="simpleSignupPhone" type="tel" value="${prefilledPhone}" placeholder="+90 (5xx) 000 0000" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px;" />
+        </div>
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #555;">Şifre</label>
+            <input id="simpleSignupPassword" type="password" placeholder="Şifre seçin" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 14px;" />
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="submitSimpleSignup()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Hesap Oluştur</button>
+            <button onclick="document.getElementById('signupModalOverlay').remove()" style="flex: 1; padding: 12px; background: #f0f0f0; color: #333; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">İptal</button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+}
+
+function submitSimpleSignup() {
+    const firstName = document.getElementById('simpleSignupFirstName')?.value?.trim();
+    const lastName = document.getElementById('simpleSignupLastName')?.value?.trim();
+    const email = document.getElementById('simpleSignupEmail')?.value?.trim();
+    const phone = document.getElementById('simpleSignupPhone')?.value?.trim();
+    const password = document.getElementById('simpleSignupPassword')?.value;
+    
+    if (!firstName || !lastName || !email || !phone || !password) {
+        alert('Tüm alanlar gerekli');
+        return;
+    }
+    
+    // Use API_BASE_URL from global scope
+    const url = `${API_BASE_URL.replace('/api', '')}/api/auth/signup`;
+    
+    fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName, lastName, email, phone, password })
+    })
+    .then(resp => resp.json().then(data => ({ ok: resp.ok, data })))
+    .then(({ ok, data }) => {
+        if (!ok) {
+            alert('Hesap oluşturma hatası: ' + (data.error || 'Bilinmeyen hata'));
+        } else {
+            localStorage.setItem('hesapPaylas_token', data.token);
+            if (data.user) {
+                localStorage.setItem('hesapPaylas_user', JSON.stringify(data.user));
+            }
+            alert('Hesap başarıyla oluşturuldu!');
+            document.getElementById('signupModalOverlay').remove();
+            window.location.reload();
+        }
+    })
+    .catch(e => {
+        alert('Bağlantı hatası: ' + e.message);
+    });
+}
+
 // Helper function to get app base URL (for sharing/invitations)
 function getAppURL() {
     const protocol = window.location.protocol;
