@@ -907,21 +907,12 @@ function handleManualLogin(event) {
                 errorCode = error.message;
             }
             if (errorCode.includes('user_not_found')) {
-                alert('Sistemde böyle bir kullanıcı bulunmuyor. Kayıt için adınızı ve e-posta adresinizi girin.');
-                // Show name and email fields for registration
-                var nameSection = document.getElementById('nameSection');
-                var emailSection = document.getElementById('emailSection');
-                if (nameSection) nameSection.style.display = 'block';
-                if (emailSection) emailSection.style.display = 'block';
-                // Change button text to "Kayıt Ol" if the element exists
-                var buttonText = document.getElementById('buttonText');
-                if (buttonText) { buttonText.textContent = 'Kayıt Ol'; }
-                // Optionally clear PIN fields
-                var pinInputs = document.querySelectorAll('.pin-input-home');
-                if (pinInputs && pinInputs.length) { pinInputs.forEach(function(input) { input.value = ''; }); }
-                // Focus on name input
-                var nameInput = document.getElementById('userName');
-                if (nameInput) nameInput.focus();
+                // Show signup modal with the phone number
+                if (window.showSignupModal) {
+                    window.showSignupModal();
+                } else {
+                    alert('Sistemde böyle bir kullanıcı bulunmuyor. Kayıt için adınızı ve e-posta adresinizi girin.');
+                }
             } else if (errorCode.includes('wrong_password')) {
                 alert('Şifre yanlış!');
             } else {
