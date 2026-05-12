@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alternatif Logo - Hesap Paylaş</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .logo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        .logo-item {
+            text-align: center;
+        }
+        .logo-item h3 {
+            color: #FF6B6B;
+            margin-top: 20px;
+        }
+        .logo-item p {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Alternatif Logo Seçenekleri</h1>
+        
+        <div class="logo-grid">
+            <!-- Logo 1: Paylaşım Elleri -->
+            <div class="logo-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="200" height="200">
+                    <!-- Arka plan -->
+                    <circle cx="120" cy="120" r="115" fill="#fff" stroke="#FF6B6B" stroke-width="4"/>
+                    
+                    <!-- Merkez: Para Sembolü -->
+                    <g transform="translate(120, 120)">
+                        <circle cx="0" cy="0" r="35" fill="#95E1D3" opacity="0.2" stroke="#95E1D3" stroke-width="3"/>
+                        <text x="0" y="0" font-size="45" font-weight="bold" fill="#95E1D3" text-anchor="middle" dominant-baseline="middle">₺</text>
+                    </g>
+                    
+                    <!-- Sol El (Paylaşım) -->
+                    <g transform="translate(60, 120)">
+                        <circle cx="0" cy="0" r="12" fill="#FF6B6B"/>
+                        <path d="M 0 12 L -15 35 M 0 12 L 0 40 M 0 12 L 15 35" stroke="#FF6B6B" stroke-width="4" stroke-linecap="round"/>
+                    </g>
+                    
+                    <!-- Sağ El (Paylaşım) -->
+                    <g transform="translate(180, 120)">
+                        <circle cx="0" cy="0" r="12" fill="#4ECDC4"/>
+                        <path d="M 0 12 L -15 35 M 0 12 L 0 40 M 0 12 L 15 35" stroke="#4ECDC4" stroke-width="4" stroke-linecap="round"/>
+                    </g>
+                    
+                    <!-- Üst El (Paylaşım) -->
+                    <g transform="translate(120, 50)">
+                        <circle cx="0" cy="0" r="12" fill="#45B7D1"/>
+                        <path d="M -12 0 L -35 -15 M 0 0 L -40 0 M 12 0 L 35 -15" stroke="#45B7D1" stroke-width="4" stroke-linecap="round"/>
+                    </g>
+                    
+                    <!-- Alt El (Paylaşım) -->
+                    <g transform="translate(120, 190)">
+                        <circle cx="0" cy="0" r="12" fill="#F7DC6F"/>
+                        <path d="M -12 0 L -35 15 M 0 0 L -40 0 M 12 0 L 35 15" stroke="#F7DC6F" stroke-width="4" stroke-linecap="round"/>
+                    </g>
+                </svg>
+                <h3>Logo 1: Paylaşım Elleri</h3>
+                <p>Para etrafında 4 el - güçlü paylaşım konsepti</p>
+            </div>
+            
+            <!-- Logo 2: Bölünmüş Para -->
+            <div class="logo-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="200" height="200">
+                    <!-- Arka plan -->
+                    <circle cx="120" cy="120" r="115" fill="#fff" stroke="#4ECDC4" stroke-width="4"/>
+                    
+                    <!-- Merkez: Bölünmüş Para -->
+                    <g transform="translate(120, 120)">
+                        <!-- Para dairesi -->
+                        <circle cx="0" cy="0" r="40" fill="none" stroke="#95E1D3" stroke-width="3"/>
+                        
+                        <!-- Bölme çizgileri (4 parça) -->
+                        <line x1="-40" y1="0" x2="40" y2="0" stroke="#95E1D3" stroke-width="3"/>
+                        <line x1="0" y1="-40" x2="0" y2="40" stroke="#95E1D3" stroke-width="3"/>
+                        
+                        <!-- Para sembolü -->
+                        <text x="0" y="0" font-size="50" font-weight="bold" fill="#FF6B6B" text-anchor="middle" dominant-baseline="middle">₺</text>
+                    </g>
+                    
+                    <!-- 4 köşede simgeler -->
+                    <!-- Top-Left: Restaurant -->
+                    <g transform="translate(50, 50)">
+                        <circle cx="0" cy="0" r="18" fill="#FF6B6B" opacity="0.1" stroke="#FF6B6B" stroke-width="2"/>
+                        <path d="M -5 0 L -5 15 M 5 0 L 5 15 M -5 5 L 5 5 M -5 10 L 5 10" stroke="#FF6B6B" stroke-width="2.5" stroke-linecap="round"/>
+                    </g>
+                    
+                    <!-- Top-Right: Uçak -->
+                    <g transform="translate(190, 50)">
+                        <circle cx="0" cy="0" r="18" fill="#45B7D1" opacity="0.1" stroke="#45B7D1" stroke-width="2"/>
+                        <ellipse cx="0" cy="-2" rx="3" ry="8" fill="#45B7D1"/>
+                        <rect x="-12" y="-4" width="24" height="4" fill="#45B7D1"/>
+                        <circle cx="0" cy="-10" r="3" fill="#45B7D1"/>
+                    </g>
+                    
+                    <!-- Bottom-Left: Ev -->
+                    <g transform="translate(50, 190)">
+                        <circle cx="0" cy="0" r="18" fill="#F7DC6F" opacity="0.3" stroke="#F7DC6F" stroke-width="2"/>
+                        <polygon points="0,-12 12,0 -12,0" fill="#F7DC6F"/>
+                        <rect x="-10" y="0" width="20" height="12" fill="none" stroke="#F7DC6F" stroke-width="2"/>
+                        <rect x="-6" y="2" width="4" height="4" fill="#F7DC6F"/>
+                        <rect x="2" y="2" width="4" height="4" fill="#F7DC6F"/>
+                    </g>
+                    
+                    <!-- Bottom-Right: İnsan Grubu -->
+                    <g transform="translate(190, 190)">
+                        <circle cx="0" cy="0" r="18" fill="#95E1D3" opacity="0.2" stroke="#95E1D3" stroke-width="2"/>
+                        <circle cx="-6" cy="-6" r="3" fill="#95E1D3"/>
+                        <circle cx="6" cy="-6" r="3" fill="#95E1D3"/>
+                        <circle cx="0" cy="-2" r="3" fill="#95E1D3"/>
+                        <path d="M -8 2 L -8 8 M 8 2 L 8 8 M -2 4 L -2 8 M 2 4 L 2 8" stroke="#95E1D3" stroke-width="2" stroke-linecap="round"/>
+                    </g>
+                </svg>
+                <h3>Logo 2: Bölünmüş Para</h3>
+                <p>Para 4 parçaya bölünmüş, köşelerde simgeler</p>
+            </div>
+            
+            <!-- Logo 3: İnsan Merkezi -->
+            <div class="logo-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="200" height="200">
+                    <!-- Arka plan -->
+                    <circle cx="120" cy="120" r="115" fill="#fff" stroke="#45B7D1" stroke-width="4"/>
+                    
+                    <!-- Merkez: İnsan Grubu ve Para -->
+                    <g transform="translate(120, 100)">
+                        <!-- Merkez Daire -->
+                        <circle cx="0" cy="0" r="45" fill="#95E1D3" opacity="0.15" stroke="#95E1D3" stroke-width="3"/>
+                        
+                        <!-- Para Sembolü -->
+                        <text x="0" y="5" font-size="48" font-weight="bold" fill="#95E1D3" text-anchor="middle">₺</text>
+                    </g>
+                    
+                    <!-- 3 İnsan (Üçgen şekli) -->
+                    <!-- Üst İnsan -->
+                    <g transform="translate(120, 40)">
+                        <circle cx="0" cy="0" r="5" fill="#FF6B6B"/>
+                        <path d="M -8 6 L 8 6 M 0 6 L 0 18" stroke="#FF6B6B" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M -8 10 L -14 16 M 8 10 L 14 16" stroke="#FF6B6B" stroke-width="3" stroke-linecap="round"/>
+                    </g>
+                    
+                    <!-- Sol Alt İnsan -->
+                    <g transform="translate(60, 160)">
+                        <circle cx="0" cy="0" r="5" fill="#4ECDC4"/>
+                        <path d="M -8 6 L 8 6 M 0 6 L 0 18" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M -8 10 L -14 16 M 8 10 L 14 16" stroke="#4ECDC4" stroke-width="3" stroke-linecap="round"/>
+                    </g>
+                    
+                    <!-- Sağ Alt İnsan -->
+                    <g transform="translate(180, 160)">
+                        <circle cx="0" cy="0" r="5" fill="#45B7D1"/>
+                        <path d="M -8 6 L 8 6 M 0 6 L 0 18" stroke="#45B7D1" stroke-width="3" stroke-linecap="round"/>
+                        <path d="M -8 10 L -14 16 M 8 10 L 14 16" stroke="#45B7D1" stroke-width="3" stroke-linecap="round"/>
+                    </g>
+                    
+                    <!-- Bağlantı çizgileri (paylaşım göstergesi) -->
+                    <line x1="120" y1="40" x2="60" y2="160" stroke="#95E1D3" stroke-width="2" opacity="0.5" stroke-dasharray="5,5"/>
+                    <line x1="120" y1="40" x2="180" y2="160" stroke="#95E1D3" stroke-width="2" opacity="0.5" stroke-dasharray="5,5"/>
+                    <line x1="60" y1="160" x2="180" y2="160" stroke="#95E1D3" stroke-width="2" opacity="0.5" stroke-dasharray="5,5"/>
+                </svg>
+                <h3>Logo 3: İnsan ve Para</h3>
+                <p>3 kişi para etrafında - doğrudan paylaşım</p>
+            </div>
+            
+            <!-- Logo 4: Basit ve Etkili -->
+            <div class="logo-item">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="200" height="200">
+                    <!-- Arka plan -->
+                    <circle cx="120" cy="120" r="115" fill="#fff" stroke="#FF6B6B" stroke-width="4"/>
+                    
+                    <!-- Ana Shape: Bölme Simgesi (÷) stilinde -->
+                    <g transform="translate(120, 120)">
+                        <!-- Üst nokta -->
+                        <circle cx="0" cy="-25" r="8" fill="#FF6B6B"/>
+                        
+                        <!-- Orta çizgi -->
+                        <line x1="-35" y1="0" x2="35" y2="0" stroke="#95E1D3" stroke-width="5" stroke-linecap="round"/>
+                        
+                        <!-- Alt nokta -->
+                        <circle cx="0" cy="25" r="8" fill="#4ECDC4"/>
+                        
+                        <!-- Dikey para sembolü -->
+                        <line x1="0" y1="-45" x2="0" y2="45" stroke="#F7DC6F" stroke-width="4" stroke-linecap="round" opacity="0.6"/>
+                    </g>
+                    
+                    <!-- Etrafta 4 renkli parça -->
+                    <circle cx="60" cy="60" r="16" fill="#FF6B6B" opacity="0.3"/>
+                    <circle cx="180" cy="60" r="16" fill="#4ECDC4" opacity="0.3"/>
+                    <circle cx="60" cy="180" r="16" fill="#45B7D1" opacity="0.3"/>
+                    <circle cx="180" cy="180" r="16" fill="#F7DC6F" opacity="0.3"/>
+                </svg>
+                <h3>Logo 4: Bölme Sembolü (÷)</h3>
+                <p>Matematiksel ve net - hesap bölme konsepti</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
