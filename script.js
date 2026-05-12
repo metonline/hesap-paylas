@@ -104,6 +104,12 @@ const API_BASE_URL = (() => {
         return `${protocol}//${hostname}:8001/api`;
     }
     
+    // Production: Use Render API domain
+    if (hostname === 'metonline.github.io') {
+        console.log('[API] GitHub Pages detected - using Render API backend');
+        return 'https://hesap-paylas-api.onrender.com/api';
+    }
+    
     // Production: Use same host as page (Render will route correctly)
     if (port) {
         return `${protocol}//${hostname}:${port}/api`;
