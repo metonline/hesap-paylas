@@ -125,6 +125,7 @@ function getBaseURL() {
 
 // ===== Simple Signup Form (Fallback) =====
 function showSimpleSignupForm(prefilledPhone = '') {
+    console.log('[SIGNUP] showSimpleSignupForm called with phone:', prefilledPhone);
     // Remove existing modal if any
     const existing = document.getElementById('signupModalOverlay');
     if (existing) existing.remove();
@@ -1115,11 +1116,14 @@ function handleManualLogin(event) {
                 errorCode = error.message;
             }
             if (errorCode.includes('user_not_found')) {
+                console.log('[LOGIN] User not found - opening signup modal');
                 // Show signup modal with the phone number
                 if (window.showSignupModal) {
+                    console.log('[LOGIN] Calling window.showSignupModal');
                     window.showSignupModal();
                 } else {
                     // Fallback: create a simple signup form
+                    console.log('[LOGIN] window.showSignupModal not available - using fallback');
                     const phone = document.getElementById('userPhone')?.value || '';
                     showSimpleSignupForm(phone);
                 }
